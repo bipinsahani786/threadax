@@ -2,68 +2,76 @@
 
 namespace App\Services;
 
+use App\Mail\OtpMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 
 class OtpService
 {
     /**
-     * Send an OTP to the given target (email/phone) using the given channel.
-     *
-     * @param string $target
-     * @param string $channel
-     * @return bool
+     * Send OTP to the given email address.
+     * Rate limited: max 3 attempts per 10 minutes.
      */
-    public function sendOtp(string $target, string $channel = 'email'): bool
+    public function sendOtp(string $email): array
     {
-        // 1. Find or create user
-        // Note: For passwordless login via email, we create a placeholder user if they don't exist.
-        // Or we just find them. Depending on business logic, we might just store OTP without creating a user
-        // until they verify. But since HasOtp is on User model, we'll find or create the user.
-        $user = User::firstOrCreate(
-            ['email' => $target],
-            ['name' => explode('@', $target)[0], 'password' => null]
-        );
+        $rateLimitKey = 'otp_send:' . $email;
 
-        // 2. Generate OTP
-        $otp = $user->generateOtp($channel);
-
-        // 3. Resolve channel implementation and send
-        $channelImpl = $this->resolveChannel($channel);
-        return $channelImpl->send($target, $otp->code);
-    }
-
-    /**
-     * Verify the given OTP.
-     *
-     * @param string $target
-     * @param string $code
-     * @param string $channel
-     * @return User|null
-     */
-    public function verifyOtp(string $target, string $code, string $channel = 'email'): ?User
-    {
-        $user = User::where('email', $target)->first();
-
-        if ($user && $user->verifyOtp($code, $channel)) {
-            return $user;
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            return [
+                'success' => false,
+                'message' => "Too many attempts. Please try again in {$seconds} seconds.",
+            ];
         }
 
-        return null;
+        RateLimiter::hit($rateLimitKey, 600); // 10 minutes
+
+        // Find or create user by email
+        $user = User::firstOrCreate(
+            ['email' => $email],
+            ['name'  => explode('@', $email)[0]] // Default name from email
+        );
+
+        // Generate OTP
+        $otp = $user->generateOtp('email');
+
+        // Send email (queued)
+        Mail::to($email)->queue(new OtpMail($otp->code));
+
+        return [
+            'success' => true,
+            'message' => "A 6-digit OTP has been sent to {$email}.",
+        ];
     }
 
     /**
-     * Resolve the channel implementation.
-     *
-     * @param string $channel
-     * @return OtpChannelInterface
-     * @throws \Exception
+     * Verify an OTP for the given email.
      */
-    protected function resolveChannel(string $channel): OtpChannelInterface
+    public function verifyOtp(string $email, string $code): array
     {
-        return match ($channel) {
-            'email' => new EmailOtpChannel(),
-            // 'sms' => new SmsOtpChannel(), // Future implementation
-            default => throw new \Exception("Unsupported OTP channel: {$channel}"),
-        };
+        $rateLimitKey = 'otp_verify:' . $email;
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            return [
+                'success' => false,
+                'message' => 'Too many failed attempts. Please try again later.',
+            ];
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            return ['success' => false, 'message' => 'User account not found.'];
+        }
+
+        if (! $user->verifyOtp($code)) {
+            RateLimiter::hit($rateLimitKey, 300); // 5 minutes
+            return ['success' => false, 'message' => 'Invalid or expired OTP. Please try again.'];
+        }
+
+        RateLimiter::clear($rateLimitKey);
+
+        return ['success' => true, 'user' => $user];
     }
 }

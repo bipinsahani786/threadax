@@ -35,19 +35,19 @@
                 <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-500"></div>
                 <div class="absolute bottom-8 left-6 sm:bottom-12 sm:left-12 z-10 text-white">
                     <h2 class="text-3xl sm:text-4xl font-heading font-bold mb-3 sm:mb-4">MENSWEAR</h2>
-                    <a href="#" class="inline-block border-b-2 border-white pb-1 text-xs sm:text-sm font-semibold uppercase tracking-widest hover:text-brand-light hover:border-brand-light transition-colors">
+                    <a href="{{ route('frontend.products.index', ['category' => 'men']) }}" class="inline-block border-b-2 border-white pb-1 text-xs sm:text-sm font-semibold uppercase tracking-widest hover:text-brand-light hover:border-brand-light transition-colors">
                         Explore →
                     </a>
                 </div>
             </div>
 
             {{-- Women --}}
-            <div class="relative w-full md:w-1/2 aspect-[4/5] md:aspect-auto md:h-[700px] overflow-hidden group cursor-pointer">
+            <div class="relative w-full md:w-1/2 aspect-[4/5] md:aspect-auto md:h-[700px] overflow-hidden group cursor-pointer" onclick="window.location='{{ route('frontend.products.index', ['category' => 'women']) }}'">
                 <img src="{{ asset('images/banner-women.png') }}" alt="Shop Women" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                 <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-500"></div>
                 <div class="absolute bottom-8 left-6 sm:bottom-12 sm:left-12 z-10 text-white">
                     <h2 class="text-3xl sm:text-4xl font-heading font-bold mb-3 sm:mb-4">WOMENSWEAR</h2>
-                    <a href="#" class="inline-block border-b-2 border-white pb-1 text-xs sm:text-sm font-semibold uppercase tracking-widest hover:text-brand-light hover:border-brand-light transition-colors">
+                    <a href="{{ route('frontend.products.index', ['category' => 'women']) }}" class="inline-block border-b-2 border-white pb-1 text-xs sm:text-sm font-semibold uppercase tracking-widest hover:text-brand-light hover:border-brand-light transition-colors">
                         Explore →
                     </a>
                 </div>
@@ -101,69 +101,46 @@
     <section class="max-w-[1440px] mx-auto px-4 lg:px-8 py-16 sm:py-24">
         <div class="flex items-center justify-between mb-10">
             <h2 class="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight">TRENDING NOW</h2>
-            <a href="#" class="hidden sm:inline-block border-b-2 border-brand-text pb-1 text-sm font-semibold uppercase tracking-widest hover:text-brand-muted transition-colors">
+            <a href="{{ route('frontend.products.index') }}" class="hidden sm:inline-block border-b-2 border-brand-text pb-1 text-sm font-semibold uppercase tracking-widest hover:text-brand-muted transition-colors">
                 View All
             </a>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-            {{-- Product 1 --}}
-            <div class="group cursor-pointer">
-                <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
-                    <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Graphic Tee" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute top-4 left-4 bg-white text-xs font-bold px-2 py-1 uppercase tracking-wider">New</div>
-                    <button class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    </button>
+            @forelse($newArrivals->take(4) as $product)
+                <div class="group cursor-pointer" onclick="window.location='{{ route('frontend.products.show', $product->slug) }}'">
+                    <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
+                        @if($product->primary_image)
+                            <img src="{{ $product->primary_image->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                <span class="text-gray-400 text-sm">No Image</span>
+                            </div>
+                        @endif
+                        
+                        @if($loop->first)
+                            <div class="absolute top-4 left-4 bg-white text-xs font-bold px-2 py-1 uppercase tracking-wider">New</div>
+                        @elseif($loop->iteration == 2)
+                            <div class="absolute top-4 left-4 bg-black text-white text-xs font-bold px-2 py-1 uppercase tracking-wider">Best Seller</div>
+                        @endif
+                        
+                        <a href="{{ route('frontend.products.show', $product->slug) }}" class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white flex items-center justify-center z-10">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        </a>
+                    </div>
+                    <h3 class="text-sm font-bold mb-1 line-clamp-1">{{ $product->name }}</h3>
+                    <p class="text-brand-muted text-xs mb-2">{{ $product->category->name ?? 'Streetwear' }}</p>
+                    <p class="font-semibold text-sm">₹{{ number_format($product->price) }}</p>
                 </div>
-                <h3 class="text-sm font-bold mb-1">Oversized Graphic Tee</h3>
-                <p class="text-brand-muted text-xs mb-2">Streetwear Collection</p>
-                <p class="font-semibold text-sm">₹1,299</p>
-            </div>
-
-            {{-- Product 2 --}}
-            <div class="group cursor-pointer">
-                <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
-                    <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Cargo Pants" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <button class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    </button>
+            @empty
+                <div class="col-span-full text-center text-gray-500 py-10">
+                    New collections dropping soon.
                 </div>
-                <h3 class="text-sm font-bold mb-1">Premium Cargo Pants</h3>
-                <p class="text-brand-muted text-xs mb-2">Utility Wear</p>
-                <p class="font-semibold text-sm">₹2,499</p>
-            </div>
-
-            {{-- Product 3 --}}
-            <div class="group cursor-pointer">
-                <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
-                    <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Hoodie" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute top-4 left-4 bg-black text-white text-xs font-bold px-2 py-1 uppercase tracking-wider">Best Seller</div>
-                    <button class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    </button>
-                </div>
-                <h3 class="text-sm font-bold mb-1">Vintage Wash Hoodie</h3>
-                <p class="text-brand-muted text-xs mb-2">Winter Essentials</p>
-                <p class="font-semibold text-sm">₹1,899</p>
-            </div>
-
-            {{-- Product 4 --}}
-            <div class="group cursor-pointer">
-                <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
-                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Streetwear Tee" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <button class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    </button>
-                </div>
-                <h3 class="text-sm font-bold mb-1">Classic Streetwear Tee</h3>
-                <p class="text-brand-muted text-xs mb-2">Everyday Essentials</p>
-                <p class="font-semibold text-sm">₹999</p>
-            </div>
+            @endforelse
         </div>
 
         <div class="mt-8 text-center sm:hidden">
-            <a href="#" class="inline-block border-b-2 border-brand-text pb-1 text-sm font-semibold uppercase tracking-widest hover:text-brand-muted transition-colors">
+            <a href="{{ route('frontend.products.index') }}" class="inline-block border-b-2 border-brand-text pb-1 text-sm font-semibold uppercase tracking-widest hover:text-brand-muted transition-colors">
                 View All Products
             </a>
         </div>

@@ -3,74 +3,59 @@
 namespace App\Traits;
 
 use App\Models\OtpCode;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 trait HasOtp
 {
     /**
-     * Generate a new OTP code for this user.
-     *
-     * @param string $channel (e.g., 'email', 'sms')
-     * @return OtpCode
+     * Generate a new OTP for the user's email.
      */
     public function generateOtp(string $channel = 'email'): OtpCode
     {
-        // Invalidate previous active OTPs for this user & channel
-        $this->invalidateOtps($channel);
+        // Invalidate existing OTPs first
+        $this->invalidateOtps();
 
-        // Generate a random 6-digit code
-        $code = str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-
-        // Create the new OTP record
         return OtpCode::create([
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'code' => $code,
-            'channel' => $channel,
-            'expires_at' => Carbon::now()->addMinutes(5),
-            'used' => false,
+            'email'      => $this->email,
+            'code'       => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+            'channel'    => $channel,
+            'expires_at' => now()->addMinutes(10),
+            'used'       => false,
         ]);
     }
 
     /**
-     * Verify a given OTP code.
-     *
-     * @param string $code
-     * @param string $channel
-     * @return bool
+     * Verify an OTP code for this user's email.
      */
-    public function verifyOtp(string $code, string $channel = 'email'): bool
+    public function verifyOtp(string $code): bool
     {
         $otp = OtpCode::where('email', $this->email)
-            ->where('channel', $channel)
             ->where('code', $code)
             ->where('used', false)
-            ->where('expires_at', '>', Carbon::now())
+            ->where('expires_at', '>', now())
             ->first();
 
-        if ($otp) {
-            $otp->update(['used' => true]);
-            return true;
+        if (! $otp) {
+            return false;
         }
 
-        return false;
+        $otp->update(['used' => true]);
+
+        // Mark email as verified
+        if (! $this->email_verified_at) {
+            $this->update(['email_verified_at' => now()]);
+        }
+
+        return true;
     }
 
     /**
-     * Invalidate all active OTPs for this user.
-     *
-     * @param string|null $channel
+     * Invalidate all existing OTPs for this user.
      */
-    public function invalidateOtps(?string $channel = null): void
+    public function invalidateOtps(): void
     {
-        $query = OtpCode::where('email', $this->email)
+        OtpCode::where('email', $this->email)
             ->where('used', false)
-            ->where('expires_at', '>', Carbon::now());
-
-        if ($channel) {
-            $query->where('channel', $channel);
-        }
-
-        $query->update(['used' => true]);
+            ->update(['used' => true]);
     }
 }

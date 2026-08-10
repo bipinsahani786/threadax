@@ -3,11 +3,18 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.">
-    <title>@yield('title', 'ThreadAx') — Premium Streetwear</title>
+    <meta name="description" content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
+    <title>@yield('title', 'ThreadAx — Premium Streetwear')</title>
+    
+    {{-- Open Graph / Facebook --}}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('title', 'ThreadAx — Premium Streetwear')">
+    <meta property="og:description" content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
+    <meta property="og:image" content="@yield('meta_image', asset('images/banner-men.png'))">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased min-h-screen flex flex-col" x-data="{ mobileMenu: false, searchOpen: false }">
+<body class="antialiased min-h-screen flex flex-col" x-data="globalApp">
 
     {{-- ═══════════ TOP STRIP ═══════════ --}}
     <div class="w-full bg-brand-off-white border-b border-brand-border text-[10px] sm:text-xs text-brand-muted">
@@ -37,25 +44,25 @@
             </button>
 
             {{-- Logo (Centered on mobile, Left on desktop) --}}
-            <a href="{{ route('home') }}" class="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex items-center gap-0 font-heading text-xl sm:text-2xl font-extrabold tracking-tight shrink-0">
+            <a href="{{ route('frontend.home') }}" class="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex items-center gap-0 font-heading text-xl sm:text-2xl font-extrabold tracking-tight shrink-0">
                 <span class="text-brand-text">THREAD</span><span class="threadax-logo-box ml-0.5 text-white">AX</span>
             </a>
 
             {{-- Nav Links — Desktop --}}
             <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold uppercase tracking-wide text-brand-text ml-8">
-                <a href="#" class="relative py-5 hover:text-brand-muted transition-colors group">
+                <a href="{{ route('frontend.products.index', ['category' => 'men']) }}" class="relative py-5 hover:text-brand-muted transition-colors group">
                     Men
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#" class="relative py-5 hover:text-brand-muted transition-colors group">
+                <a href="{{ route('frontend.products.index', ['category' => 'women']) }}" class="relative py-5 hover:text-brand-muted transition-colors group">
                     Women
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#" class="relative py-5 hover:text-brand-muted transition-colors group">
+                <a href="{{ route('frontend.products.index', ['category' => 'oversized']) }}" class="relative py-5 hover:text-brand-muted transition-colors group">
                     Oversized
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
                 </a>
-                <a href="#" class="relative py-5 hover:text-brand-muted transition-colors group">
+                <a href="{{ route('frontend.products.index', ['sort' => 'newest']) }}" class="relative py-5 hover:text-brand-muted transition-colors group">
                     New Arrivals
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
                 </a>
@@ -97,42 +104,42 @@
                 </div>
 
                 {{-- Wishlist (Desktop Only) --}}
-                <a href="#" class="hidden lg:block p-2 text-brand-text hover:text-brand-muted transition-colors">
+                <a href="{{ route('account.wishlist') }}" class="hidden lg:block p-2 text-brand-text hover:text-brand-muted transition-colors">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
                     </svg>
                 </a>
 
-                {{-- Bag --}}
-                <a href="#" class="p-2 -mr-2 sm:mr-0 text-brand-text hover:text-brand-muted transition-colors relative">
+                {{-- Bag (Desktop) --}}
+                <button @click.prevent="cartOpen = true" class="p-2 -mr-2 sm:mr-0 text-brand-text hover:text-brand-muted transition-colors relative hidden lg:block">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/>
                     </svg>
-                    <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                </a>
+                    <span x-show="cartSummary.item_count > 0" x-text="cartSummary.item_count" class="absolute top-0 right-0 w-4 h-4 bg-brand-text text-white text-[10px] font-bold rounded-full flex items-center justify-center"></span>
+                </button>
             </div>
         </div>
 
         {{-- Expanded Search Bar --}}
         <div x-show="searchOpen" x-transition class="w-full bg-white border-t border-brand-border px-4 py-3">
-            <div class="max-w-[1440px] mx-auto flex items-center bg-brand-light rounded-md px-4 py-2">
+            <form action="{{ route('frontend.products.index') }}" method="GET" class="max-w-[1440px] mx-auto flex items-center bg-brand-light rounded-md px-4 py-2">
                 <svg class="w-4 h-4 text-brand-muted mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <input type="text" placeholder="Search for products..." class="bg-transparent text-sm w-full focus:outline-none text-brand-text placeholder:text-brand-muted">
-                <button @click="searchOpen = false" class="ml-2 text-brand-muted hover:text-brand-text">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search for products..." class="bg-transparent text-sm w-full focus:outline-none text-brand-text placeholder:text-brand-muted">
+                <button type="button" @click="searchOpen = false" class="ml-2 text-brand-muted hover:text-brand-text">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
-            </div>
+            </form>
         </div>
 
         {{-- Mobile Menu --}}
         <div x-show="mobileMenu" x-transition class="lg:hidden w-full bg-white border-t border-brand-border absolute top-full left-0 shadow-lg">
             <nav class="flex flex-col text-sm font-semibold uppercase tracking-wide">
-                <a href="#" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Men</a>
-                <a href="#" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Women</a>
-                <a href="#" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Oversized</a>
-                <a href="#" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">New Arrivals</a>
+                <a href="{{ route('frontend.products.index', ['category' => 'men']) }}" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Men</a>
+                <a href="{{ route('frontend.products.index', ['category' => 'women']) }}" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Women</a>
+                <a href="{{ route('frontend.products.index', ['category' => 'oversized']) }}" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Oversized</a>
+                <a href="{{ route('frontend.products.index', ['sort' => 'newest']) }}" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">New Arrivals</a>
                 <div class="p-6 bg-brand-off-white flex items-center gap-4">
                     @auth
                         <a href="{{ route('account.dashboard') }}" class="flex-1 text-center py-2 bg-brand-text text-white rounded">My Account</a>
@@ -231,10 +238,10 @@
     </footer>
 
     {{-- ═══════════ MOBILE BOTTOM NAVIGATION (5 ICONS) ═══════════ --}}
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t border-brand-border z-50 flex justify-between items-end px-2 pt-2 pb-3 text-[10px] font-bold text-brand-muted shadow-[0_-5px_20px_rgba(0,0,0,0.08)]">
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t border-brand-border z-40 flex justify-between items-end px-2 pt-2 pb-3 text-[10px] font-bold text-brand-muted shadow-[0_-5px_20px_rgba(0,0,0,0.08)]">
         
         {{-- 1. Home --}}
-        <a href="{{ route('home') }}" class="flex flex-col items-center gap-1 p-2 flex-1 {{ request()->routeIs('home') ? 'text-brand-text' : 'hover:text-brand-text' }}">
+        <a href="{{ route('frontend.home') }}" class="flex flex-col items-center gap-1 p-2 flex-1 {{ request()->routeIs('frontend.home') ? 'text-brand-text' : 'hover:text-brand-text' }}">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
             </svg>
@@ -242,7 +249,7 @@
         </a>
 
         {{-- 2. Explore --}}
-        <a href="#" class="flex flex-col items-center gap-1 p-2 flex-1 hover:text-brand-text">
+        <a href="{{ route('frontend.products.index') }}" class="flex flex-col items-center gap-1 p-2 flex-1 hover:text-brand-text">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
             </svg>
@@ -250,15 +257,15 @@
         </a>
 
         {{-- 3. Bag (Center Floating Highlight) --}}
-        <a href="#" class="flex flex-col items-center p-0 flex-1 relative -mt-6 pb-1">
+        <button @click.prevent="cartOpen = true" class="flex flex-col items-center p-0 flex-1 relative -mt-6 pb-1">
             <div class="w-14 h-14 bg-brand-text text-white rounded-full flex items-center justify-center shadow-lg border-[4px] border-white relative transition-transform hover:scale-105">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
                 </svg>
-                <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-brand-text"></span>
+                <span x-show="cartSummary.item_count > 0" x-text="cartSummary.item_count" class="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-brand-text text-[10px] font-bold flex items-center justify-center"></span>
             </div>
             <span class="mt-1">Bag</span>
-        </a>
+        </button>
 
         {{-- 4. Wishlist --}}
         <a href="#" class="flex flex-col items-center gap-1 p-2 flex-1 hover:text-brand-text">
@@ -275,8 +282,219 @@
             </svg>
             <span>Profile</span>
         </a>
-
     </div>
 
+    {{-- ═══════════ CART DRAWER ═══════════ --}}
+    <div x-show="cartOpen" class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true" style="display: none;">
+        <div class="absolute inset-0 overflow-hidden">
+            <div x-show="cartOpen" x-transition.opacity class="absolute inset-0 bg-black/50 transition-opacity" @click="cartOpen = false"></div>
+
+            <div class="fixed inset-y-0 right-0 max-w-full flex">
+                <div x-show="cartOpen" 
+                    x-transition:enter="transform transition ease-in-out duration-500 sm:duration-700" 
+                    x-transition:enter-start="translate-x-full" 
+                    x-transition:enter-end="translate-x-0" 
+                    x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700" 
+                    x-transition:leave-start="translate-x-0" 
+                    x-transition:leave-end="translate-x-full" 
+                    class="w-screen max-w-md">
+                    
+                    <div class="h-full flex flex-col bg-white shadow-xl">
+                        
+                        {{-- Header --}}
+                        <div class="px-6 py-6 border-b border-brand-border flex items-center justify-between">
+                            <h2 class="text-xl font-heading font-extrabold uppercase tracking-tight" id="slide-over-title">Your Bag (<span x-text="cartSummary.item_count"></span>)</h2>
+                            <button @click="cartOpen = false" class="text-brand-muted hover:text-brand-text transition-colors">
+                                <span class="sr-only">Close panel</span>
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {{-- Items --}}
+                        <div class="flex-1 overflow-y-auto px-6 py-6 sm:px-6">
+                            
+                            {{-- Empty State --}}
+                            <template x-if="cartItems.length === 0">
+                                <div class="h-full flex flex-col items-center justify-center text-center">
+                                    <svg class="w-16 h-16 text-brand-muted mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>
+                                    <p class="text-lg font-bold text-brand-dark mb-2">Your bag is empty</p>
+                                    <p class="text-brand-muted text-sm mb-6">Looks like you haven't added anything yet.</p>
+                                    <button @click="cartOpen = false" class="btn-primary w-full max-w-[200px]">Continue Shopping</button>
+                                </div>
+                            </template>
+
+                            {{-- Item List --}}
+                            <div class="flow-root">
+                                <ul role="list" class="-my-6 divide-y divide-brand-border">
+                                    <template x-for="item in cartItems" :key="item.id">
+                                        <li class="py-6 flex">
+                                            <div class="flex-shrink-0 w-24 h-32 border border-brand-border bg-brand-light overflow-hidden rounded-md">
+                                                <img :src="item.image || 'https://via.placeholder.com/150'" :alt="item.product_name" class="w-full h-full object-center object-cover">
+                                            </div>
+
+                                            <div class="ml-4 flex-1 flex flex-col">
+                                                <div>
+                                                    <div class="flex justify-between text-base font-bold text-brand-dark">
+                                                        <h3 class="line-clamp-1 mr-4">
+                                                            <a :href="'/product/' + item.product_slug" x-text="item.product_name"></a>
+                                                        </h3>
+                                                        <p class="ml-4 whitespace-nowrap" x-text="formatPrice(item.price * item.quantity)"></p>
+                                                    </div>
+                                                    <p class="mt-1 text-xs text-brand-muted"><span x-text="item.color"></span> <span x-show="item.size">/</span> <span x-text="item.size"></span></p>
+                                                </div>
+                                                <div class="flex-1 flex items-end justify-between text-sm">
+                                                    
+                                                    <div class="flex items-center border border-brand-border rounded h-8">
+                                                        <button @click="updateCartItem(item.id, item.quantity - 1)" :disabled="isUpdatingCart" class="px-2 text-brand-muted hover:text-brand-text disabled:opacity-50">&minus;</button>
+                                                        <span class="px-2 font-semibold text-xs" x-text="item.quantity"></span>
+                                                        <button @click="updateCartItem(item.id, item.quantity + 1)" :disabled="isUpdatingCart" class="px-2 text-brand-muted hover:text-brand-text disabled:opacity-50">&plus;</button>
+                                                    </div>
+
+                                                    <div class="flex">
+                                                        <button @click="removeCartItem(item.id)" :disabled="isUpdatingCart" type="button" class="font-semibold text-brand-muted hover:text-red-500 text-xs tracking-widest uppercase disabled:opacity-50 transition-colors">Remove</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Footer / Subtotal --}}
+                        <div class="border-t border-brand-border px-4 py-6 sm:px-6" x-show="cartItems.length > 0">
+                            <div class="flex justify-between text-base font-bold text-brand-dark mb-4">
+                                <p>Subtotal</p>
+                                <p x-text="formatPrice(cartSummary.subtotal)"></p>
+                            </div>
+                            <p class="mt-0.5 text-xs text-brand-muted mb-6">Shipping and taxes calculated at checkout.</p>
+                            <div class="space-y-3">
+                                <a href="{{ route('frontend.checkout.index') }}" class="btn-primary w-full block text-center py-4 bg-brand-text text-white">Proceed to Checkout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @stack('scripts')
+    
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('globalApp', () => ({
+                mobileMenu: false,
+                searchOpen: false,
+                cartOpen: false,
+                cartItems: [],
+                cartSummary: { item_count: 0, subtotal: 0, total: 0 },
+                isUpdatingCart: false,
+                
+                init() {
+                    this.fetchCart();
+                    
+                    // Listen for a global event to add to cart
+                    window.addEventListener('add-to-cart', (e) => {
+                        this.addToCart(e.detail.variant_id, e.detail.quantity);
+                    });
+                },
+                
+                formatPrice(price) {
+                    return '₹' + new Intl.NumberFormat('en-IN').format(price);
+                },
+                
+                async fetchCart() {
+                    try {
+                        let res = await fetch('/cart/data');
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                        }
+                    } catch (e) {
+                        console.error("Cart fetch error:", e);
+                    }
+                },
+                
+                async addToCart(variantId, quantity) {
+                    this.isUpdatingCart = true;
+                    try {
+                        let res = await fetch('/cart/add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ variant_id: variantId, quantity: quantity })
+                        });
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                            this.cartOpen = true; // Open drawer
+                        } else {
+                            alert(data.message || 'Error adding to cart');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Something went wrong!');
+                    }
+                    this.isUpdatingCart = false;
+                },
+                
+                async removeCartItem(itemId) {
+                    this.isUpdatingCart = true;
+                    try {
+                        let res = await fetch('/cart/remove', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ item_id: itemId })
+                        });
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    this.isUpdatingCart = false;
+                },
+                
+                async updateCartItem(itemId, qty) {
+                    if (qty < 1) {
+                        return this.removeCartItem(itemId);
+                    }
+                    
+                    this.isUpdatingCart = true;
+                    try {
+                        let res = await fetch('/cart/update', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ item_id: itemId, quantity: qty })
+                        });
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                        } else {
+                            alert(data.message || 'Error updating cart');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    this.isUpdatingCart = false;
+                }
+            }));
+        });
+    </script>
 </body>
 </html>

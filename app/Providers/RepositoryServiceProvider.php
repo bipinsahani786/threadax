@@ -2,26 +2,22 @@
 
 namespace App\Providers;
 
+use App\Repositories\CategoryRepository;
+use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Contracts\ProductRepositoryInterface;
+use App\Repositories\ProductRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
     /**
      * Register repository bindings.
-     * Jaise jaise repositories bante jayenge, yahan bind karo:
-     *
-     * $this->app->bind(
-     *     \App\Repositories\Contracts\ProductRepositoryInterface::class,
-     *     \App\Repositories\ProductRepository::class,
-     * );
      */
     public function register(): void
     {
-        //
+        $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
+        $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
     }
 
-    public function boot(): void
-    {
-        //
-    }
+    public function boot(): void {}
 }

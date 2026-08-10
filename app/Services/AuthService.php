@@ -8,36 +8,38 @@ use Laravel\Socialite\Contracts\User as SocialiteUser;
 class AuthService
 {
     /**
-     * Handle the Socialite user returned from Google.
-     *
-     * @param SocialiteUser $googleUser
-     * @return User
+     * Find or create a user from Google OAuth callback data.
      */
-    public function handleGoogleUser(SocialiteUser $googleUser): User
+    public function findOrCreateGoogleUser(SocialiteUser $googleUser): User
     {
-        // Check if user exists by google_id or email
-        $user = User::where('google_id', $googleUser->id)
-            ->orWhere('email', $googleUser->email)
-            ->first();
+        // Try to find by Google ID first
+        $user = User::where('google_id', $googleUser->getId())->first();
 
         if ($user) {
-            // Update google_id and avatar if missing/changed
-            $user->update([
-                'google_id' => $googleUser->id,
-                'avatar' => $googleUser->avatar,
-                'email_verified_at' => $user->email_verified_at ?? now(),
-            ]);
-        } else {
-            // Create a new user
-            $user = User::create([
-                'name' => $googleUser->name ?? $googleUser->nickname ?? 'User',
-                'email' => $googleUser->email,
-                'google_id' => $googleUser->id,
-                'avatar' => $googleUser->avatar,
-                'email_verified_at' => now(), // Google emails are already verified
-            ]);
+            // Update avatar in case it changed
+            $user->update(['avatar' => $googleUser->getAvatar()]);
+            return $user;
         }
 
-        return $user;
+        // Try to find by email (user may have registered with OTP before)
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if ($user) {
+            $user->update([
+                'google_id'         => $googleUser->getId(),
+                'avatar'            => $googleUser->getAvatar(),
+                'email_verified_at' => $user->email_verified_at ?? now(),
+            ]);
+            return $user;
+        }
+
+        // Create new user
+        return User::create([
+            'name'              => $googleUser->getName(),
+            'email'             => $googleUser->getEmail(),
+            'google_id'         => $googleUser->getId(),
+            'avatar'            => $googleUser->getAvatar(),
+            'email_verified_at' => now(), // Google already verified the email
+        ]);
     }
 }
