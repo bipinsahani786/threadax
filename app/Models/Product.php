@@ -27,6 +27,8 @@ class Product extends Model
         'is_featured',
         'meta_title',
         'meta_description',
+        'video_url',
+        'model_3d_url',
     ];
 
     protected $casts = [
@@ -38,7 +40,7 @@ class Product extends Model
 
     /** Fields allowed for filtering */
     protected array $filterableFields = [
-        'category', 'min_price', 'max_price', 'is_active', 'is_featured', 'search',
+        'category', 'min_price', 'max_price', 'is_active', 'is_featured', 'search', 'sizes', 'colors'
     ];
 
     /** Fields allowed for sorting */

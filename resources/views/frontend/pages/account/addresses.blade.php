@@ -41,5 +41,65 @@
             <p class="mt-1 text-sm text-brand-muted">You haven't saved any addresses yet.</p>
         </div>
     @endif
+
+    {{-- Add New Address Form --}}
+    <div class="mt-12 pt-10 border-t border-brand-border">
+        <h3 class="text-xl font-heading font-black text-brand-dark uppercase tracking-tight mb-6">Add New Address</h3>
+        
+        <form action="{{ route('account.addresses.store') }}" method="POST" class="max-w-2xl">
+            @csrf
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="name" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Full Name</label>
+                    <input type="text" name="name" id="name" value="{{ old('name') }}" required class="w-full border-brand-border focus:ring-brand-text focus:border-brand-text text-sm">
+                    @error('name') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label for="phone" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Phone Number</label>
+                    <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" required class="w-full border-brand-border focus:ring-brand-text focus:border-brand-text text-sm">
+                    @error('phone') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="street" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Street Address</label>
+                <input type="text" name="street" id="street" value="{{ old('street') }}" required class="w-full border-brand-border focus:ring-brand-text focus:border-brand-text text-sm" placeholder="House number and street name">
+                @error('street') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <label for="city" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">City</label>
+                    <input type="text" name="city" id="city" value="{{ old('city') }}" required class="w-full border-brand-border focus:ring-brand-text focus:border-brand-text text-sm">
+                    @error('city') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label for="state" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">State</label>
+                    <input type="text" name="state" id="state" value="{{ old('state') }}" required class="w-full border-brand-border focus:ring-brand-text focus:border-brand-text text-sm">
+                    @error('state') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label for="pincode" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">PIN Code</label>
+                    <input type="text" name="pincode" id="pincode" value="{{ old('pincode') }}" required class="w-full border-brand-border focus:ring-brand-text focus:border-brand-text text-sm">
+                    @error('pincode') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <label for="type" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-2">Address Type</label>
+                <select name="type" id="type" class="w-full md:w-1/3 border-brand-border focus:ring-brand-text focus:border-brand-text text-sm">
+                    <option value="home" {{ old('type') == 'home' ? 'selected' : '' }}>Home (All Day Delivery)</option>
+                    <option value="work" {{ old('type') == 'work' ? 'selected' : '' }}>Work (Delivery between 10 AM - 5 PM)</option>
+                    <option value="other" {{ old('type') == 'other' ? 'selected' : '' }}>Other</option>
+                </select>
+                @error('type') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+            </div>
+
+            <button type="submit" class="btn-primary">
+                Save Address
+            </button>
+        </form>
+    </div>
 </div>
 @endsection

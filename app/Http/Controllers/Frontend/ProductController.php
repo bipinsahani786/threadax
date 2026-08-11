@@ -16,10 +16,12 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['search', 'category', 'status', 'min_price', 'max_price']);
+        $filters = $request->only(['search', 'category', 'is_active', 'min_price', 'max_price']);
+        if ($request->has('sizes')) $filters['sizes'] = $request->get('sizes');
+        if ($request->has('colors')) $filters['colors'] = $request->get('colors');
         
         // Make sure we only show active products on frontend
-        $filters['status'] = '1';
+        $filters['is_active'] = 1;
 
         $sort = $request->get('sort', 'newest');
         
@@ -35,9 +37,19 @@ class ProductController extends Controller
         }
 
         $products = $this->productRepo->all($filters, $sortBy, $direction);
-        $categories = $this->categoryRepo->all(['status' => '1']);
+        
+        if ($request->ajax()) {
+            return view('frontend.pages.products.partials.grid', compact('products'))->render();
+        }
 
-        return view('frontend.pages.products.index', compact('products', 'categories'));
+        $categories = $this->categoryRepo->all(['is_active' => 1]);
+        
+        // Filter options
+        $maxPrice = \App\Models\Product::max('price') ?? 10000;
+        $availableSizes = \App\Models\ProductVariant::whereNotNull('size')->where('size', '!=', '')->distinct()->pluck('size');
+        $availableColors = \App\Models\ProductVariant::whereNotNull('color')->where('color', '!=', '')->distinct()->pluck('color');
+
+        return view('frontend.pages.products.index', compact('products', 'categories', 'maxPrice', 'availableSizes', 'availableColors'));
     }
 
     public function show(string $slug)

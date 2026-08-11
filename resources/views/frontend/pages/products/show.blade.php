@@ -23,27 +23,93 @@
         <div class="flex flex-col lg:flex-row gap-12 lg:gap-20">
             
             {{-- Left: Image Gallery --}}
-            <div class="w-full lg:w-[55%] flex flex-col-reverse md:flex-row gap-4" x-data="{ mainImage: '{{ $product->primary_image ? $product->primary_image->url : '' }}' }">
+            <div class="w-full lg:w-[55%] flex flex-col-reverse md:flex-row gap-4" x-data="{ 
+                activeMedia: 'image',
+                mainImage: '{{ $product->primary_image ? $product->primary_image->url : '' }}',
+                zoomActive: false,
+                zoomX: 0,
+                zoomY: 0
+            }">
                 
                 {{-- Thumbnails --}}
                 <div class="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:w-24 shrink-0 no-scrollbar">
                     @foreach($product->images as $image)
-                        <button @click="mainImage = '{{ $image->url }}'" class="w-20 md:w-full aspect-[3/4] bg-brand-light cursor-pointer border-2 transition-colors shrink-0" :class="mainImage === '{{ $image->url }}' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
+                        <button @click="activeMedia = 'image'; mainImage = '{{ $image->url }}'" class="w-20 md:w-full aspect-[3/4] bg-brand-light cursor-pointer border-2 transition-colors shrink-0" :class="activeMedia === 'image' && mainImage === '{{ $image->url }}' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
                             <img src="{{ $image->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                         </button>
                     @endforeach
+
+                    @if($product->video_url)
+                        <button @click="activeMedia = 'video'" class="w-20 md:w-full aspect-[3/4] bg-brand-light cursor-pointer border-2 transition-colors shrink-0 flex flex-col items-center justify-center gap-1 text-brand-text" :class="activeMedia === 'video' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Video</span>
+                        </button>
+                    @endif
+
+                    @if($product->model_3d_url)
+                        <button @click="activeMedia = '3d'" class="w-20 md:w-full aspect-[3/4] bg-brand-light cursor-pointer border-2 transition-colors shrink-0 flex flex-col items-center justify-center gap-1 text-brand-text" :class="activeMedia === '3d' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                            <span class="text-[10px] font-bold uppercase tracking-wider">3D View</span>
+                        </button>
+                    @endif
                 </div>
                 
-                {{-- Main Image --}}
-                <div class="w-full bg-brand-light aspect-[3/4] md:aspect-auto md:h-[800px] overflow-hidden group">
-                    <template x-if="mainImage">
-                        <img :src="mainImage" alt="{{ $product->name }}" class="w-full h-full object-cover">
-                    </template>
-                    <template x-if="!mainImage">
-                        <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                            <span class="text-gray-400">No Image Available</span>
+                {{-- Main Media Area --}}
+                <div class="w-full bg-brand-light aspect-[3/4] md:aspect-auto md:h-[800px] overflow-hidden relative">
+                    
+                    {{-- Inner Zoom Image --}}
+                    <div x-show="activeMedia === 'image'" 
+                         class="absolute inset-0 cursor-crosshair"
+                         @mousemove="zoomActive = true; const rect = $el.getBoundingClientRect(); zoomX = (($event.clientX - rect.left) / rect.width) * 100; zoomY = (($event.clientY - rect.top) / rect.height) * 100;"
+                         @mouseleave="zoomActive = false">
+                        
+                        <template x-if="mainImage">
+                            <img :src="mainImage" alt="{{ $product->name }}" class="w-full h-full object-cover transition-opacity duration-200" :class="zoomActive ? 'opacity-0' : 'opacity-100'">
+                        </template>
+                        <template x-if="!mainImage">
+                            <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                <span class="text-gray-400">No Image Available</span>
+                            </div>
+                        </template>
+
+                        {{-- Zoomed Overlay --}}
+                        <div x-show="zoomActive && mainImage" 
+                             class="absolute inset-0 bg-no-repeat pointer-events-none z-10" 
+                             :style="`background-image: url('${mainImage}'); background-position: ${zoomX}% ${zoomY}%; background-size: 250%;`"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0">
                         </div>
-                    </template>
+                    </div>
+
+                    {{-- Video Player --}}
+                    @if($product->video_url)
+                        <div x-show="activeMedia === 'video'" class="absolute inset-0 bg-black flex items-center justify-center">
+                            @if(str_contains($product->video_url, 'youtube.com') || str_contains($product->video_url, 'youtu.be'))
+                                @php 
+                                    // Basic YouTube URL parsing
+                                    $ytUrl = $product->video_url;
+                                    if(str_contains($ytUrl, 'watch?v=')) $ytUrl = str_replace('watch?v=', 'embed/', $ytUrl);
+                                    if(str_contains($ytUrl, 'youtu.be/')) $ytUrl = str_replace('youtu.be/', 'youtube.com/embed/', $ytUrl);
+                                @endphp
+                                <iframe src="{{ $ytUrl }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            @else
+                                <video controls class="w-full max-h-full">
+                                    <source src="{{ $product->video_url }}" type="video/mp4">
+                                </video>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- 3D Model Viewer --}}
+                    @if($product->model_3d_url)
+                        <div x-show="activeMedia === '3d'" class="absolute inset-0 bg-brand-light flex items-center justify-center">
+                            <model-viewer src="{{ $product->model_3d_url }}" auto-rotate camera-controls shadow-intensity="1" style="width: 100%; height: 100%; --poster-color: transparent;"></model-viewer>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -330,6 +396,9 @@
 @endsection
 
 @push('scripts')
+{{-- Google Model Viewer Script --}}
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('productDetails', (variants, basePrice) => ({

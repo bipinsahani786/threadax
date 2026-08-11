@@ -32,6 +32,12 @@ trait Filterable
                 'max_price'  => $query->where('price', '<=', $value),
                 'is_active'  => $query->where('is_active', (bool) $value),
                 'is_featured' => $query->where('is_featured', (bool) $value),
+                'sizes'      => $query->whereHas('variants', function ($q) use ($value) {
+                    $q->whereIn('size', (array) $value);
+                }),
+                'colors'     => $query->whereHas('variants', function ($q) use ($value) {
+                    $q->whereIn('color', (array) $value);
+                }),
                 default      => $query->where($key, $value),
             };
         }

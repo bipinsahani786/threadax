@@ -44,16 +44,10 @@ class AccountController extends Controller
         return view('frontend.pages.account.profile', compact('user'));
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(\App\Http\Requests\Frontend\ProfileUpdateRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-        ]);
-
-        $user = Auth::user();
-        $user->update([
-            'name' => $request->name,
+        Auth::user()->update([
+            'name'  => $request->name,
             'phone' => $request->phone,
         ]);
 
@@ -72,18 +66,8 @@ class AccountController extends Controller
         return view('frontend.pages.account.reviews', compact('reviews'));
     }
 
-    public function storeAddress(Request $request)
+    public function storeAddress(\App\Http\Requests\Frontend\StoreAddressRequest $request)
     {
-        $request->validate([
-            'name'    => 'required|string|max:255',
-            'phone'   => 'required|digits_between:10,15',
-            'street'  => 'required|string|max:255',
-            'city'    => 'required|string|max:100',
-            'state'   => 'required|string|max:100',
-            'pincode' => 'required|digits:6',
-            'type'    => 'nullable|in:home,work,other',
-        ]);
-
         Auth::user()->addresses()->create([
             'name'    => $request->name,
             'phone'   => $request->phone,

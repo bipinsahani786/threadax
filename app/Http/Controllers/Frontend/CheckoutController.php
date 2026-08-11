@@ -102,23 +102,12 @@ class CheckoutController extends Controller
     /**
      * Process checkout: validate address, create order, init payment.
      */
-    public function process(Request $request)
+    public function process(CheckoutRequest $request)
     {
         $cart = $this->cartService->getCart();
         if ($cart->items->isEmpty()) {
             return response()->json(['success' => false, 'message' => 'Your cart is empty.'], 422);
         }
-
-        $request->validate([
-            'address_id'     => 'nullable|exists:addresses,id',
-            'name'           => 'required_without:address_id|string|max:255',
-            'phone'          => 'required_without:address_id|digits_between:10,15',
-            'street'         => 'required_without:address_id|string|max:255',
-            'city'           => 'required_without:address_id|string|max:100',
-            'state'          => 'required_without:address_id|string|max:100',
-            'pincode'        => 'required_without:address_id|digits:6',
-            'payment_method' => 'required|in:cod,razorpay',
-        ]);
 
         try {
             $user = Auth::user();

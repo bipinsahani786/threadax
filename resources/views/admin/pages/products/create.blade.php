@@ -90,6 +90,31 @@
                 </div>
             </div>
             
+            {{-- Rich Media --}}
+            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
+                <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Rich Media URLs (Optional)</h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label for="video_url" class="block text-sm font-bold text-slate-900 mb-2">Video URL</label>
+                        <input type="url" id="video_url" name="video_url" value="{{ old('video_url') }}"
+                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('video_url') border-red-500 @enderror"
+                               placeholder="e.g., YouTube link or direct MP4 URL">
+                        <p class="mt-2 text-xs text-slate-500">Will be embedded in the product gallery.</p>
+                        @error('video_url') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label for="model_3d_url" class="block text-sm font-bold text-slate-900 mb-2">3D Model URL (.glb / .gltf)</label>
+                        <input type="url" id="model_3d_url" name="model_3d_url" value="{{ old('model_3d_url') }}"
+                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('model_3d_url') border-red-500 @enderror"
+                               placeholder="e.g., https://example.com/model.glb">
+                        <p class="mt-2 text-xs text-slate-500">For 3D interactive viewer on product page.</p>
+                        @error('model_3d_url') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
+
             {{-- SEO --}}
             <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
                 <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Search Engine Optimization</h3>
