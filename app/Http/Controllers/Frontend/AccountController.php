@@ -31,6 +31,13 @@ class AccountController extends Controller
         return view('frontend.pages.account.order-detail', compact('order'));
     }
 
+    public function downloadInvoice($id)
+    {
+        $order = Auth::user()->orders()->with(['items.variant.product', 'address'])->findOrFail($id);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.pages.orders.invoice', compact('order'));
+        return $pdf->download('invoice-' . $order->order_number . '.pdf');
+    }
+
     public function profile()
     {
         $user = Auth::user();
@@ -59,11 +66,42 @@ class AccountController extends Controller
         return view('frontend.pages.account.addresses', compact('addresses'));
     }
 
+    public function reviews()
+    {
+        $reviews = Auth::user()->reviews()->with('product')->latest()->paginate(10);
+        return view('frontend.pages.account.reviews', compact('reviews'));
+    }
+
+    public function storeAddress(Request $request)
+    {
+        $request->validate([
+            'name'    => 'required|string|max:255',
+            'phone'   => 'required|digits_between:10,15',
+            'street'  => 'required|string|max:255',
+            'city'    => 'required|string|max:100',
+            'state'   => 'required|string|max:100',
+            'pincode' => 'required|digits:6',
+            'type'    => 'nullable|in:home,work,other',
+        ]);
+
+        Auth::user()->addresses()->create([
+            'name'    => $request->name,
+            'phone'   => $request->phone,
+            'street'  => $request->street,
+            'city'    => $request->city,
+            'state'   => $request->state,
+            'pincode' => $request->pincode,
+            'type'    => $request->type ?? 'home',
+        ]);
+
+        return redirect()->route('account.addresses')->with('success', 'Address added successfully.');
+    }
+
     public function destroyAddress($id)
     {
         $address = Auth::user()->addresses()->findOrFail($id);
         $address->delete();
-        
+
         return redirect()->route('account.addresses')->with('success', 'Address removed.');
     }
 }

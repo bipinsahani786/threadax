@@ -13,6 +13,12 @@
         </div>
         
         <div class="flex items-center space-x-4">
+            <a href="{{ route('admin.orders.invoice.download', $order->id) }}" class="btn-secondary text-sm px-3 py-1 bg-white border border-slate-200 text-slate-600 hover:border-slate-300">
+                <svg class="w-4 h-4 fill-current text-slate-500 inline-block mr-1" viewBox="0 0 16 16">
+                    <path d="M15 15H1a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h4v2H2v10h12V3h-3V1h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1ZM9 7h4l-5 5-5-5h4V1h2v6Z" />
+                </svg>
+                Invoice
+            </a>
             <span class="inline-flex font-medium rounded-full text-center px-3 py-1 text-sm capitalize
                 @if($order->status === 'delivered') bg-emerald-100 text-emerald-600
                 @elseif($order->status === 'cancelled') bg-rose-100 text-rose-500

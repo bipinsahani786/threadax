@@ -148,15 +148,34 @@
                                 {{ $summary['shipping'] == 0 ? 'FREE' : '₹'.number_format($summary['shipping']) }}
                             </p>
                         </div>
-                        <div class="flex justify-between text-brand-muted">
-                            <p>Tax (Included)</p>
-                            <p class="font-semibold text-brand-dark">₹0</p>
+                        {{-- Coupon Discount Row --}}
+                        <div x-show="appliedDiscount > 0" class="flex justify-between text-green-700 font-semibold">
+                            <p class="flex items-center gap-2">
+                                Coupon (<span x-text="appliedCoupon" class="font-mono text-xs bg-green-100 px-1 rounded"></span>)
+                                <button @click="removeCoupon" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                            </p>
+                            <p>- ₹<span x-text="appliedDiscount"></span></p>
                         </div>
                     </div>
 
+                    {{-- Coupon Input --}}
+                    <div x-show="appliedDiscount == 0" class="mb-5">
+                        <p class="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2">Have a coupon?</p>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="couponCode" @keydown.enter.prevent="applyCoupon"
+                                   placeholder="Enter code" class="flex-1 border border-brand-border px-3 py-2 text-sm uppercase focus:outline-none focus:border-brand-text">
+                            <button @click="applyCoupon" :disabled="couponLoading"
+                                    class="bg-brand-text text-white px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-brand-dark transition-colors disabled:opacity-50">
+                                <span x-show="!couponLoading">Apply</span>
+                                <svg x-show="couponLoading" class="animate-spin h-4 w-4 text-white mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </button>
+                        </div>
+                        <p x-show="couponError" x-text="couponError" class="text-red-500 text-xs mt-1"></p>
+                        <p x-show="couponSuccess" x-text="couponSuccess" class="text-green-600 text-xs mt-1 font-semibold"></p>
+                    </div>
                     <div class="flex justify-between items-center text-lg font-bold text-brand-dark mb-8">
                         <p>Total</p>
-                        <p>₹{{ number_format($summary['total']) }}</p>
+                        <p>₹<span x-text="displayTotal">{{ number_format($summary['total']) }}</span></p>
                     </div>
 
                     <button @click="placeOrder" :disabled="loading" class="btn-primary w-full py-4 text-center disabled:opacity-70 flex justify-center items-center">
@@ -195,6 +214,45 @@
                 payment_method: 'razorpay'
             },
             loading: false,
+            
+            init() {
+                // GA4 begin_checkout
+                if (typeof gtag === 'function') {
+                    gtag('event', 'begin_checkout', {
+                        currency: 'INR',
+                        value: this.baseTotal,
+                        items: [
+                            @foreach($cartItems as $item)
+                            {
+                                item_id: '{{ $item->variant->sku ?? $item->variant_id }}',
+                                item_name: '{{ $item->variant->product->name }}',
+                                price: {{ $item->variant->price ?? $item->variant->product->price }},
+                                quantity: {{ $item->quantity }}
+                            },
+                            @endforeach
+                        ]
+                    });
+                }
+                
+                // Meta InitiateCheckout
+                if (typeof fbq === 'function') {
+                    fbq('track', 'InitiateCheckout', {
+                        value: this.baseTotal,
+                        currency: 'INR',
+                        num_items: {{ $summary['item_count'] }}
+                    });
+                }
+            },
+            couponCode: '{{ $coupon ? $coupon->code : '' }}',
+            couponLoading: false,
+            couponError: '',
+            couponSuccess: '',
+            appliedCoupon: '{{ $coupon ? $coupon->code : '' }}',
+            appliedDiscount: {{ $discount > 0 ? number_format($discount, 2) : 0 }},
+            baseTotal: {{ $summary['total'] }},
+            get displayTotal() {
+                return Math.max(0, this.baseTotal - this.appliedDiscount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            },
 
             async placeOrder() {
                 // Validation
@@ -322,6 +380,44 @@
                 }.bind(this));
                 
                 rzp1.open();
+            },
+
+            async applyCoupon() {
+                if (!this.couponCode.trim()) return;
+                this.couponLoading = true;
+                this.couponError = '';
+                this.couponSuccess = '';
+                try {
+                    let res = await fetch('{{ route("frontend.checkout.coupon.apply") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ coupon_code: this.couponCode })
+                    });
+                    let data = await res.json();
+                    if (data.success) {
+                        this.appliedCoupon = data.coupon;
+                        this.appliedDiscount = parseFloat(data.discount.replace(',', ''));
+                        this.couponSuccess = data.message;
+                    } else {
+                        this.couponError = data.message || 'Invalid coupon.';
+                    }
+                } catch(e) {
+                    this.couponError = 'Something went wrong.';
+                } finally {
+                    this.couponLoading = false;
+                }
+            },
+
+            async removeCoupon() {
+                await fetch('{{ route("frontend.checkout.coupon.remove") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                });
+                this.appliedCoupon = '';
+                this.appliedDiscount = 0;
+                this.couponCode = '';
+                this.couponSuccess = '';
+                this.couponError = '';
             }
         }));
     });

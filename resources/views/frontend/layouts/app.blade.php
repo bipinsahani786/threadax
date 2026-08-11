@@ -13,6 +13,34 @@
     <meta property="og:description" content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
     <meta property="og:image" content="@yield('meta_image', asset('images/banner-men.png'))">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Google Analytics 4 (GA4) --}}
+    @if(env('GA_MEASUREMENT_ID'))
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GA_MEASUREMENT_ID') }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ env('GA_MEASUREMENT_ID') }}');
+    </script>
+    @endif
+
+    {{-- Meta Pixel Code --}}
+    @if(env('META_PIXEL_ID'))
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '{{ env('META_PIXEL_ID') }}');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id={{ env('META_PIXEL_ID') }}&ev=PageView&noscript=1"/></noscript>
+    @endif
 </head>
 <body class="antialiased min-h-screen flex flex-col" x-data="globalApp">
 
@@ -212,15 +240,21 @@
                             <span class="lg:hidden text-lg">f</span><span class="hidden lg:inline">Facebook</span>
                         </a></li>
                     </ul>
-                    <div class="mt-6">
+                    <div class="mt-6" x-data="newsletterForm()">
                         <p class="text-xs font-bold uppercase tracking-widest text-brand-text mb-3">Newsletter</p>
-                        <div class="flex gap-2">
-                            <input type="email" placeholder="your@email.com" class="input-field text-xs !py-2 flex-1 w-full max-w-[250px]">
-                            <button class="bg-brand-text text-white text-xs font-semibold px-4 py-2 rounded-md hover:bg-brand-dark/80 transition-colors shrink-0">Join</button>
-                        </div>
+                        <form @submit.prevent="submit" class="flex gap-2 relative">
+                            <input type="email" x-model="email" placeholder="your@email.com" required class="input-field text-xs !py-2 flex-1 w-full max-w-[250px]" :disabled="isLoading">
+                            <button type="submit" class="bg-brand-text text-white text-xs font-semibold px-4 py-2 rounded-md hover:bg-brand-dark/80 transition-colors shrink-0" :disabled="isLoading">
+                                <span x-show="!isLoading">Join</span>
+                                <span x-show="isLoading" class="animate-pulse">...</span>
+                            </button>
+                        </form>
+                        <p x-show="message" x-text="message" x-transition :class="isSuccess ? 'text-green-600' : 'text-red-500'" class="text-xs mt-2 font-medium"></p>
                     </div>
                 </div>
             </div>
+            
+
 
             {{-- Bottom Bar --}}
             <div class="mt-10 pt-6 border-t border-brand-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-brand-muted">
@@ -236,6 +270,19 @@
             </div>
         </div>
     </footer>
+
+    {{-- WhatsApp Floating Button --}}
+    @php
+        $whatsappNumber = $globalSettings['whatsapp_number'] ?? env('WHATSAPP_NUMBER');
+    @endphp
+    @if($whatsappNumber)
+        <a href="https://wa.me/{{ $whatsappNumber }}?text={{ urlencode('Hello ThreadAX! I have a query.') }}" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-3 sm:p-4 rounded-full shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 flex items-center justify-center" aria-label="Chat on WhatsApp">
+            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+        </a>
+    @endif
+
 
     {{-- ═══════════ MOBILE BOTTOM NAVIGATION (5 ICONS) ═══════════ --}}
     <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t border-brand-border z-40 flex justify-between items-end px-2 pt-2 pb-3 text-[10px] font-bold text-brand-muted shadow-[0_-5px_20px_rgba(0,0,0,0.08)]">
@@ -434,6 +481,31 @@
                             this.cartItems = data.items;
                             this.cartSummary = data.summary;
                             this.cartOpen = true; // Open drawer
+
+                            // Trigger GA4 Add to Cart
+                            if (typeof gtag === 'function') {
+                                gtag('event', 'add_to_cart', {
+                                    currency: 'INR',
+                                    value: this.cartSummary.subtotal,
+                                    items: this.cartItems.map(item => ({
+                                        item_id: item.variant.sku || item.variant.id,
+                                        item_name: item.variant.product.name,
+                                        price: item.variant.price || item.variant.product.price,
+                                        quantity: item.quantity
+                                    }))
+                                });
+                            }
+
+                            // Trigger Meta Pixel Add to Cart
+                            if (typeof fbq === 'function') {
+                                fbq('track', 'AddToCart', {
+                                    value: this.cartSummary.subtotal,
+                                    currency: 'INR',
+                                    content_ids: this.cartItems.map(item => item.variant.sku || item.variant.id),
+                                    content_type: 'product'
+                                });
+                            }
+
                         } else {
                             alert(data.message || 'Error adding to cart');
                         }
@@ -492,6 +564,43 @@
                         console.error(e);
                     }
                     this.isUpdatingCart = false;
+                }
+            }));
+
+            Alpine.data('newsletterForm', () => ({
+                email: '',
+                isLoading: false,
+                message: '',
+                isSuccess: false,
+                
+                async submit() {
+                    if(!this.email) return;
+                    this.isLoading = true;
+                    this.message = '';
+                    
+                    try {
+                        let res = await fetch('{{ route('frontend.newsletter.store') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ email: this.email })
+                        });
+                        
+                        let data = await res.json();
+                        this.message = data.message;
+                        this.isSuccess = data.success;
+                        
+                        if(this.isSuccess) {
+                            this.email = '';
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.message = 'Something went wrong. Please try again.';
+                        this.isSuccess = false;
+                    }
+                    this.isLoading = false;
                 }
             }));
         });

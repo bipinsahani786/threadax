@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Paginator::useTailwind();
+        
+        try {
+            if (Schema::hasTable('settings')) {
+                $globalSettings = \App\Models\Setting::all()->pluck('value', 'key')->toArray();
+                View::share('globalSettings', $globalSettings);
+            }
+        } catch (\Exception $e) {
+            // Ignore during migrations or initial setup
+        }
     }
 }

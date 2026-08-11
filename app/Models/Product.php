@@ -63,6 +63,16 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->where('status', 'approved');
+    }
+
     // ─── Accessors ────────────────────────────────────────────
 
     /**
@@ -74,9 +84,6 @@ class Product extends Model
             ?? $this->images->first();
     }
 
-    /**
-     * Get the discount percentage.
-     */
     public function getDiscountPercentAttribute(): int
     {
         if (! $this->compare_price || $this->compare_price <= $this->price) {
@@ -84,6 +91,16 @@ class Product extends Model
         }
 
         return (int) round((($this->compare_price - $this->price) / $this->compare_price) * 100);
+    }
+
+    public function getAverageRatingAttribute(): float
+    {
+        return (float) $this->approvedReviews()->avg('rating') ?: 0;
+    }
+
+    public function getReviewCountAttribute(): int
+    {
+        return $this->approvedReviews()->count();
     }
 
     // ─── Scopes ───────────────────────────────────────────────

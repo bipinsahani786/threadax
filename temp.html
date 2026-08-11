@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.">
+    <title>Premium Streetwear</title>
+    
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="http://127.0.0.1:8000">
+    <meta property="og:title" content="Premium Streetwear">
+    <meta property="og:description" content="ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.">
+    <meta property="og:image" content="http://127.0.0.1:8000/images/banner-men.png">
+    <script type="module" src="http://[::1]:5173/@vite/client"></script><link rel="stylesheet" href="http://[::1]:5173/resources/css/app.css" /><script type="module" src="http://[::1]:5173/resources/js/app.js"></script>
+    
+    
+    
+    </head>
+<body class="antialiased min-h-screen flex flex-col" x-data="globalApp">
+
+    
+    <div class="w-full bg-brand-off-white border-b border-brand-border text-[10px] sm:text-xs text-brand-muted">
+        <div class="max-w-[1440px] mx-auto px-2 sm:px-4 lg:px-8 flex items-center justify-between h-8">
+            <div class="flex items-center gap-2 sm:gap-4">
+                <span>📦 Free Shipping on ₹999+</span>
+                <span class="hidden sm:inline">•</span>
+                <span class="hidden sm:inline">🔄 Easy 7-Day Returns</span>
+            </div>
+            <div class="hidden sm:flex items-center gap-4">
+                <a href="#" class="hover:text-brand-text transition-colors">Track Order</a>
+                <a href="#" class="hover:text-brand-text transition-colors">Help</a>
+            </div>
+        </div>
+    </div>
+
+    
+    <header class="w-full bg-white sticky top-0 z-50 border-b border-brand-border shadow-sm">
+        <div class="max-w-[1440px] mx-auto px-4 lg:px-8 flex items-center justify-between h-14 sm:h-16 relative">
+
+            
+            <button @click="mobileMenu = !mobileMenu" class="lg:hidden p-2 -ml-2 text-brand-text">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path x-show="!mobileMenu" stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                    <path x-show="mobileMenu" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            
+            <a href="http://127.0.0.1:8000" class="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex items-center gap-0 font-heading text-xl sm:text-2xl font-extrabold tracking-tight shrink-0">
+                <span class="text-brand-text">THREAD</span><span class="threadax-logo-box ml-0.5 text-white">AX</span>
+            </a>
+
+            
+            <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold uppercase tracking-wide text-brand-text ml-8">
+                <a href="http://127.0.0.1:8000/shop?category=men" class="relative py-5 hover:text-brand-muted transition-colors group">
+                    Men
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="http://127.0.0.1:8000/shop?category=women" class="relative py-5 hover:text-brand-muted transition-colors group">
+                    Women
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="http://127.0.0.1:8000/shop?category=oversized" class="relative py-5 hover:text-brand-muted transition-colors group">
+                    Oversized
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="http://127.0.0.1:8000/shop?sort=newest" class="relative py-5 hover:text-brand-muted transition-colors group">
+                    New Arrivals
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-text group-hover:w-full transition-all duration-300"></span>
+                </a>
+            </nav>
+
+            
+            <div class="flex items-center gap-2 sm:gap-4 ml-auto lg:ml-0">
+                
+                
+                <button @click="searchOpen = !searchOpen" class="p-2 text-brand-text hover:text-brand-muted transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+
+                
+                <div class="hidden lg:block relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                                            <a href="http://127.0.0.1:8000/auth/login" class="p-2 text-brand-text hover:text-brand-muted transition-colors flex items-center">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                            </svg>
+                        </a>
+                                    </div>
+
+                
+                <a href="http://127.0.0.1:8000/account/wishlist" class="hidden lg:block p-2 text-brand-text hover:text-brand-muted transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+                    </svg>
+                </a>
+
+                
+                <button @click.prevent="cartOpen = true" class="p-2 -mr-2 sm:mr-0 text-brand-text hover:text-brand-muted transition-colors relative hidden lg:block">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/>
+                    </svg>
+                    <span x-show="cartSummary.item_count > 0" x-text="cartSummary.item_count" class="absolute top-0 right-0 w-4 h-4 bg-brand-text text-white text-[10px] font-bold rounded-full flex items-center justify-center"></span>
+                </button>
+            </div>
+        </div>
+
+        
+        <div x-show="searchOpen" x-transition class="w-full bg-white border-t border-brand-border px-4 py-3">
+            <form action="http://127.0.0.1:8000/shop" method="GET" class="max-w-[1440px] mx-auto flex items-center bg-brand-light rounded-md px-4 py-2">
+                <svg class="w-4 h-4 text-brand-muted mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" name="search" value="" placeholder="Search for products..." class="bg-transparent text-sm w-full focus:outline-none text-brand-text placeholder:text-brand-muted">
+                <button type="button" @click="searchOpen = false" class="ml-2 text-brand-muted hover:text-brand-text">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </form>
+        </div>
+
+        
+        <div x-show="mobileMenu" x-transition class="lg:hidden w-full bg-white border-t border-brand-border absolute top-full left-0 shadow-lg">
+            <nav class="flex flex-col text-sm font-semibold uppercase tracking-wide">
+                <a href="http://127.0.0.1:8000/shop?category=men" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Men</a>
+                <a href="http://127.0.0.1:8000/shop?category=women" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Women</a>
+                <a href="http://127.0.0.1:8000/shop?category=oversized" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">Oversized</a>
+                <a href="http://127.0.0.1:8000/shop?sort=newest" class="px-6 py-4 hover:bg-brand-light border-b border-brand-border transition-colors">New Arrivals</a>
+                <div class="p-6 bg-brand-off-white flex items-center gap-4">
+                                            <a href="http://127.0.0.1:8000/auth/login" class="w-full text-center py-2 bg-brand-text text-white rounded">Login / Sign Up</a>
+                                    </div>
+            </nav>
+        </div>
+    </header>
+
+    
+    <main class="flex-grow pb-24 lg:pb-0">
+        
+    
+            
+        <section class="relative w-full h-[85vh] min-h-[500px] sm:min-h-[600px] overflow-hidden bg-brand-light flex items-center justify-center">
+            <img src="http://127.0.0.1:8000/images/hero-full.png" alt="Premium Streetwear" class="absolute inset-0 w-full h-full object-cover object-top opacity-90">
+            <div class="absolute inset-0 bg-black/30"></div>
+            <div class="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
+                <p class="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-white mb-4 sm:mb-6">The New Standard</p>
+                <h1 class="text-[10vw] sm:text-6xl md:text-7xl font-heading font-extrabold text-white leading-tight mb-6 sm:mb-8 drop-shadow-lg">
+                    REDEFINE YOUR<br>STREETWEAR
+                </h1>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#" class="btn-primary w-full sm:w-auto text-center text-sm uppercase tracking-wider px-8 py-4 bg-white text-brand-dark hover:bg-brand-light hover:text-brand-dark hover:shadow-xl border border-transparent">
+                        Shop Collection
+                    </a>
+                </div>
+            </div>
+        </section>
+    
+    
+    <section class="w-full">
+        <div class="flex flex-col md:flex-row w-full">
+            
+            <div class="relative w-full md:w-1/2 aspect-[4/5] md:aspect-auto md:h-[700px] overflow-hidden group cursor-pointer">
+                <img src="http://127.0.0.1:8000/images/banner-men.png" alt="Shop Men" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-500"></div>
+                <div class="absolute bottom-8 left-6 sm:bottom-12 sm:left-12 z-10 text-white">
+                    <h2 class="text-3xl sm:text-4xl font-heading font-bold mb-3 sm:mb-4">MENSWEAR</h2>
+                    <a href="http://127.0.0.1:8000/shop?category=men" class="inline-block border-b-2 border-white pb-1 text-xs sm:text-sm font-semibold uppercase tracking-widest hover:text-brand-light hover:border-brand-light transition-colors">
+                        Explore →
+                    </a>
+                </div>
+            </div>
+
+            
+            <div class="relative w-full md:w-1/2 aspect-[4/5] md:aspect-auto md:h-[700px] overflow-hidden group cursor-pointer" onclick="window.location='http://127.0.0.1:8000/shop?category=women'">
+                <img src="http://127.0.0.1:8000/images/banner-women.png" alt="Shop Women" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-500"></div>
+                <div class="absolute bottom-8 left-6 sm:bottom-12 sm:left-12 z-10 text-white">
+                    <h2 class="text-3xl sm:text-4xl font-heading font-bold mb-3 sm:mb-4">WOMENSWEAR</h2>
+                    <a href="http://127.0.0.1:8000/shop?category=women" class="inline-block border-b-2 border-white pb-1 text-xs sm:text-sm font-semibold uppercase tracking-widest hover:text-brand-light hover:border-brand-light transition-colors">
+                        Explore →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="py-16 bg-white">
+        <div class="max-w-[1440px] mx-auto px-4 lg:px-8">
+            <div class="relative w-full h-[500px] overflow-hidden rounded-lg group cursor-pointer">
+                <img src="http://127.0.0.1:8000/images/banner-oversized.png" alt="Oversized Collection" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+                <div class="absolute inset-0 flex flex-col justify-center px-12 md:px-24 z-10 text-white max-w-2xl">
+                    <h2 class="text-5xl font-heading font-extrabold mb-4">OVERSIZED<br>ESSENTIALS</h2>
+                    <p class="text-lg text-gray-200 mb-8 max-w-md">Premium heavyweight cotton. Drop shoulders. The perfect fit for everyday comfort.</p>
+                    <a href="#" class="btn-primary inline-flex self-start bg-white text-brand-dark hover:bg-brand-light border-transparent px-8 py-3 text-sm uppercase tracking-widest">
+                        Shop Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    
+    <section class="py-16 border-t border-brand-border bg-brand-off-white">
+        <div class="max-w-[1440px] mx-auto px-4 lg:px-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <p class="text-sm font-heading font-extrabold uppercase tracking-widest text-brand-text mb-2">Free Shipping</p>
+                    <p class="text-xs text-brand-muted">On all orders above ₹999</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-heading font-extrabold uppercase tracking-widest text-brand-text mb-2">7 Days Return</p>
+                    <p class="text-xs text-brand-muted">No questions asked</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-heading font-extrabold uppercase tracking-widest text-brand-text mb-2">Premium Quality</p>
+                    <p class="text-xs text-brand-muted">100% heavy cotton fabrics</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-heading font-extrabold uppercase tracking-widest text-brand-text mb-2">Secure Payments</p>
+                    <p class="text-xs text-brand-muted">Encrypted secure checkout</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="max-w-[1440px] mx-auto px-4 lg:px-8 py-16 sm:py-24">
+        <div class="flex items-center justify-between mb-10">
+            <h2 class="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight">TRENDING NOW</h2>
+            <a href="http://127.0.0.1:8000/shop" class="hidden sm:inline-block border-b-2 border-brand-text pb-1 text-sm font-semibold uppercase tracking-widest hover:text-brand-muted transition-colors">
+                View All
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+                            <div class="group cursor-pointer" onclick="window.location='http://127.0.0.1:8000/product/essential-oversized-tee-black'">
+                    <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
+                                                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&amp;q=80" alt="Essential Oversized Tee — Black" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                                
+                                                    <div class="absolute top-4 left-4 bg-white text-xs font-bold px-2 py-1 uppercase tracking-wider">New</div>
+                                                
+                        <a href="http://127.0.0.1:8000/product/essential-oversized-tee-black" class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white flex items-center justify-center z-10">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        </a>
+                    </div>
+                    <h3 class="text-sm font-bold mb-1 line-clamp-1">Essential Oversized Tee — Black</h3>
+                    <p class="text-brand-muted text-xs mb-2">Oversized T-Shirts</p>
+                    <p class="font-semibold text-sm">₹799</p>
+                </div>
+                            <div class="group cursor-pointer" onclick="window.location='http://127.0.0.1:8000/product/essential-oversized-tee-white'">
+                    <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
+                                                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&amp;q=80" alt="Essential Oversized Tee — White" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                                
+                                                    <div class="absolute top-4 left-4 bg-black text-white text-xs font-bold px-2 py-1 uppercase tracking-wider">Best Seller</div>
+                                                
+                        <a href="http://127.0.0.1:8000/product/essential-oversized-tee-white" class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white flex items-center justify-center z-10">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        </a>
+                    </div>
+                    <h3 class="text-sm font-bold mb-1 line-clamp-1">Essential Oversized Tee — White</h3>
+                    <p class="text-brand-muted text-xs mb-2">Oversized T-Shirts</p>
+                    <p class="font-semibold text-sm">₹799</p>
+                </div>
+                            <div class="group cursor-pointer" onclick="window.location='http://127.0.0.1:8000/product/statement-hoodie-charcoal'">
+                    <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
+                                                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&amp;q=80" alt="Statement Hoodie — Charcoal" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                                
+                                                
+                        <a href="http://127.0.0.1:8000/product/statement-hoodie-charcoal" class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white flex items-center justify-center z-10">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        </a>
+                    </div>
+                    <h3 class="text-sm font-bold mb-1 line-clamp-1">Statement Hoodie — Charcoal</h3>
+                    <p class="text-brand-muted text-xs mb-2">Hoodies</p>
+                    <p class="font-semibold text-sm">₹1,499</p>
+                </div>
+                            <div class="group cursor-pointer" onclick="window.location='http://127.0.0.1:8000/product/archive-hoodie-black'">
+                    <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
+                                                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&amp;q=80" alt="Archive Hoodie — Black" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                                
+                                                
+                        <a href="http://127.0.0.1:8000/product/archive-hoodie-black" class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white flex items-center justify-center z-10">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        </a>
+                    </div>
+                    <h3 class="text-sm font-bold mb-1 line-clamp-1">Archive Hoodie — Black</h3>
+                    <p class="text-brand-muted text-xs mb-2">Hoodies</p>
+                    <p class="font-semibold text-sm">₹1,699</p>
+                </div>
+                    </div>
+
+        <div class="mt-8 text-center sm:hidden">
+            <a href="http://127.0.0.1:8000/shop" class="inline-block border-b-2 border-brand-text pb-1 text-sm font-semibold uppercase tracking-widest hover:text-brand-muted transition-colors">
+                View All Products
+            </a>
+        </div>
+    </section>
+
+    
+    <section class="w-full bg-brand-off-white py-16 sm:py-24 border-t border-brand-border">
+        <div class="max-w-[1440px] mx-auto px-4 lg:px-8 text-center overflow-hidden">
+            <h2 class="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight mb-4">JOIN THE MOVEMENT</h2>
+            <p class="text-brand-muted text-sm mb-10 max-w-md mx-auto">Follow us on Instagram @threadax.co.in for the latest streetwear drops, styling tips, and community vibes.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start justify-items-center">
+
+                
+                <div class="w-full flex justify-center">
+                    <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/reel/DbtE0iGTHJJ/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:100%;"><div style="padding:16px;"> <a href="https://www.instagram.com/reel/DbtE0iGTHJJ/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank"> <div style=" display: flex; flex-direction: row; align-items: center;"> <div style="background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;"></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;"></div></div></div><div style="padding: 19% 0;"></div> <div style="display:block; height:50px; margin:0 auto 12px; width:50px;"><svg width="50px" height="50px" viewBox="0 0 60 60" version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(-511.000000, -20.000000)" fill="#000000"><g><path d="M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631"></path></g></g></g></svg></div><div style="padding-top: 8px;"> <div style=" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;">View this post on Instagram</div></div><div style="padding: 12.5% 0;"></div> <div style="display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;"><div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);"></div> <div style="background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;"></div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);"></div></div><div style="margin-left: 8px;"> <div style=" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;"></div> <div style=" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)"></div></div><div style="margin-left: auto;"> <div style=" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);"></div> <div style=" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);"></div> <div style=" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);"></div></div></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;"></div></div></a><p style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;"><a href="https://www.instagram.com/reel/DbtE0iGTHJJ/?utm_source=ig_embed&amp;utm_campaign=loading" style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;" target="_blank">A post shared by ThreadAX | Streetwear (@threadax.co.in)</a></p></div></blockquote>
+                </div>
+
+                
+                <div class="w-full flex justify-center">
+                    <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/reel/DbhlXPVRNFa/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:100%;"><div style="padding:16px;"> <a href="https://www.instagram.com/reel/DbhlXPVRNFa/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank"> <div style=" display: flex; flex-direction: row; align-items: center;"> <div style="background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;"></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;"></div></div></div><div style="padding: 19% 0;"></div> <div style="display:block; height:50px; margin:0 auto 12px; width:50px;"><svg width="50px" height="50px" viewBox="0 0 60 60" version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(-511.000000, -20.000000)" fill="#000000"><g><path d="M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631"></path></g></g></g></svg></div><div style="padding-top: 8px;"> <div style=" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;">View this post on Instagram</div></div><div style="padding: 12.5% 0;"></div> <div style="display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;"><div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);"></div> <div style="background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;"></div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);"></div></div><div style="margin-left: 8px;"> <div style=" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;"></div> <div style=" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)"></div></div><div style="margin-left: auto;"> <div style=" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);"></div> <div style=" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);"></div> <div style=" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);"></div></div></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;"></div></div></a><p style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;"><a href="https://www.instagram.com/reel/DbhlXPVRNFa/?utm_source=ig_embed&amp;utm_campaign=loading" style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;" target="_blank">A post shared by ThreadAX | Streetwear (@threadax.co.in)</a></p></div></blockquote>
+                </div>
+
+                
+                <div class="w-full flex justify-center">
+                    <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/reel/DbTMZGBRzUt/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:100%;"><div style="padding:16px;"> <a href="https://www.instagram.com/reel/DbTMZGBRzUt/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank"> <div style=" display: flex; flex-direction: row; align-items: center;"> <div style="background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;"></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;"></div></div></div><div style="padding: 19% 0;"></div> <div style="display:block; height:50px; margin:0 auto 12px; width:50px;"><svg width="50px" height="50px" viewBox="0 0 60 60" version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(-511.000000, -20.000000)" fill="#000000"><g><path d="M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631"></path></g></g></g></svg></div><div style="padding-top: 8px;"> <div style=" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;">View this post on Instagram</div></div><div style="padding: 12.5% 0;"></div> <div style="display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;"><div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);"></div> <div style="background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;"></div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);"></div></div><div style="margin-left: 8px;"> <div style=" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;"></div> <div style=" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)"></div></div><div style="margin-left: auto;"> <div style=" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);"></div> <div style=" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);"></div> <div style=" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);"></div></div></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;"></div></div></a><p style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;"><a href="https://www.instagram.com/reel/DbTMZGBRzUt/?utm_source=ig_embed&amp;utm_campaign=loading" style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;" target="_blank">A post shared by ThreadAX | Streetwear (@threadax.co.in)</a></p></div></blockquote>
+                </div>
+
+                
+                <div class="w-full flex justify-center">
+                    <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/reel/DbN7nP1xDUv/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:100%;"><div style="padding:16px;"> <a href="https://www.instagram.com/reel/DbN7nP1xDUv/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank"> <div style=" display: flex; flex-direction: row; align-items: center;"> <div style="background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;"></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;"></div></div></div><div style="padding: 19% 0;"></div> <div style="display:block; height:50px; margin:0 auto 12px; width:50px;"><svg width="50px" height="50px" viewBox="0 0 60 60" version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(-511.000000, -20.000000)" fill="#000000"><g><path d="M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631"></path></g></g></g></svg></div><div style="padding-top: 8px;"> <div style=" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;">View this post on Instagram</div></div><div style="padding: 12.5% 0;"></div> <div style="display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;"><div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);"></div> <div style="background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;"></div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);"></div></div><div style="margin-left: 8px;"> <div style=" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;"></div> <div style=" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)"></div></div><div style="margin-left: auto;"> <div style=" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);"></div> <div style=" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);"></div> <div style=" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);"></div></div></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;"></div></div></a><p style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;"><a href="https://www.instagram.com/reel/DbN7nP1xDUv/?utm_source=ig_embed&amp;utm_campaign=loading" style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;" target="_blank">A post shared by ThreadAX | Streetwear (@threadax.co.in)</a></p></div></blockquote>
+                </div>
+
+                <script async src="//www.instagram.com/embed.js"></script>
+            </div>
+
+            <div class="mt-10">
+                <a href="https://www.instagram.com/threadax.co.in/" target="_blank" class="btn-primary inline-flex items-center gap-2 text-sm uppercase tracking-wider px-8 py-3 bg-brand-text text-white hover:bg-brand-dark transition-colors rounded-md shadow-lg">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                    Follow on Instagram
+                </a>
+            </div>
+        </div>
+    </section>
+
+    </main>
+
+    
+    <footer class="bg-brand-off-white border-t border-brand-border mt-auto pb-24 lg:pb-0">
+        <div class="max-w-[1440px] mx-auto px-4 lg:px-8 py-10 lg:py-12">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
+                
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-brand-text mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li><a href="#" class="hover:text-brand-text transition-colors">About Us</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Careers</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Blog</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Press</a></li>
+                    </ul>
+                </div>
+
+                
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-brand-text mb-4">Help</h4>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Track Order</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Returns & Exchanges</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Shipping Info</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+
+                
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-brand-text mb-4">Shop</h4>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Men</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Women</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">Oversized</a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors">New Arrivals</a></li>
+                    </ul>
+                </div>
+
+                
+                <div class="col-span-2 lg:col-span-1">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-brand-text mb-4">Connect</h4>
+                    <ul class="space-y-2 text-sm text-brand-muted flex gap-4 lg:block lg:space-y-2 lg:gap-0">
+                        <li><a href="https://www.instagram.com/threadax.co.in/" target="_blank" class="hover:text-brand-text transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                            <span class="hidden lg:inline">Instagram</span>
+                        </a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors flex items-center gap-2">
+                            <span class="lg:hidden text-lg">𝕏</span><span class="hidden lg:inline">Twitter</span>
+                        </a></li>
+                        <li><a href="#" class="hover:text-brand-text transition-colors flex items-center gap-2">
+                            <span class="lg:hidden text-lg">f</span><span class="hidden lg:inline">Facebook</span>
+                        </a></li>
+                    </ul>
+                    <div class="mt-6" x-data="newsletterForm()">
+                        <p class="text-xs font-bold uppercase tracking-widest text-brand-text mb-3">Newsletter</p>
+                        <form @submit.prevent="submit" class="flex gap-2 relative">
+                            <input type="email" x-model="email" placeholder="your@email.com" required class="input-field text-xs !py-2 flex-1 w-full max-w-[250px]" :disabled="isLoading">
+                            <button type="submit" class="bg-brand-text text-white text-xs font-semibold px-4 py-2 rounded-md hover:bg-brand-dark/80 transition-colors shrink-0" :disabled="isLoading">
+                                <span x-show="!isLoading">Join</span>
+                                <span x-show="isLoading" class="animate-pulse">...</span>
+                            </button>
+                        </form>
+                        <p x-show="message" x-text="message" x-transition :class="isSuccess ? 'text-green-600' : 'text-red-500'" class="text-xs mt-2 font-medium"></p>
+                    </div>
+                </div>
+            </div>
+            
+
+
+            
+            <div class="mt-10 pt-6 border-t border-brand-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-brand-muted">
+                <div class="flex items-center gap-1">
+                    <span class="font-heading font-extrabold text-sm text-brand-text">THREAD</span><span class="threadax-logo-box text-[10px] text-white">AX</span>
+                    <span class="ml-2">&copy; 2026 All rights reserved.</span>
+                </div>
+                <div class="flex gap-4 flex-wrap justify-center">
+                    <a href="#" class="hover:text-brand-text transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-brand-text transition-colors">Terms of Service</a>
+                    <a href="#" class="hover:text-brand-text transition-colors">Cookie Preferences</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    
+                <a href="https://wa.me/919876543210?text=Hello+ThreadAX%21+I+have+a+query." target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-3 sm:p-4 rounded-full shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 flex items-center justify-center" aria-label="Chat on WhatsApp">
+            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+        </a>
+    
+
+    
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t border-brand-border z-40 flex justify-between items-end px-2 pt-2 pb-3 text-[10px] font-bold text-brand-muted shadow-[0_-5px_20px_rgba(0,0,0,0.08)]">
+        
+        
+        <a href="http://127.0.0.1:8000" class="flex flex-col items-center gap-1 p-2 flex-1 text-brand-text">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            <span>Home</span>
+        </a>
+
+        
+        <a href="http://127.0.0.1:8000/shop" class="flex flex-col items-center gap-1 p-2 flex-1 hover:text-brand-text">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+            </svg>
+            <span>Explore</span>
+        </a>
+
+        
+        <button @click.prevent="cartOpen = true" class="flex flex-col items-center p-0 flex-1 relative -mt-6 pb-1">
+            <div class="w-14 h-14 bg-brand-text text-white rounded-full flex items-center justify-center shadow-lg border-[4px] border-white relative transition-transform hover:scale-105">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+                </svg>
+                <span x-show="cartSummary.item_count > 0" x-text="cartSummary.item_count" class="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-brand-text text-[10px] font-bold flex items-center justify-center"></span>
+            </div>
+            <span class="mt-1">Bag</span>
+        </button>
+
+        
+        <a href="#" class="flex flex-col items-center gap-1 p-2 flex-1 hover:text-brand-text">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+            <span>Wishlist</span>
+        </a>
+
+        
+        <a href="http://127.0.0.1:8000/account/dashboard" class="flex flex-col items-center gap-1 p-2 flex-1 hover:text-brand-text">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            <span>Profile</span>
+        </a>
+    </div>
+
+    
+    <div x-show="cartOpen" class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true" style="display: none;">
+        <div class="absolute inset-0 overflow-hidden">
+            <div x-show="cartOpen" x-transition.opacity class="absolute inset-0 bg-black/50 transition-opacity" @click="cartOpen = false"></div>
+
+            <div class="fixed inset-y-0 right-0 max-w-full flex">
+                <div x-show="cartOpen" 
+                    x-transition:enter="transform transition ease-in-out duration-500 sm:duration-700" 
+                    x-transition:enter-start="translate-x-full" 
+                    x-transition:enter-end="translate-x-0" 
+                    x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700" 
+                    x-transition:leave-start="translate-x-0" 
+                    x-transition:leave-end="translate-x-full" 
+                    class="w-screen max-w-md">
+                    
+                    <div class="h-full flex flex-col bg-white shadow-xl">
+                        
+                        
+                        <div class="px-6 py-6 border-b border-brand-border flex items-center justify-between">
+                            <h2 class="text-xl font-heading font-extrabold uppercase tracking-tight" id="slide-over-title">Your Bag (<span x-text="cartSummary.item_count"></span>)</h2>
+                            <button @click="cartOpen = false" class="text-brand-muted hover:text-brand-text transition-colors">
+                                <span class="sr-only">Close panel</span>
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        
+                        <div class="flex-1 overflow-y-auto px-6 py-6 sm:px-6">
+                            
+                            
+                            <template x-if="cartItems.length === 0">
+                                <div class="h-full flex flex-col items-center justify-center text-center">
+                                    <svg class="w-16 h-16 text-brand-muted mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" /></svg>
+                                    <p class="text-lg font-bold text-brand-dark mb-2">Your bag is empty</p>
+                                    <p class="text-brand-muted text-sm mb-6">Looks like you haven't added anything yet.</p>
+                                    <button @click="cartOpen = false" class="btn-primary w-full max-w-[200px]">Continue Shopping</button>
+                                </div>
+                            </template>
+
+                            
+                            <div class="flow-root">
+                                <ul role="list" class="-my-6 divide-y divide-brand-border">
+                                    <template x-for="item in cartItems" :key="item.id">
+                                        <li class="py-6 flex">
+                                            <div class="flex-shrink-0 w-24 h-32 border border-brand-border bg-brand-light overflow-hidden rounded-md">
+                                                <img :src="item.image || 'https://via.placeholder.com/150'" :alt="item.product_name" class="w-full h-full object-center object-cover">
+                                            </div>
+
+                                            <div class="ml-4 flex-1 flex flex-col">
+                                                <div>
+                                                    <div class="flex justify-between text-base font-bold text-brand-dark">
+                                                        <h3 class="line-clamp-1 mr-4">
+                                                            <a :href="'/product/' + item.product_slug" x-text="item.product_name"></a>
+                                                        </h3>
+                                                        <p class="ml-4 whitespace-nowrap" x-text="formatPrice(item.price * item.quantity)"></p>
+                                                    </div>
+                                                    <p class="mt-1 text-xs text-brand-muted"><span x-text="item.color"></span> <span x-show="item.size">/</span> <span x-text="item.size"></span></p>
+                                                </div>
+                                                <div class="flex-1 flex items-end justify-between text-sm">
+                                                    
+                                                    <div class="flex items-center border border-brand-border rounded h-8">
+                                                        <button @click="updateCartItem(item.id, item.quantity - 1)" :disabled="isUpdatingCart" class="px-2 text-brand-muted hover:text-brand-text disabled:opacity-50">&minus;</button>
+                                                        <span class="px-2 font-semibold text-xs" x-text="item.quantity"></span>
+                                                        <button @click="updateCartItem(item.id, item.quantity + 1)" :disabled="isUpdatingCart" class="px-2 text-brand-muted hover:text-brand-text disabled:opacity-50">&plus;</button>
+                                                    </div>
+
+                                                    <div class="flex">
+                                                        <button @click="removeCartItem(item.id)" :disabled="isUpdatingCart" type="button" class="font-semibold text-brand-muted hover:text-red-500 text-xs tracking-widest uppercase disabled:opacity-50 transition-colors">Remove</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+
+                        
+                        <div class="border-t border-brand-border px-4 py-6 sm:px-6" x-show="cartItems.length > 0">
+                            <div class="flex justify-between text-base font-bold text-brand-dark mb-4">
+                                <p>Subtotal</p>
+                                <p x-text="formatPrice(cartSummary.subtotal)"></p>
+                            </div>
+                            <p class="mt-0.5 text-xs text-brand-muted mb-6">Shipping and taxes calculated at checkout.</p>
+                            <div class="space-y-3">
+                                <a href="http://127.0.0.1:8000/checkout" class="btn-primary w-full block text-center py-4 bg-brand-text text-white">Proceed to Checkout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('globalApp', () => ({
+                mobileMenu: false,
+                searchOpen: false,
+                cartOpen: false,
+                cartItems: [],
+                cartSummary: { item_count: 0, subtotal: 0, total: 0 },
+                isUpdatingCart: false,
+                
+                init() {
+                    this.fetchCart();
+                    
+                    // Listen for a global event to add to cart
+                    window.addEventListener('add-to-cart', (e) => {
+                        this.addToCart(e.detail.variant_id, e.detail.quantity);
+                    });
+                },
+                
+                formatPrice(price) {
+                    return '₹' + new Intl.NumberFormat('en-IN').format(price);
+                },
+                
+                async fetchCart() {
+                    try {
+                        let res = await fetch('/cart/data');
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                        }
+                    } catch (e) {
+                        console.error("Cart fetch error:", e);
+                    }
+                },
+                
+                async addToCart(variantId, quantity) {
+                    this.isUpdatingCart = true;
+                    try {
+                        let res = await fetch('/cart/add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': 'c8SCCvsNUF093EhykV6rHmy5IR4cIqMi03M6BWOB'
+                            },
+                            body: JSON.stringify({ variant_id: variantId, quantity: quantity })
+                        });
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                            this.cartOpen = true; // Open drawer
+
+                            // Trigger GA4 Add to Cart
+                            if (typeof gtag === 'function') {
+                                gtag('event', 'add_to_cart', {
+                                    currency: 'INR',
+                                    value: this.cartSummary.subtotal,
+                                    items: this.cartItems.map(item => ({
+                                        item_id: item.variant.sku || item.variant.id,
+                                        item_name: item.variant.product.name,
+                                        price: item.variant.price || item.variant.product.price,
+                                        quantity: item.quantity
+                                    }))
+                                });
+                            }
+
+                            // Trigger Meta Pixel Add to Cart
+                            if (typeof fbq === 'function') {
+                                fbq('track', 'AddToCart', {
+                                    value: this.cartSummary.subtotal,
+                                    currency: 'INR',
+                                    content_ids: this.cartItems.map(item => item.variant.sku || item.variant.id),
+                                    content_type: 'product'
+                                });
+                            }
+
+                        } else {
+                            alert(data.message || 'Error adding to cart');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Something went wrong!');
+                    }
+                    this.isUpdatingCart = false;
+                },
+                
+                async removeCartItem(itemId) {
+                    this.isUpdatingCart = true;
+                    try {
+                        let res = await fetch('/cart/remove', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': 'c8SCCvsNUF093EhykV6rHmy5IR4cIqMi03M6BWOB'
+                            },
+                            body: JSON.stringify({ item_id: itemId })
+                        });
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    this.isUpdatingCart = false;
+                },
+                
+                async updateCartItem(itemId, qty) {
+                    if (qty < 1) {
+                        return this.removeCartItem(itemId);
+                    }
+                    
+                    this.isUpdatingCart = true;
+                    try {
+                        let res = await fetch('/cart/update', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': 'c8SCCvsNUF093EhykV6rHmy5IR4cIqMi03M6BWOB'
+                            },
+                            body: JSON.stringify({ item_id: itemId, quantity: qty })
+                        });
+                        let data = await res.json();
+                        if(data.success) {
+                            this.cartItems = data.items;
+                            this.cartSummary = data.summary;
+                        } else {
+                            alert(data.message || 'Error updating cart');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    this.isUpdatingCart = false;
+                }
+            }));
+
+            Alpine.data('newsletterForm', () => ({
+                email: '',
+                isLoading: false,
+                message: '',
+                isSuccess: false,
+                
+                async submit() {
+                    if(!this.email) return;
+                    this.isLoading = true;
+                    this.message = '';
+                    
+                    try {
+                        let res = await fetch('http://127.0.0.1:8000/newsletter', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': 'c8SCCvsNUF093EhykV6rHmy5IR4cIqMi03M6BWOB'
+                            },
+                            body: JSON.stringify({ email: this.email })
+                        });
+                        
+                        let data = await res.json();
+                        this.message = data.message;
+                        this.isSuccess = data.success;
+                        
+                        if(this.isSuccess) {
+                            this.email = '';
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.message = 'Something went wrong. Please try again.';
+                        this.isSuccess = false;
+                    }
+                    this.isLoading = false;
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

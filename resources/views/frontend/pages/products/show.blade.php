@@ -187,9 +187,121 @@
                     </div>
                 </div>
 
+                </div>
+
             </div>
         </div>
     </div>
+
+    {{-- ═══════════ CUSTOMER REVIEWS ═══════════ --}}
+    <section class="max-w-[1440px] mx-auto px-4 lg:px-8 py-16 sm:py-24 border-t border-brand-border" id="reviews">
+        <div class="flex flex-col md:flex-row gap-12">
+            
+            {{-- Review Summary & Form --}}
+            <div class="md:w-1/3">
+                <h2 class="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight mb-4 uppercase">Customer Reviews</h2>
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="text-4xl font-bold font-heading">{{ number_format($product->average_rating, 1) }}</div>
+                    <div>
+                        <div class="flex text-brand-dark mb-1">
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg class="w-5 h-5 {{ $i <= round($product->average_rating) ? 'fill-current' : 'text-gray-200 fill-current' }}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            @endfor
+                        </div>
+                        <p class="text-xs font-bold text-brand-muted uppercase tracking-widest">Based on {{ $product->review_count }} reviews</p>
+                    </div>
+                </div>
+
+                @auth
+                    @php
+                        $hasPurchased = \App\Models\Order::where('user_id', Auth::id())
+                            ->where('status', 'delivered')
+                            ->whereHas('items', function($q) use ($product) {
+                                $q->whereHas('variant', function($q2) use ($product) {
+                                    $q2->where('product_id', $product->id);
+                                });
+                            })->exists();
+                            
+                        $hasReviewed = \App\Models\Review::where('user_id', Auth::id())
+                            ->where('product_id', $product->id)->exists();
+                    @endphp
+
+                    @if($hasReviewed)
+                        <div class="bg-brand-light border border-brand-border p-4 rounded text-sm text-brand-dark">
+                            You have already submitted a review for this product. Thank you!
+                        </div>
+                    @elseif($hasPurchased)
+                        <div class="bg-white border border-brand-border p-6" x-data="{ rating: 5, hoverRating: 0 }">
+                            <h3 class="text-sm font-bold uppercase tracking-wider mb-4">Write a Review</h3>
+                            <form action="{{ route('reviews.store', $product) }}" method="POST">
+                                @csrf
+                                <div class="mb-4">
+                                    <label class="block text-xs font-bold text-brand-muted uppercase mb-2">Rating</label>
+                                    <div class="flex gap-1 cursor-pointer" @mouseleave="hoverRating = 0">
+                                        <template x-for="i in 5" :key="i">
+                                            <svg @mouseenter="hoverRating = i" @click="rating = i"
+                                                 class="w-6 h-6 transition-colors"
+                                                 :class="(hoverRating ? hoverRating >= i : rating >= i) ? 'text-brand-dark fill-current' : 'text-gray-200 fill-current'"
+                                                 viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        </template>
+                                        <input type="hidden" name="rating" x-model="rating">
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-xs font-bold text-brand-muted uppercase mb-2">Title (Optional)</label>
+                                    <input type="text" name="title" class="input-field w-full" placeholder="Summarize your experience">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-xs font-bold text-brand-muted uppercase mb-2">Review</label>
+                                    <textarea name="body" rows="4" class="input-field w-full" required placeholder="What did you like or dislike?"></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary w-full text-center block">Submit Review</button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="bg-brand-light border border-brand-border p-4 rounded text-sm text-brand-dark">
+                            You must purchase and receive this item before you can leave a review.
+                        </div>
+                    @endif
+                @else
+                    <div class="bg-brand-light border border-brand-border p-4 rounded text-sm text-brand-dark">
+                        Please <a href="{{ route('auth.login') }}" class="underline font-bold">log in</a> to write a review.
+                    </div>
+                @endauth
+            </div>
+
+            {{-- Review List --}}
+            <div class="md:w-2/3 md:pl-12">
+                @if($product->approvedReviews->isNotEmpty())
+                    <div class="divide-y divide-brand-border">
+                        @foreach($product->approvedReviews as $review)
+                            <div class="py-6 first:pt-0">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex text-brand-dark">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <svg class="w-4 h-4 {{ $i <= $review->rating ? 'fill-current' : 'text-gray-200 fill-current' }}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        @endfor
+                                    </div>
+                                    <span class="text-xs text-brand-muted">{{ $review->created_at->diffForHumans() }}</span>
+                                </div>
+                                @if($review->title)
+                                    <h4 class="font-bold text-brand-dark text-sm uppercase tracking-wider mb-2">{{ $review->title }}</h4>
+                                @endif
+                                <p class="text-brand-muted text-sm leading-relaxed mb-3">{{ $review->body }}</p>
+                                <p class="text-xs font-bold text-brand-dark uppercase tracking-widest">{{ $review->user->name }} <span class="text-brand-muted font-normal lowercase tracking-normal bg-brand-light px-2 py-0.5 rounded ml-2">Verified Buyer</span></p>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="h-full flex flex-col justify-center items-center py-12 text-center border border-dashed border-brand-border rounded">
+                        <svg class="w-12 h-12 text-brand-muted mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        <h3 class="text-lg font-bold text-brand-dark uppercase tracking-wider mb-1">No Reviews Yet</h3>
+                        <p class="text-sm text-brand-muted max-w-sm">Be the first to share your experience with this product!</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </section>
 
     {{-- ═══════════ RELATED PRODUCTS ═══════════ --}}
     @if($relatedProducts->count() > 0)

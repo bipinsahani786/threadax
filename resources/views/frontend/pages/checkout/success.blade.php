@@ -43,3 +43,40 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // GA4 Purchase Event
+    if (typeof gtag === 'function') {
+        gtag('event', 'purchase', {
+            transaction_id: '{{ $order->order_number }}',
+            value: {{ $order->total }},
+            currency: 'INR',
+            items: [
+                @foreach($order->items as $item)
+                {
+                    item_id: '{{ $item->variant->sku ?? $item->variant_id }}',
+                    item_name: '{{ $item->variant->product->name }}',
+                    price: {{ $item->price }},
+                    quantity: {{ $item->quantity }}
+                },
+                @endforeach
+            ]
+        });
+    }
+
+    // Meta Purchase Event
+    if (typeof fbq === 'function') {
+        fbq('track', 'Purchase', {
+            value: {{ $order->total }},
+            currency: 'INR',
+            content_type: 'product',
+            content_ids: [
+                @foreach($order->items as $item)
+                '{{ $item->variant->sku ?? $item->variant_id }}',
+                @endforeach
+            ]
+        });
+    }
+</script>
+@endpush

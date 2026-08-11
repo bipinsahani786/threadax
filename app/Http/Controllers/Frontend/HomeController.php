@@ -21,7 +21,12 @@ class HomeController extends Controller
         $featuredCategories = $this->categoryRepo->getFeatured(limit: 4);
         $newArrivals        = $this->productRepo->getNewArrivals(limit: 8);
         $bestSellers        = $this->productRepo->getBestSellers(limit: 4);
+        
+        $banners = \App\Models\Banner::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy('position');
 
-        return view('welcome', compact('featuredCategories', 'newArrivals', 'bestSellers'));
+        return view('welcome', compact('featuredCategories', 'newArrivals', 'bestSellers', 'banners'));
     }
 }

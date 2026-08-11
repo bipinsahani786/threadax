@@ -44,14 +44,22 @@ class ProductController extends Controller
     {
         $product = $this->productRepo->findBySlug($slug);
 
-        if (!$product || !$product->is_active) {
+        if (! $product || ! $product->is_active) {
             abort(404);
         }
 
-        // Get related products from the same category
+        // Eager-load approved reviews with the reviewer's name to avoid N+1
+        $product->load([
+            'approvedReviews' => fn($q) => $q->with('user:id,name')->latest(),
+            'images',
+            'variants',
+            'category',
+        ]);
+
+        // Related products from same category
         $relatedProducts = $this->productRepo->all([
             'category' => $product->category_id,
-            'status' => '1'
+            'status'   => '1',
         ])->where('id', '!=', $product->id)->take(4);
 
         return view('frontend.pages.products.show', compact('product', 'relatedProducts'));

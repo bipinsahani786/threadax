@@ -126,25 +126,26 @@ class CartService
     /**
      * Get cart summary (totals)
      */
-    public function getSummary()
+    public function getSummary(): array
     {
         $cart = $this->getCart();
-        
+
         $subtotal = 0;
         foreach ($cart->items as $item) {
             $subtotal += $item->quantity * ($item->variant->effective_price ?? $item->price_at_time);
         }
 
-        // Add tax/shipping logic here if needed
-        $shipping = $subtotal > 999 ? 0 : 50; // free shipping over 999
-        $tax = $subtotal * 0.18; // 18% GST included in price typically, so just for display
-        $total = $subtotal + $shipping;
+        // Free shipping on orders above ₹999
+        $shipping = $subtotal >= 999 ? 0 : 50;
+        $total    = $subtotal + $shipping;
+
+        // Note: GST is included in the listed price (not added on top)
 
         return [
             'item_count' => $cart->items->sum('quantity'),
-            'subtotal' => $subtotal,
-            'shipping' => $shipping,
-            'total' => $total
+            'subtotal'   => round($subtotal, 2),
+            'shipping'   => $shipping,
+            'total'      => round($total, 2),
         ];
     }
 }

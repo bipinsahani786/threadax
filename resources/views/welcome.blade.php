@@ -5,26 +5,76 @@
 @section('content')
 
     {{-- ═══════════ HERO SECTION ═══════════ --}}
-    <section class="relative w-full h-[85vh] min-h-[500px] sm:min-h-[600px] overflow-hidden bg-brand-light flex items-center justify-center">
-        {{-- Background Image --}}
-        <img src="{{ asset('images/hero-full.png') }}" alt="Premium Streetwear" class="absolute inset-0 w-full h-full object-cover object-top opacity-90">
+    @if(isset($banners['hero']) && $banners['hero']->count() > 0)
+        <!-- Alpine Carousel for Hero Banners -->
+        <section x-data="{ activeSlide: 0, slides: {{ $banners['hero']->count() }} }" class="relative w-full h-[85vh] min-h-[500px] sm:min-h-[600px] overflow-hidden bg-brand-dark">
+            @foreach($banners['hero'] as $index => $banner)
+                <div x-show="activeSlide === {{ $index }}"
+                     x-transition:enter="transition ease-out duration-500"
+                     x-transition:enter-start="opacity-0 translate-x-full"
+                     x-transition:enter-end="opacity-100 translate-x-0"
+                     x-transition:leave="transition ease-in duration-500"
+                     x-transition:leave-start="opacity-100 translate-x-0"
+                     x-transition:leave-end="opacity-0 -translate-x-full"
+                     class="absolute inset-0 w-full h-full flex items-center justify-center">
+                    
+                    <img src="{{ asset('storage/' . $banner->image_path) }}" alt="{{ $banner->title }}" class="absolute inset-0 w-full h-full object-cover object-center opacity-80">
+                    <div class="absolute inset-0 bg-black/40"></div>
+                    
+                    <div class="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
+                        @if($banner->subtitle)
+                            <p class="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-white mb-4 sm:mb-6">{{ $banner->subtitle }}</p>
+                        @endif
+                        <h1 class="text-[10vw] sm:text-6xl md:text-7xl font-heading font-extrabold text-white leading-tight mb-6 sm:mb-8 drop-shadow-lg">
+                            {!! nl2br(e($banner->title)) !!}
+                        </h1>
+                        @if($banner->link && $banner->button_text)
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                <a href="{{ url($banner->link) }}" class="btn-primary w-full sm:w-auto text-center text-sm uppercase tracking-wider px-8 py-4 bg-white text-brand-dark hover:bg-brand-light hover:text-brand-dark hover:shadow-xl border border-transparent">
+                                    {{ $banner->button_text }}
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
 
-        {{-- Dark Overlay for text readability (optional, but good for white text) --}}
-        <div class="absolute inset-0 bg-black/30"></div>
-
-        {{-- Content --}}
-        <div class="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
-            <p class="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-white mb-4 sm:mb-6">The New Standard</p>
-            <h1 class="text-[10vw] sm:text-6xl md:text-7xl font-heading font-extrabold text-white leading-tight mb-6 sm:mb-8 drop-shadow-lg">
-                REDEFINE YOUR<br>STREETWEAR
-            </h1>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#" class="btn-primary w-full sm:w-auto text-center text-sm uppercase tracking-wider px-8 py-4 bg-white text-brand-dark hover:bg-brand-light hover:text-brand-dark hover:shadow-xl border border-transparent">
-                    Shop Collection
-                </a>
+            @if($banners['hero']->count() > 1)
+                <!-- Navigation -->
+                <button @click="activeSlide = activeSlide === 0 ? slides - 1 : activeSlide - 1" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-brand-light">
+                    <svg class="w-10 h-10 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button @click="activeSlide = activeSlide === slides - 1 ? 0 : activeSlide + 1" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-brand-light">
+                    <svg class="w-10 h-10 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <!-- Dots -->
+                <div class="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-20">
+                    @foreach($banners['hero'] as $index => $banner)
+                        <button @click="activeSlide = {{ $index }}" :class="{'bg-white w-6': activeSlide === {{ $index }}, 'bg-white/50 w-2': activeSlide !== {{ $index }}}" class="h-2 rounded-full transition-all duration-300"></button>
+                    @endforeach
+                </div>
+                <!-- Auto-advance -->
+                <div x-init="setInterval(() => { activeSlide = activeSlide === slides - 1 ? 0 : activeSlide + 1 }, 5000)"></div>
+            @endif
+        </section>
+    @else
+        {{-- Static Fallback Hero --}}
+        <section class="relative w-full h-[85vh] min-h-[500px] sm:min-h-[600px] overflow-hidden bg-brand-light flex items-center justify-center">
+            <img src="{{ asset('images/hero-full.png') }}" alt="Premium Streetwear" class="absolute inset-0 w-full h-full object-cover object-top opacity-90">
+            <div class="absolute inset-0 bg-black/30"></div>
+            <div class="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
+                <p class="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-white mb-4 sm:mb-6">The New Standard</p>
+                <h1 class="text-[10vw] sm:text-6xl md:text-7xl font-heading font-extrabold text-white leading-tight mb-6 sm:mb-8 drop-shadow-lg">
+                    REDEFINE YOUR<br>STREETWEAR
+                </h1>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#" class="btn-primary w-full sm:w-auto text-center text-sm uppercase tracking-wider px-8 py-4 bg-white text-brand-dark hover:bg-brand-light hover:text-brand-dark hover:shadow-xl border border-transparent">
+                        Shop Collection
+                    </a>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
     {{-- ═══════════ FEATURED CATEGORIES (SPLIT) ═══════════ --}}
     <section class="w-full">
@@ -64,7 +114,7 @@
                 <div class="absolute inset-0 flex flex-col justify-center px-12 md:px-24 z-10 text-white max-w-2xl">
                     <h2 class="text-5xl font-heading font-extrabold mb-4">OVERSIZED<br>ESSENTIALS</h2>
                     <p class="text-lg text-gray-200 mb-8 max-w-md">Premium heavyweight cotton. Drop shoulders. The perfect fit for everyday comfort.</p>
-                    <a href="#" class="btn-primary inline-flex self-start bg-white text-brand-dark hover:bg-brand-light border-transparent px-8 py-3 text-sm uppercase tracking-widest">
+                    <a href="{{ route('frontend.products.index', ['category' => 'oversized']) }}" class="btn-primary inline-flex self-start bg-white text-brand-dark hover:bg-brand-light border-transparent px-8 py-3 text-sm uppercase tracking-widest">
                         Shop Now
                     </a>
                 </div>
@@ -108,30 +158,50 @@
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             @forelse($newArrivals->take(4) as $product)
-                <div class="group cursor-pointer" onclick="window.location='{{ route('frontend.products.show', $product->slug) }}'">
+                <a href="{{ route('frontend.products.show', $product->slug) }}" class="group block">
                     <div class="relative w-full aspect-[3/4] bg-brand-light overflow-hidden mb-4">
                         @if($product->primary_image)
-                            <img src="{{ $product->primary_image->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                            <img src="{{ $product->primary_image->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy">
                         @else
                             <div class="w-full h-full flex items-center justify-center bg-gray-200">
                                 <span class="text-gray-400 text-sm">No Image</span>
                             </div>
                         @endif
-                        
-                        @if($loop->first)
-                            <div class="absolute top-4 left-4 bg-white text-xs font-bold px-2 py-1 uppercase tracking-wider">New</div>
+
+                        {{-- Discount Badge --}}
+                        @if($product->discount_percent > 0)
+                            <div class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded">{{ $product->discount_percent }}% OFF</div>
+                        @elseif($loop->first)
+                            <div class="absolute top-3 left-3 bg-white text-brand-text text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded">New</div>
                         @elseif($loop->iteration == 2)
-                            <div class="absolute top-4 left-4 bg-black text-white text-xs font-bold px-2 py-1 uppercase tracking-wider">Best Seller</div>
+                            <div class="absolute top-3 left-3 bg-brand-text text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded">Best Seller</div>
                         @endif
-                        
-                        <a href="{{ route('frontend.products.show', $product->slug) }}" class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white flex items-center justify-center z-10">
+
+                        <div class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white flex items-center justify-center z-10">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                        </a>
+                        </div>
                     </div>
                     <h3 class="text-sm font-bold mb-1 line-clamp-1">{{ $product->name }}</h3>
-                    <p class="text-brand-muted text-xs mb-2">{{ $product->category->name ?? 'Streetwear' }}</p>
-                    <p class="font-semibold text-sm">₹{{ number_format($product->price) }}</p>
-                </div>
+                    <p class="text-brand-muted text-xs mb-1">{{ $product->category->name ?? 'Streetwear' }}</p>
+
+                    {{-- Star Rating --}}
+                    @if($product->review_count > 0)
+                        <div class="flex items-center gap-1 mb-2">
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg class="w-3 h-3 {{ $i <= round($product->average_rating) ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            @endfor
+                            <span class="text-[10px] text-brand-muted">({{ $product->review_count }})</span>
+                        </div>
+                    @endif
+
+                    {{-- Price with strikethrough --}}
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <p class="font-bold text-sm">₹{{ number_format($product->price) }}</p>
+                        @if($product->compare_price > $product->price)
+                            <p class="text-xs text-brand-muted line-through">₹{{ number_format($product->compare_price) }}</p>
+                        @endif
+                    </div>
+                </a>
             @empty
                 <div class="col-span-full text-center text-gray-500 py-10">
                     New collections dropping soon.

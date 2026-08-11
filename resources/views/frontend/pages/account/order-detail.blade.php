@@ -8,7 +8,11 @@
             <h2 class="text-2xl font-heading font-black text-brand-dark uppercase tracking-tight">Order {{ $order->order_number ?? 'TX-'.$order->id }}</h2>
             <p class="text-sm text-brand-muted mt-1">Placed on {{ $order->created_at->format('F d, Y \a\t H:i A') }}</p>
         </div>
-        <div>
+        <div class="flex items-center gap-4">
+            <a href="{{ route('account.orders.invoice', $order->id) }}" class="inline-flex items-center gap-2 border border-brand-dark px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-brand-dark hover:bg-brand-dark hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Invoice
+            </a>
             <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest
                 @if($order->status === 'delivered') bg-green-100 text-green-800
                 @elseif($order->status === 'cancelled') bg-red-100 text-red-800

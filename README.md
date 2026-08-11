@@ -1,58 +1,372 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# 🧵 ThreadAX
+### Premium Streetwear E-Commerce — Built with Laravel 13
 
-## About Laravel
+[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php&logoColor=white)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-13.x-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-4.x-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Razorpay](https://img.shields.io/badge/Razorpay-Integrated-02042B?logo=razorpay&logoColor=white)](https://razorpay.com)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+</div>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 📋 Table of Contents
+- [About](#about)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Local Setup](#local-setup)
+- [Environment Variables](#environment-variables)
+- [Production Deployment — Hostinger](#production-deployment--hostinger)
+- [Razorpay Webhook Setup](#razorpay-webhook-setup)
+- [Security Checklist](#security-checklist)
+- [Common Issues](#common-issues)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## About
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+ThreadAX is a full-featured e-commerce platform for premium streetwear. It includes a customer-facing shop with OTP authentication, cart, wishlist, checkout via Razorpay or COD, reviews, and a complete admin panel.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## Features
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Customer Side
+- 🔐 OTP-based login (no password required) + Google OAuth
+- 🛒 Cart with guest + user merge on login
+- 💳 Razorpay payment gateway (UPI, Cards, Netbanking)
+- 📦 COD support
+- 🎟️ Coupon / discount codes
+- ⭐ Product reviews (verified buyers only, admin-approved)
+- ❤️ Wishlist
+- 📱 Fully responsive mobile-first design
+- 🔖 Discount badges + strikethrough MRP on all product cards
+- 📍 Multiple saved addresses
+
+### Admin Panel
+- 📊 Dashboard with sales analytics
+- 📦 Product & variant management (sizes, colors, stock)
+- 🖼️ Image management (drag-and-drop, primary image)
+- 📋 Order management with status updates
+- 💰 Auto refund trigger on Razorpay-paid order cancellation
+- 📦 Auto stock restore on order cancellation
+- 🎟️ Coupon management
+- ⭐ Review moderation (approve/reject)
+- 🏷️ Banner / hero image management
+- ⚙️ Global settings (WhatsApp number, contact info etc.)
+- 📈 Sales reports with CSV export
+- 👥 Customer management
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Backend | Laravel 13, PHP 8.2+ |
+| Frontend | Blade, Alpine.js, Tailwind CSS 4 |
+| Database | MySQL 8.0 |
+| Payment | Razorpay |
+| Auth | OTP via Email + Google OAuth (Socialite) |
+| PDF | barryvdh/laravel-dompdf |
+| Storage | Laravel Storage (local/S3 compatible) |
+
+---
+
+## Local Setup
+
+### Prerequisites
+- PHP 8.2+ with extensions: `bcmath ctype curl fileinfo mbstring openssl pdo pdo_mysql tokenizer xml zip`
+- Composer 2.x
+- Node.js 18+ & npm
+- MySQL 8.0
+
+### Steps
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone the repo
+git clone https://github.com/bipinsahani786/threadax.git
+cd threadax
 
-php artisan boost:install
+# 2. Install PHP dependencies
+composer install
+
+# 3. Install Node dependencies
+npm install
+
+# 4. Set up environment
+cp .env.example .env
+php artisan key:generate
+
+# 5. Configure database in .env then run migrations
+php artisan migrate
+
+# 6. Create storage symlink
+php artisan storage:link
+
+# 7. Build frontend assets
+npm run dev   # development (with hot reload)
+# OR
+npm run build # production build
+
+# 8. Start local server
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Visit: http://127.0.0.1:8000
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Environment Variables
 
-## Code of Conduct
+Copy `.env.example` to `.env` and fill in all values:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Core App
+```env
+APP_NAME="ThreadAX"
+APP_ENV=local               # Change to 'production' on server
+APP_KEY=                    # Auto-generated by: php artisan key:generate
+APP_DEBUG=true              # ⚠️ Set to FALSE in production
+APP_URL=http://localhost:8000
+```
 
-## Security Vulnerabilities
+### Database
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=threadax
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Email (SMTP)
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your@gmail.com
+MAIL_PASSWORD=your_app_password   # Use Gmail App Password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your@gmail.com
+MAIL_FROM_NAME="ThreadAX"
+```
 
-## License
+### Razorpay
+```env
+# Test keys (from https://dashboard.razorpay.com → Settings → API Keys)
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
+RAZORPAY_WEBHOOK_SECRET=          # Set after configuring webhook
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Google OAuth (Optional)
+```env
+GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=xxxxx
+GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+```
+
+### Marketing (Optional)
+```env
+WHATSAPP_NUMBER=919876543210      # Country code + number, no +
+GA_MEASUREMENT_ID=G-XXXXXXXX
+META_PIXEL_ID=XXXXXXXXXX
+```
+
+---
+
+## Production Deployment — Hostinger
+
+### Server Requirements
+
+| Requirement | Minimum | Recommended |
+|------------|---------|-------------|
+| PHP | 8.2 | 8.3+ |
+| MySQL | 5.7 | 8.0+ |
+| SSL | Required | Let's Encrypt (free via hPanel) |
+
+### Required PHP Extensions
+Enable in **hPanel → Advanced → PHP Configuration**:
+```
+bcmath, ctype, curl, dom, fileinfo, json, mbstring, openssl, pcre, pdo, pdo_mysql, session, tokenizer, xml, zip
+```
+
+### Step 1 — Upload Files
+Upload the entire project folder (excluding `node_modules/` and `.git/`) to your hosting.
+
+> ⚠️ **Hostinger webroot is `public_html/`**. Point your domain's Document Root to the `/public` folder:
+> **hPanel → Domains → Manage → Change Document Root** → set to `/home/username/public_html/threadax/public`
+
+### Step 2 — Set Up `.env` on Server
+```env
+APP_ENV=production
+APP_DEBUG=false               # ⚠️ MUST be false
+APP_URL=https://yourdomain.com
+
+DB_HOST=127.0.0.1             # or your hPanel DB host
+DB_DATABASE=your_db_name
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
+
+RAZORPAY_KEY_ID=rzp_live_xxxx # Use LIVE keys in production
+RAZORPAY_KEY_SECRET=xxxxxxxxx
+RAZORPAY_WEBHOOK_SECRET=xxxxx
+```
+
+### Step 3 — Run Commands via SSH
+```bash
+cd ~/public_html/threadax
+
+# Install PHP dependencies (production only, no dev packages)
+composer install --no-dev --optimize-autoloader
+
+# Generate app key
+php artisan key:generate
+
+# Run database migrations
+php artisan migrate --force
+
+# Create storage symlink (for uploaded images)
+php artisan storage:link
+
+# Cache everything for performance
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Fix permissions
+chmod -R 755 storage/
+chmod -R 755 bootstrap/cache/
+```
+
+### Step 4 — Build & Upload Frontend Assets
+Run **on your local machine**, then upload the `public/build/` folder to the server:
+```bash
+npm install
+npm run build
+# Upload public/build/ to server's public/build/
+```
+
+### Step 5 — Set Up Cron Job
+**hPanel → Cron Jobs → Add New**:
+```
+* * * * * /usr/local/bin/php /home/username/public_html/threadax/artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
+## Razorpay Webhook Setup
+
+1. Log in to [Razorpay Dashboard](https://dashboard.razorpay.com)
+2. Go to **Settings → Webhooks → Add New Webhook**
+3. **Webhook URL**: `https://yourdomain.com/webhooks/razorpay`
+4. **Active Events** — check these:
+   - `payment.captured`
+   - `payment.failed`
+   - `refund.processed`
+5. **Secret**: Create a secret string, copy it
+6. Add to `.env`: `RAZORPAY_WEBHOOK_SECRET=your_secret_here`
+7. Run `php artisan config:cache`
+
+---
+
+## Folder Structure
+
+```
+threadax/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/          # Admin panel controllers
+│   │   │   ├── Auth/           # OTP, Google OAuth
+│   │   │   ├── Frontend/       # Shop, Cart, Checkout, Account
+│   │   │   └── Webhook/        # Razorpay webhook handler
+│   │   └── Middleware/
+│   │       ├── AdminMiddleware.php
+│   │       └── SecurityHeaders.php
+│   ├── Models/                 # Eloquent models
+│   ├── Services/               # Business logic layer
+│   │   ├── CartService.php
+│   │   ├── OrderService.php
+│   │   ├── PaymentService.php  # Razorpay integration
+│   │   ├── CouponService.php
+│   │   └── OtpService.php
+│   └── Repositories/          # Repository pattern for data access
+├── database/
+│   └── migrations/
+├── resources/
+│   └── views/
+│       ├── frontend/           # Customer-facing views
+│       ├── admin/              # Admin panel views
+│       └── auth/               # Login, OTP views
+├── routes/
+│   └── web.php                 # All routes (frontend + admin + webhook)
+├── public/
+│   └── build/                  # Compiled CSS/JS (after npm run build)
+├── .env                        # Environment config (NEVER commit to Git)
+├── PRODUCTION.md               # Detailed deployment reference
+└── README.md                   # This file
+```
+
+---
+
+## Security Checklist (Before Going Live)
+
+- [ ] `APP_DEBUG=false` in `.env`
+- [ ] `APP_ENV=production` in `.env`
+- [ ] `.env` file is NOT accessible via browser (`yourdomain.com/.env` should return 404)
+- [ ] SSL certificate installed (Let's Encrypt via hPanel)
+- [ ] Razorpay **live** keys added (not test keys)
+- [ ] `RAZORPAY_WEBHOOK_SECRET` configured
+- [ ] Storage permissions set (`chmod -R 755 storage/`)
+- [ ] `php artisan config:cache` run after any `.env` changes
+- [ ] Admin password is strong
+
+---
+
+## Common Issues
+
+| Issue | Fix |
+|-------|-----|
+| 500 Server Error | Check `storage/logs/laravel.log`. Temporarily set `APP_DEBUG=true` |
+| Images not showing | Run `php artisan storage:link` |
+| Payment not working | Verify Razorpay keys in `.env`, run `php artisan config:cache` |
+| Session expires quickly | Increase `SESSION_LIFETIME` in `.env` |
+| Emails not sending | Use Gmail App Password (not login password) |
+| Permission denied on storage | `chmod -R 755 storage/ bootstrap/cache/` |
+| `php artisan` not found | Make sure you're in the project root directory |
+
+---
+
+## Update / Redeploy Process
+
+```bash
+# 1. Pull latest code
+git pull origin main
+
+# 2. Install any new PHP packages
+composer install --no-dev --optimize-autoloader
+
+# 3. Run new migrations
+php artisan migrate --force
+
+# 4. Build new frontend assets (locally, then upload public/build/)
+npm run build
+
+# 5. Clear and re-cache
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+---
+
+## Support & Docs
+
+- 📖 [Laravel Documentation](https://laravel.com/docs)
+- 💳 [Razorpay Docs](https://razorpay.com/docs/)
+- 🌐 [Hostinger Support](https://support.hostinger.com)
+- 📋 [Detailed Deployment Guide](./PRODUCTION.md)

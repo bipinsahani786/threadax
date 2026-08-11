@@ -28,6 +28,9 @@
                     <a href="{{ route('account.wishlist') }}" class="flex items-center px-4 py-3 text-sm font-bold uppercase tracking-wider rounded-lg transition-colors {{ request()->routeIs('account.wishlist') ? 'bg-brand-text text-white' : 'text-brand-muted hover:bg-white hover:text-brand-text shadow-sm' }}">
                         Wishlist
                     </a>
+                    <a href="{{ route('account.reviews') }}" class="flex items-center px-4 py-3 text-sm font-bold uppercase tracking-wider rounded-lg transition-colors {{ request()->routeIs('account.reviews') ? 'bg-brand-text text-white' : 'text-brand-muted hover:bg-white hover:text-brand-text shadow-sm' }}">
+                        My Reviews
+                    </a>
                     <a href="{{ route('account.profile') }}" class="flex items-center px-4 py-3 text-sm font-bold uppercase tracking-wider rounded-lg transition-colors {{ request()->routeIs('account.profile') ? 'bg-brand-text text-white' : 'text-brand-muted hover:bg-white hover:text-brand-text shadow-sm' }}">
                         Profile Details
                     </a>

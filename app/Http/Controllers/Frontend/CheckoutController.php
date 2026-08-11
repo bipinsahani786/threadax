@@ -3,149 +3,271 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Frontend\CheckoutRequest;
 use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
+use App\Services\CouponService;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\Payment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
     public function __construct(
-        private CartService $cartService,
-        private OrderService $orderService,
-        private PaymentService $paymentService
+        private CartService    $cartService,
+        private OrderService   $orderService,
+        private PaymentService $paymentService,
+        private CouponService  $couponService
     ) {}
 
     public function index()
     {
         $cart = $this->cartService->getCart();
-        
+
         if ($cart->items->isEmpty()) {
             return redirect()->route('frontend.products.index')->with('error', 'Your cart is empty.');
         }
 
-        $summary = $this->cartService->getSummary();
-        $addresses = Auth::user()->addresses; // User is authenticated due to middleware
+        $summary   = $this->cartService->getSummary();
+        $addresses = Auth::user()->addresses;
 
-        return view('frontend.pages.checkout.index', compact('cart', 'summary', 'addresses'));
+        // Rehydrate any coupon stored in session
+        $coupon   = null;
+        $discount = 0;
+        if (session('coupon_code')) {
+            $result = $this->couponService->validate(session('coupon_code'), $summary['subtotal']);
+            if ($result['valid']) {
+                $coupon   = $result['coupon'];
+                $discount = $result['discount'];
+            } else {
+                session()->forget(['coupon_code', 'coupon_discount']);
+            }
+        }
+
+        $razorpayKeyId = $this->paymentService->getKeyId();
+
+        return view('frontend.pages.checkout.index', compact(
+            'cart', 'summary', 'addresses', 'coupon', 'discount', 'razorpayKeyId'
+        ));
     }
 
+    /**
+     * AJAX: Apply a coupon code.
+     */
+    public function applyCoupon(Request $request)
+    {
+        $request->validate(['coupon_code' => 'required|string|max:50']);
+
+        $summary = $this->cartService->getSummary();
+        $result  = $this->couponService->validate($request->coupon_code, $summary['subtotal']);
+
+        if (! $result['valid']) {
+            return response()->json(['success' => false, 'message' => $result['message']], 422);
+        }
+
+        session([
+            'coupon_code'     => strtoupper($request->coupon_code),
+            'coupon_discount' => $result['discount'],
+        ]);
+
+        $newTotal = max(0, $summary['total'] - $result['discount']);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Coupon applied! You save ₹' . number_format($result['discount'], 2),
+            'discount' => number_format($result['discount'], 2),
+            'total'    => number_format($newTotal, 2),
+            'coupon'   => $result['coupon']->code,
+        ]);
+    }
+
+    /**
+     * AJAX: Remove applied coupon.
+     */
+    public function removeCoupon()
+    {
+        session()->forget(['coupon_code', 'coupon_discount']);
+        $summary = $this->cartService->getSummary();
+
+        return response()->json([
+            'success' => true,
+            'total'   => number_format($summary['total'], 2),
+        ]);
+    }
+
+    /**
+     * Process checkout: validate address, create order, init payment.
+     */
     public function process(Request $request)
     {
         $cart = $this->cartService->getCart();
         if ($cart->items->isEmpty()) {
-            return redirect()->route('frontend.products.index');
+            return response()->json(['success' => false, 'message' => 'Your cart is empty.'], 422);
         }
 
         $request->validate([
-            'address_id' => 'nullable|exists:addresses,id',
-            'name' => 'required_without:address_id|string|max:255',
-            'phone' => 'required_without:address_id|string|max:20',
-            'street' => 'required_without:address_id|string|max:255',
-            'city' => 'required_without:address_id|string|max:255',
-            'state' => 'required_without:address_id|string|max:255',
-            'pincode' => 'required_without:address_id|string|max:10',
-            'payment_method' => 'required|in:cod,razorpay'
+            'address_id'     => 'nullable|exists:addresses,id',
+            'name'           => 'required_without:address_id|string|max:255',
+            'phone'          => 'required_without:address_id|digits_between:10,15',
+            'street'         => 'required_without:address_id|string|max:255',
+            'city'           => 'required_without:address_id|string|max:100',
+            'state'          => 'required_without:address_id|string|max:100',
+            'pincode'        => 'required_without:address_id|digits:6',
+            'payment_method' => 'required|in:cod,razorpay',
         ]);
 
         try {
             $user = Auth::user();
-            
+
             // Handle Address
             if ($request->address_id) {
-                $addressId = $request->address_id;
+                // Ensure the address belongs to this user (authorization check)
+                $address = $user->addresses()->findOrFail($request->address_id);
+                $addressId = $address->id;
             } else {
                 $address = Address::create([
                     'user_id' => $user->id,
-                    'name' => $request->name,
-                    'phone' => $request->phone,
-                    'street' => $request->street,
-                    'city' => $request->city,
-                    'state' => $request->state,
+                    'name'    => $request->name,
+                    'phone'   => $request->phone,
+                    'street'  => $request->street,
+                    'city'    => $request->city,
+                    'state'   => $request->state,
                     'pincode' => $request->pincode,
-                    'type' => 'home'
+                    'type'    => 'home',
                 ]);
                 $addressId = $address->id;
             }
 
+            // Resolve coupon from session
+            $coupon   = null;
+            $discount = 0;
+            if (session('coupon_code')) {
+                $summary = $this->cartService->getSummary();
+                $result  = $this->couponService->validate(session('coupon_code'), $summary['subtotal']);
+                if ($result['valid']) {
+                    $coupon   = $result['coupon'];
+                    $discount = $result['discount'];
+                }
+            }
+
             // Create Order
-            $order = $this->orderService->createOrder($user->id, $addressId, $request->payment_method);
+            $order = $this->orderService->createOrder($user->id, $addressId, $request->payment_method, $coupon, $discount);
+
+            // Record coupon usage
+            if ($coupon) {
+                $this->couponService->recordUsage($coupon, $order->id, $discount);
+                session()->forget(['coupon_code', 'coupon_discount']);
+            }
 
             if ($request->payment_method === 'razorpay') {
                 $razorpayOrderId = $this->paymentService->initializeRazorpayPayment($order);
-                
-                // Save payment init record
+
                 Payment::create([
-                    'order_id' => $order->id,
+                    'order_id'       => $order->id,
                     'transaction_id' => $razorpayOrderId,
-                    'amount' => $order->total,
-                    'status' => 'pending',
-                    'payment_method' => 'razorpay'
+                    'amount'         => $order->total,
+                    'status'         => 'pending',
+                    'payment_method' => 'razorpay',
                 ]);
 
                 return response()->json([
-                    'success' => true,
+                    'success'           => true,
                     'razorpay_order_id' => $razorpayOrderId,
-                    'amount' => $order->total * 100, // in paise
-                    'currency' => 'INR',
-                    'name' => 'ThreadAx',
-                    'description' => 'Order #' . $order->order_number,
-                    'prefill' => [
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'contact' => $order->address->phone ?? ''
+                    'amount'            => (int) ($order->total * 100),
+                    'currency'          => 'INR',
+                    'name'              => 'ThreadAx',
+                    'description'       => 'Order #' . $order->order_number,
+                    'prefill'           => [
+                        'name'    => $user->name,
+                        'email'   => $user->email,
+                        'contact' => $order->address->phone ?? '',
                     ],
-                    'order_id_db' => $order->id
-                ]);
-            } else {
-                // COD
-                return response()->json([
-                    'success' => true,
-                    'redirect_url' => route('frontend.checkout.success', $order->id)
+                    'order_id_db' => $order->id,
                 ]);
             }
+
+            // COD flow
+            $order->update(['payment_status' => 'pending', 'status' => 'processing']);
+            return response()->json([
+                'success'      => true,
+                'redirect_url' => route('frontend.checkout.success', $order->id),
+            ]);
+
         } catch (\Exception $e) {
+            Log::error('Checkout process failed: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+            ]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Razorpay payment callback — verify signature and confirm order.
+     */
     public function callback(Request $request)
     {
+        $request->validate([
+            'razorpay_signature'  => 'required|string',
+            'razorpay_payment_id' => 'required|string',
+            'razorpay_order_id'   => 'required|string',
+            'order_id_db'         => 'required|integer|exists:orders,id',
+        ]);
+
         $attributes = [
-            'razorpay_signature' => $request->razorpay_signature,
+            'razorpay_signature'  => $request->razorpay_signature,
             'razorpay_payment_id' => $request->razorpay_payment_id,
-            'razorpay_order_id' => $request->razorpay_order_id
+            'razorpay_order_id'   => $request->razorpay_order_id,
         ];
 
         if ($this->paymentService->verifyRazorpaySignature($attributes)) {
-            // Success
-            $payment = Payment::where('transaction_id', $request->razorpay_order_id)->first();
+            $payment = Payment::where('transaction_id', $request->razorpay_order_id)
+                               ->where('status', 'pending')
+                               ->first();
+
             if ($payment) {
                 $payment->update([
-                    'status' => 'success',
-                    'transaction_id' => $request->razorpay_payment_id // update to actual payment id
+                    'status'              => 'success',
+                    'razorpay_payment_id' => $request->razorpay_payment_id,
+                    'transaction_id'      => $request->razorpay_order_id,
                 ]);
+
                 $payment->order->update([
                     'payment_status' => 'paid',
-                    'status' => 'processing'
+                    'status'         => 'processing',
                 ]);
+
+                Log::info('Razorpay payment confirmed', [
+                    'order_id'   => $payment->order_id,
+                    'payment_id' => $request->razorpay_payment_id,
+                ]);
+
                 return redirect()->route('frontend.checkout.success', $payment->order_id);
             }
         }
 
-        // Failure
-        // In real app, you might want to redirect to a failure page or update payment status to failed
-        return redirect()->route('frontend.checkout.index')->with('error', 'Payment failed or was cancelled.');
+        Log::warning('Razorpay callback verification failed', [
+            'razorpay_order_id'   => $request->razorpay_order_id,
+            'razorpay_payment_id' => $request->razorpay_payment_id,
+        ]);
+
+        return redirect()->route('frontend.checkout.index')
+                         ->with('error', 'Payment verification failed. Please contact support if money was deducted.');
     }
 
+    /**
+     * Order success page.
+     */
     public function success($orderId)
     {
-        $order = Order::where('id', $orderId)->where('user_id', Auth::id())->firstOrFail();
-        
+        $order = Order::with(['items.variant.product', 'address'])
+                      ->where('id', $orderId)
+                      ->where('user_id', Auth::id())
+                      ->firstOrFail();
+
         return view('frontend.pages.checkout.success', compact('order'));
     }
 }
