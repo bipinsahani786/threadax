@@ -18,6 +18,12 @@ class SettingController extends Controller
     {
         $data = $request->except(['_token', '_method']);
 
+        // Handle file uploads
+        if ($request->hasFile('shop_header_image')) {
+            $path = $request->file('shop_header_image')->store('settings', 'public');
+            $data['shop_header_image'] = $path;
+        }
+
         foreach ($data as $key => $value) {
             Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }

@@ -136,27 +136,28 @@
                 </div>
             </template>
 
-            {{-- OTP Form with Fluid 6-Box Grid --}}
-            <form @submit.prevent="verifyOtp" class="space-y-6">
+            {{-- OTP Form with 6-Box Grid --}}
+            <form @submit.prevent="verifyOtp" class="space-y-6" @paste="handleOtpPaste($event)">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-brand-muted mb-3 text-center">
                         Enter 6-Digit Code
                     </label>
                     
-                    {{-- 6 Fluid Individual Box Inputs (min-w-0 flex-1 guarantees NO overflow) --}}
-                    <div class="flex items-center justify-between gap-1.5 sm:gap-2.5 w-full max-w-sm mx-auto" @paste="handleOtpPaste($event)">
-                        <template x-for="(digit, index) in 6" :key="index">
+                    {{-- 6 Premium Individual Digit Boxes --}}
+                    <div class="flex items-center justify-center gap-2 sm:gap-3 w-full" id="otp-boxes-container">
+                        <template x-for="index in [0,1,2,3,4,5]" :key="index">
                             <input
                                 type="text"
                                 maxlength="1"
                                 inputmode="numeric"
                                 pattern="[0-9]"
-                                :x-ref="'otpBox' + index"
-                                :value="otpDigits[index]"
+                                :id="'otp-box-' + index"
+                                x-model="otpDigits[index]"
                                 @input="handleOtpInput(index, $event)"
                                 @keydown.backspace="handleOtpBackspace(index, $event)"
-                                class="flex-1 min-w-0 h-12 sm:h-14 text-xl sm:text-2xl font-extrabold font-heading text-center text-brand-text bg-brand-light border-2 border-brand-border rounded-xl focus:border-brand-text focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-text/10 transition-all shadow-sm"
-                                required
+                                @focus="$el.select()"
+                                class="w-12 h-14 sm:w-14 sm:h-16 text-2xl sm:text-3xl font-black font-heading text-center text-brand-text bg-brand-light border-2 border-brand-border rounded-2xl focus:border-brand-text focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-text/10 transition-all duration-200 shadow-sm caret-brand-text"
+                                autocomplete="one-time-code"
                             >
                         </template>
                     </div>
@@ -256,9 +257,7 @@
                         this.successMessage = data.message;
                         this.step = 'otp';
                         this.$nextTick(() => {
-                            const firstBox = this.$refs['otpBox0'];
-                            if (Array.isArray(firstBox)) firstBox[0]?.focus();
-                            else if (firstBox) firstBox.focus();
+                            document.getElementById('otp-box-0')?.focus();
                         });
                     } else {
                         this.errorMessage = data.message || 'Failed to send OTP.';
@@ -273,40 +272,31 @@
             handleOtpInput(index, e) {
                 const val = e.target.value.replace(/[^0-9]/g, '');
                 this.otpDigits[index] = val ? val.slice(-1) : '';
-                
+                e.target.value = this.otpDigits[index];
                 if (val && index < 5) {
-                    this.$nextTick(() => {
-                        const nextBox = this.$refs['otpBox' + (index + 1)];
-                        if (Array.isArray(nextBox)) nextBox[0]?.focus();
-                        else if (nextBox) nextBox.focus();
-                    });
+                    this.$nextTick(() => document.getElementById('otp-box-' + (index + 1))?.focus());
                 }
             },
 
             handleOtpBackspace(index, e) {
                 if (!this.otpDigits[index] && index > 0) {
-                    this.$nextTick(() => {
-                        const prevBox = this.$refs['otpBox' + (index - 1)];
-                        if (Array.isArray(prevBox)) prevBox[0]?.focus();
-                        else if (prevBox) prevBox.focus();
-                    });
+                    this.otpDigits[index - 1] = '';
+                    this.$nextTick(() => document.getElementById('otp-box-' + (index - 1))?.focus());
                 } else {
                     this.otpDigits[index] = '';
                 }
+                e.target.value = '';
             },
 
             handleOtpPaste(e) {
                 e.preventDefault();
                 const pasted = (e.clipboardData || window.clipboardData).getData('text').trim().replace(/[^0-9]/g, '');
-                if (pasted.length >= 6) {
-                    for (let i = 0; i < 6; i++) {
+                if (pasted.length >= 1) {
+                    for (let i = 0; i < 6 && i < pasted.length; i++) {
                         this.otpDigits[i] = pasted[i];
                     }
-                    this.$nextTick(() => {
-                        const lastBox = this.$refs['otpBox5'];
-                        if (Array.isArray(lastBox)) lastBox[0]?.focus();
-                        else if (lastBox) lastBox.focus();
-                    });
+                    const focusIdx = Math.min(pasted.length, 5);
+                    this.$nextTick(() => document.getElementById('otp-box-' + focusIdx)?.focus());
                 }
             },
 

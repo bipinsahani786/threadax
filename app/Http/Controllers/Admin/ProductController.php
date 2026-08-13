@@ -58,6 +58,7 @@ class ProductController extends Controller
             'meta_description' => 'nullable|string|max:500',
             'video_url' => 'nullable|url|max:255',
             'model_3d_url' => 'nullable|url|max:255',
+            'size_guide_url' => 'nullable|url|max:255',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
@@ -93,6 +94,7 @@ class ProductController extends Controller
             'meta_description' => 'nullable|string|max:500',
             'video_url' => 'nullable|url|max:255',
             'model_3d_url' => 'nullable|url|max:255',
+            'size_guide_url' => 'nullable|url|max:255',
         ]);
 
         $validated['is_active'] = $request->has('is_active');

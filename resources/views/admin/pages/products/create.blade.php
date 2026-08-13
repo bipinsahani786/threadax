@@ -112,6 +112,15 @@
                         <p class="mt-2 text-xs text-slate-500">For 3D interactive viewer on product page.</p>
                         @error('model_3d_url') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
+                    
+                    <div>
+                        <label for="size_guide_url" class="block text-sm font-bold text-slate-900 mb-2">Size Guide Image URL</label>
+                        <input type="url" id="size_guide_url" name="size_guide_url" value="{{ old('size_guide_url') }}"
+                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('size_guide_url') border-red-500 @enderror"
+                               placeholder="e.g., https://example.com/size-guide.jpg">
+                        <p class="mt-2 text-xs text-slate-500">Optional size chart image specific to this product.</p>
+                        @error('size_guide_url') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
                 </div>
             </div>
 

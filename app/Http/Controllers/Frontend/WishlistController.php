@@ -29,20 +29,24 @@ class WishlistController extends Controller
 
         if ($wishlist) {
             $wishlist->delete();
-            return response()->json([
-                'status' => 'removed',
-                'message' => 'Product removed from wishlist.',
-                'count' => $user->wishlists()->count()
-            ]);
+            $status = 'removed';
+            $message = 'Product removed from wishlist.';
         } else {
             $user->wishlists()->create([
                 'product_id' => $productId
             ]);
+            $status = 'added';
+            $message = 'Product added to wishlist.';
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'status' => 'added',
-                'message' => 'Product added to wishlist.',
+                'status' => $status,
+                'message' => $message,
                 'count' => $user->wishlists()->count()
             ]);
         }
+
+        return back()->with('success', $message);
     }
 }

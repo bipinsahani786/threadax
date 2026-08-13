@@ -26,9 +26,7 @@
             <div class="w-full lg:w-[55%] flex flex-col-reverse md:flex-row gap-4" x-data="{ 
                 activeMedia: 'image',
                 mainImage: '{{ $product->primary_image ? $product->primary_image->url : '' }}',
-                zoomActive: false,
-                zoomX: 0,
-                zoomY: 0
+                lightboxOpen: false
             }">
                 
                 {{-- Thumbnails --}}
@@ -40,16 +38,20 @@
                     @endforeach
 
                     @if($product->video_url)
-                        <button @click="activeMedia = 'video'" class="w-20 md:w-full aspect-[3/4] bg-brand-light cursor-pointer border-2 transition-colors shrink-0 flex flex-col items-center justify-center gap-1 text-brand-text" :class="activeMedia === 'video' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span class="text-[10px] font-bold uppercase tracking-wider">Video</span>
+                        <button @click="activeMedia = 'video'" class="w-20 md:w-full aspect-[3/4] cursor-pointer border-2 transition-colors shrink-0 relative group overflow-hidden" :class="activeMedia === 'video' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
+                            <img src="{{ $product->primary_image ? $product->primary_image->url : asset('images/hero-full.png') }}" class="w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 text-white bg-black/30">
+                                <svg class="w-8 h-8 drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
                         </button>
                     @endif
 
                     @if($product->model_3d_url)
-                        <button @click="activeMedia = '3d'" class="w-20 md:w-full aspect-[3/4] bg-brand-light cursor-pointer border-2 transition-colors shrink-0 flex flex-col items-center justify-center gap-1 text-brand-text" :class="activeMedia === '3d' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
-                            <span class="text-[10px] font-bold uppercase tracking-wider">3D View</span>
+                        <button @click="activeMedia = '3d'" class="w-20 md:w-full aspect-[3/4] cursor-pointer border-2 transition-colors shrink-0 relative group overflow-hidden" :class="activeMedia === '3d' ? 'border-brand-text' : 'border-transparent hover:border-brand-muted'">
+                            <img src="{{ $product->primary_image ? $product->primary_image->url : asset('images/hero-full.png') }}" class="w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 text-white bg-black/30">
+                                <svg class="w-8 h-8 drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                            </div>
                         </button>
                     @endif
                 </div>
@@ -57,32 +59,22 @@
                 {{-- Main Media Area --}}
                 <div class="w-full bg-brand-light aspect-[3/4] md:aspect-auto md:h-[800px] overflow-hidden relative">
                     
-                    {{-- Inner Zoom Image --}}
-                    <div x-show="activeMedia === 'image'" 
-                         class="absolute inset-0 cursor-crosshair"
-                         @mousemove="zoomActive = true; const rect = $el.getBoundingClientRect(); zoomX = (($event.clientX - rect.left) / rect.width) * 100; zoomY = (($event.clientY - rect.top) / rect.height) * 100;"
-                         @mouseleave="zoomActive = false">
+                    {{-- Main Image with Click for Lightbox --}}
+                    <div x-show="activeMedia === 'image'" class="absolute inset-0 group">
                         
                         <template x-if="mainImage">
-                            <img :src="mainImage" alt="{{ $product->name }}" class="w-full h-full object-cover transition-opacity duration-200" :class="zoomActive ? 'opacity-0' : 'opacity-100'">
+                            <div class="w-full h-full relative cursor-zoom-in" @click="lightboxOpen = true">
+                                <img :src="mainImage" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                <div class="absolute bottom-4 right-4 bg-white/90 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                </div>
+                            </div>
                         </template>
                         <template x-if="!mainImage">
                             <div class="w-full h-full flex items-center justify-center bg-gray-200">
                                 <span class="text-gray-400">No Image Available</span>
                             </div>
                         </template>
-
-                        {{-- Zoomed Overlay --}}
-                        <div x-show="zoomActive && mainImage" 
-                             class="absolute inset-0 bg-no-repeat pointer-events-none z-10" 
-                             :style="`background-image: url('${mainImage}'); background-position: ${zoomX}% ${zoomY}%; background-size: 250%;`"
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0"
-                             x-transition:enter-end="opacity-100"
-                             x-transition:leave="transition ease-in duration-200"
-                             x-transition:leave-start="opacity-100"
-                             x-transition:leave-end="opacity-0">
-                        </div>
                     </div>
 
                     {{-- Video Player --}}
@@ -111,6 +103,16 @@
                         </div>
                     @endif
                 </div>
+
+                {{-- Lightbox / Outer Zoom Modal --}}
+                <div x-show="lightboxOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 md:p-8" @keydown.escape.window="lightboxOpen = false">
+                    <button @click="lightboxOpen = false" class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors z-50">
+                        <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <div class="w-full h-full max-w-5xl max-h-screen relative flex items-center justify-center" @click.away="lightboxOpen = false">
+                        <img :src="mainImage" alt="Zoomed Product Image" class="max-w-full max-h-full object-contain cursor-zoom-out" @click="lightboxOpen = false">
+                    </div>
+                </div>
             </div>
 
             {{-- Right: Product Info --}}
@@ -136,7 +138,9 @@
                     <div class="mb-8" x-show="availableSizes.length > 0">
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-xs font-bold uppercase tracking-widest text-brand-text">Select Size</span>
-                            <button type="button" class="text-xs text-brand-muted underline hover:text-brand-text">Size Guide</button>
+                            @if($product->size_guide_url)
+                                <button type="button" @click="sizeGuideOpen = true" class="text-xs text-brand-muted underline hover:text-brand-text">Size Guide</button>
+                            @endif
                         </div>
                         <div class="flex flex-wrap gap-3">
                             <template x-for="size in availableSizes" :key="size">
@@ -182,45 +186,47 @@
                     </template>
                 </div>
 
-                {{-- Add to Cart Form --}}
-                <form action="#" method="POST" @submit.prevent="addToCart" class="flex gap-4 mb-10 border-t border-brand-border pt-8">
-                    @csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <input type="hidden" name="variant_id" :value="selectedVariant ? selectedVariant.id : ''">
-                    
-                    <div class="w-24 h-14 border border-brand-border flex items-center justify-between px-4 shrink-0 bg-white">
-                        <button type="button" @click="quantity > 1 ? quantity-- : null" class="text-brand-muted hover:text-brand-text transition-colors font-bold">&minus;</button>
-                        <span class="text-sm font-bold" x-text="quantity"></span>
-                        <button type="button" @click="quantity++" class="text-brand-muted hover:text-brand-text transition-colors font-bold">&plus;</button>
-                        <input type="hidden" name="quantity" :value="quantity">
-                    </div>
-                    
-                    <button type="submit" 
-                        class="flex-1 h-14 bg-brand-text text-white text-sm font-bold uppercase tracking-widest hover:bg-brand-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="!canAddToCart">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                        <span x-text="buttonText"></span>
-                    </button>
-                    
-                </form>
-
-                {{-- Wishlist Toggle Form --}}
-                @auth
-                    @php
-                        $inWishlist = auth()->user()->wishlists()->where('product_id', $product->id)->exists();
-                    @endphp
-                    <form action="{{ route('account.wishlist.toggle') }}" method="POST" class="absolute right-0 bottom-24 -mt-20 -mr-2">
+                {{-- Action Buttons Row --}}
+                <div class="flex gap-4 mb-10 border-t border-brand-border pt-8">
+                    {{-- Add to Cart Form --}}
+                    <form action="#" method="POST" @submit.prevent="addToCart" class="flex flex-1 gap-4">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <button type="submit" class="w-14 h-14 border flex items-center justify-center transition-colors bg-white {{ $inWishlist ? 'border-red-500 text-red-500 hover:bg-red-50' : 'border-brand-border text-brand-muted hover:text-red-500 hover:border-red-500' }}">
-                            <svg class="w-5 h-5 {{ $inWishlist ? 'fill-current' : 'fill-none' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                        <input type="hidden" name="variant_id" :value="selectedVariant ? selectedVariant.id : ''">
+                        
+                        <div class="w-24 h-14 border border-brand-border flex items-center justify-between px-4 shrink-0 bg-white">
+                            <button type="button" @click="quantity > 1 ? quantity-- : null" class="text-brand-muted hover:text-brand-text transition-colors font-bold">&minus;</button>
+                            <span class="text-sm font-bold" x-text="quantity"></span>
+                            <button type="button" @click="quantity++" class="text-brand-muted hover:text-brand-text transition-colors font-bold">&plus;</button>
+                            <input type="hidden" name="quantity" :value="quantity">
+                        </div>
+                        
+                        <button type="submit" 
+                            class="flex-1 h-14 bg-brand-text text-white text-sm font-bold uppercase tracking-widest hover:bg-brand-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            :disabled="!canAddToCart">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                            <span x-text="buttonText"></span>
                         </button>
                     </form>
-                @else
-                    <a href="{{ route('auth.login') }}" class="absolute right-0 bottom-24 -mt-20 -mr-2 w-14 h-14 border border-brand-border flex items-center justify-center text-brand-muted hover:text-red-500 hover:border-red-500 transition-colors bg-white">
-                        <svg class="w-5 h-5 fill-none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
-                    </a>
-                @endauth
+
+                    {{-- Wishlist Toggle Form --}}
+                    @auth
+                        @php
+                            $inWishlist = auth()->user()->wishlists()->where('product_id', $product->id)->exists();
+                        @endphp
+                        <form action="{{ route('account.wishlist.toggle') }}" method="POST" class="shrink-0">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <button type="submit" class="w-14 h-14 border flex items-center justify-center transition-colors bg-white {{ $inWishlist ? 'border-red-500 text-red-500 hover:bg-red-50' : 'border-brand-border text-brand-muted hover:text-red-500 hover:border-red-500' }}">
+                                <svg class="w-5 h-5 {{ $inWishlist ? 'fill-current' : 'fill-none' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('auth.login') }}" class="w-14 h-14 border border-brand-border flex items-center justify-center text-brand-muted hover:text-red-500 hover:border-red-500 transition-colors bg-white shrink-0">
+                            <svg class="w-5 h-5 fill-none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                        </a>
+                    @endauth
+                </div>
 
                 {{-- Accordions for details --}}
                 <div class="border-t border-brand-border divide-y divide-brand-border" x-data="{ activeTab: 1 }">
@@ -244,10 +250,17 @@
                             <svg class="w-5 h-5 text-brand-muted group-hover:text-brand-text transition-transform duration-300" :class="activeTab === 2 ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div x-show="activeTab === 2" x-collapse>
-                            <div class="pb-6 text-sm text-brand-muted space-y-4">
-                                <p><strong class="text-brand-text">Free Shipping:</strong> On all orders above ₹999.</p>
-                                <p><strong class="text-brand-text">Delivery Time:</strong> Standard delivery within 3-5 business days. Metro cities within 1-2 business days.</p>
-                                <p><strong class="text-brand-text">Returns:</strong> Easy 7-day returns and exchanges. Product must be unwashed and unworn with original tags attached.</p>
+                            <div class="pb-6 text-sm text-brand-muted space-y-4 prose prose-sm max-w-none">
+                                @php
+                                    $shippingPolicy = \App\Models\Setting::where('key', 'shipping_policy')->value('value');
+                                @endphp
+                                @if($shippingPolicy)
+                                    {!! nl2br($shippingPolicy) !!}
+                                @else
+                                    <p><strong class="text-brand-text">Free Shipping:</strong> On all orders above ₹999.</p>
+                                    <p><strong class="text-brand-text">Delivery Time:</strong> Standard delivery within 3-5 business days. Metro cities within 1-2 business days.</p>
+                                    <p><strong class="text-brand-text">Returns:</strong> Easy 7-day returns and exchanges. Product must be unwashed and unworn with original tags attached.</p>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -381,6 +394,13 @@
                             @if($related->primary_image)
                                 <img src="{{ $related->primary_image->url }}" alt="{{ $related->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                             @endif
+                            @if($related->discount_percent > 0)
+                                <div class="absolute top-3 left-3">
+                                    <span class="inline-flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black px-2.5 py-1 uppercase tracking-wider rounded-sm shadow-lg">
+                                        {{ $related->discount_percent }}% OFF
+                                    </span>
+                                </div>
+                            @endif
                             <button class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-brand-text hover:text-white">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                             </button>
@@ -391,6 +411,19 @@
                 @endforeach
             </div>
         </section>
+    @endif
+
+    {{-- Size Guide Modal --}}
+    @if($product->size_guide_url)
+        <div x-show="sizeGuideOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" @keydown.escape.window="sizeGuideOpen = false">
+            <button @click="sizeGuideOpen = false" class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors z-50">
+                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div class="w-full max-w-3xl max-h-[90vh] bg-white rounded overflow-y-auto relative p-6 md:p-10 shadow-2xl" @click.away="sizeGuideOpen = false">
+                <h3 class="text-2xl font-bold font-heading mb-6 border-b pb-4">Size Guide</h3>
+                <img src="{{ $product->size_guide_url }}" alt="Size Guide" class="w-full h-auto">
+            </div>
+        </div>
     @endif
 
 @endsection
@@ -405,6 +438,8 @@
             variants: variants,
             basePrice: basePrice,
             
+            sizeGuideOpen: false,
+
             selectedSize: null,
             selectedColor: null,
             quantity: 1,

@@ -21,6 +21,7 @@ class Category extends Model
         'image',
         'sort_order',
         'is_active',
+        'show_in_header',
     ];
 
     protected $casts = [
@@ -63,5 +64,10 @@ class Category extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function scopeHeaderNav($query)
+    {
+        return $query->where('show_in_header', true)->where('is_active', true)->orderBy('sort_order')->orderBy('name');
     }
 }

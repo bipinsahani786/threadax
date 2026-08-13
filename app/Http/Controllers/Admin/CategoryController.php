@@ -50,6 +50,7 @@ class CategoryController extends Controller
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+        $validated['show_in_header'] = $request->has('show_in_header');
         $validated['sort_order'] = $request->input('sort_order', 0);
 
         // Name slug is handled by HasSlug trait
@@ -81,6 +82,7 @@ class CategoryController extends Controller
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+        $validated['show_in_header'] = $request->has('show_in_header');
         $validated['sort_order'] = $request->input('sort_order', 0);
 
         // Prevent circular reference

@@ -65,9 +65,15 @@ class CartController extends Controller
 
         try {
             $this->cartService->updateQuantity($request->item_id, $request->quantity);
-            return $this->index(); // Return updated cart
+            if ($request->expectsJson() || $request->ajax()) {
+                return $this->index();
+            }
+            return back()->with('success', 'Cart updated.');
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -79,9 +85,57 @@ class CartController extends Controller
 
         try {
             $this->cartService->removeItem($request->item_id);
-            return $this->index(); // Return updated cart
+            if ($request->expectsJson() || $request->ajax()) {
+                return $this->index();
+            }
+            return back()->with('success', 'Item removed from cart.');
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+            return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function moveToWishlist(Request $request, $id)
+    {
+        $cartItem = \App\Models\CartItem::findOrFail($id);
+        
+        // Add to wishlist
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            \Illuminate\Support\Facades\Auth::user()->wishlists()->firstOrCreate([
+                'product_id' => $cartItem->variant->product_id
+            ]);
+        }
+
+        // Remove from cart
+        $this->cartService->removeItem($cartItem->id);
+
+        return back()->with('success', 'Item moved to wishlist.');
+    }
+
+    public function moveFromWishlist(Request $request, $id)
+    {
+        if (!\Illuminate\Support\Facades\Auth::check()) {
+            return back()->with('error', 'Please login to manage wishlist.');
+        }
+
+        $wishlistItem = \Illuminate\Support\Facades\Auth::user()->wishlists()->findOrFail($id);
+        $product = $wishlistItem->product;
+        
+        // We need a variant to add to cart. Let's get the default or first variant.
+        $variant = $product->variants->first();
+
+        if ($variant) {
+            try {
+                $this->cartService->addItem($variant->id, 1);
+                $wishlistItem->delete(); // Remove from wishlist
+                return back()->with('success', 'Item moved to cart.');
+            } catch (\Exception $e) {
+                return back()->with('error', $e->getMessage());
+            }
+        }
+
+        return back()->with('error', 'Product is currently unavailable.');
     }
 }

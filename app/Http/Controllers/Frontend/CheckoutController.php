@@ -50,8 +50,33 @@ class CheckoutController extends Controller
 
         $razorpayKeyId = $this->paymentService->getKeyId();
 
+        // Recommendations (Random 4 active products)
+        $recommendedProducts = \App\Models\Product::with('images', 'variants')
+            ->where('is_active', true)
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
+
+        // Available Coupons
+        $availableCoupons = \App\Models\Coupon::where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('starts_at')
+                      ->orWhere('starts_at', '<=', now());
+            })
+            ->get()
+            ->filter(function ($coupon) {
+                return $coupon->isValid(); // Double check logic
+            });
+
+        // Wishlist Items
+        $wishlistItems = Auth::check() ? Auth::user()->wishlists()->with('product.variants', 'product.images')->get() : collect();
+
         return view('frontend.pages.checkout.index', compact(
-            'cart', 'summary', 'addresses', 'coupon', 'discount', 'razorpayKeyId'
+            'cart', 'summary', 'addresses', 'coupon', 'discount', 'razorpayKeyId', 'recommendedProducts', 'availableCoupons', 'wishlistItems'
         ));
     }
 
@@ -118,15 +143,22 @@ class CheckoutController extends Controller
                 $address = $user->addresses()->findOrFail($request->address_id);
                 $addressId = $address->id;
             } else {
+                // Determine if this should be default
+                $isDefault = $user->addresses()->count() === 0;
+
                 $address = Address::create([
-                    'user_id' => $user->id,
-                    'name'    => $request->name,
-                    'phone'   => $request->phone,
-                    'street'  => $request->street,
-                    'city'    => $request->city,
-                    'state'   => $request->state,
-                    'pincode' => $request->pincode,
-                    'type'    => 'home',
+                    'user_id'         => $user->id,
+                    'name'            => $request->name,
+                    'phone'           => $request->phone,
+                    'alternate_phone' => $request->alternate_phone,
+                    'line1'           => $request->line1,
+                    'line2'           => $request->line2,
+                    'landmark'        => $request->landmark,
+                    'city'            => $request->city,
+                    'state'           => $request->state,
+                    'pincode'         => $request->pincode,
+                    'type'            => 'home', // default
+                    'is_default'      => $isDefault,
                 ]);
                 $addressId = $address->id;
             }
@@ -163,8 +195,7 @@ class CheckoutController extends Controller
                     'payment_method' => 'razorpay',
                 ]);
 
-                return response()->json([
-                    'success'           => true,
+                $razorpayData = [
                     'razorpay_order_id' => $razorpayOrderId,
                     'amount'            => (int) ($order->total * 100),
                     'currency'          => 'INR',
@@ -176,14 +207,22 @@ class CheckoutController extends Controller
                         'contact' => $order->address->phone ?? '',
                     ],
                     'order_id_db' => $order->id,
-                ]);
+                ];
+
+                return response()->json(array_merge([
+                    'success'  => true,
+                    'razorpay' => $razorpayData,
+                ], $razorpayData));
             }
 
             // COD flow
             $order->update(['payment_status' => 'pending', 'status' => 'processing']);
+            $redirectUrl = route('frontend.checkout.success', $order->id);
+
             return response()->json([
                 'success'      => true,
-                'redirect_url' => route('frontend.checkout.success', $order->id),
+                'redirect'     => $redirectUrl,
+                'redirect_url' => $redirectUrl,
             ]);
 
         } catch (\Exception $e) {
@@ -252,7 +291,7 @@ class CheckoutController extends Controller
      */
     public function success($orderId)
     {
-        $order = Order::with(['items.variant.product', 'address'])
+        $order = Order::with(['items.variant.product.images', 'address'])
                       ->where('id', $orderId)
                       ->where('user_id', Auth::id())
                       ->firstOrFail();

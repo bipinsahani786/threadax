@@ -32,5 +32,16 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Ignore during migrations or initial setup
         }
+
+        // Share header categories to all frontend views
+        try {
+            if (Schema::hasTable('categories')) {
+                View::composer(['frontend.layouts.app', 'welcome'], function ($view) {
+                    $view->with('headerCategories', \App\Models\Category::headerNav()->get());
+                });
+            }
+        } catch (\Exception $e) {
+            // Ignore during migrations or initial setup
+        }
     }
 }

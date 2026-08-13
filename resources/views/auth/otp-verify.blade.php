@@ -5,7 +5,7 @@
 
 @section('content')
 
-<div class="relative w-full min-h-[calc(100vh-130px)] flex items-stretch overflow-hidden bg-white" x-data="{ otpDigits: ['', '', '', '', '', ''], get code() { return this.otpDigits.join(''); } }">
+<div class="relative w-full min-h-[calc(100vh-130px)] flex items-stretch overflow-hidden bg-white" x-data="{ code: '' }">
 
     {{-- Left Image Banner (Stuck to Center Card, Touch Header & Footer) --}}
     <div class="hidden lg:block flex-1 relative overflow-hidden group">
@@ -56,26 +56,19 @@
         <form action="{{ route('auth.otp.verify') }}" method="POST" class="space-y-6">
             @csrf
             <input type="hidden" name="email" value="{{ $email }}">
-            <input type="hidden" name="code" :value="code">
-
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-widest text-brand-muted mb-3 text-center">
-                    Enter 6-Digit Code
-                </label>
-                
-                {{-- 6 Fluid Individual Box Inputs --}}
-                <div id="otp-container" class="flex items-center justify-between gap-1.5 sm:gap-2.5 w-full max-w-sm mx-auto">
-                    <template x-for="(digit, index) in otpDigits" :key="index">
-                        <input
-                            type="text"
-                            maxlength="1"
-                            inputmode="numeric"
-                            pattern="[0-9]"
-                            x-model="otpDigits[index]"
-                            class="otp-input flex-1 min-w-0 h-12 sm:h-14 text-xl sm:text-2xl font-extrabold font-heading text-center text-brand-text bg-brand-light border-2 border-brand-border rounded-xl focus:border-brand-text focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-text/10 transition-all shadow-sm"
-                            required
-                        >
-                    </template>
+                {{-- Single Sleek Box Input --}}
+                <div class="w-full max-w-[280px] mx-auto relative">
+                    <input
+                        type="text"
+                        name="code"
+                        x-model="code"
+                        maxlength="6"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        class="w-full h-16 sm:h-20 text-3xl sm:text-4xl font-extrabold font-heading text-center text-brand-text bg-brand-light/50 border-2 border-brand-border rounded-2xl focus:border-brand-text focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-text/10 transition-all shadow-inner tracking-[0.5em] sm:tracking-[0.7em] pl-[0.5em] sm:pl-[0.7em]"
+                        required
+                        placeholder="••••••"
+                    >
                 </div>
 
                 <p class="text-brand-muted text-xs text-center mt-3">Code expires in 10 minutes.</p>
@@ -128,34 +121,7 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('otp-container');
-    if (!container) return;
-    
-    container.addEventListener('input', function(e) {
-        if (e.target.classList.contains('otp-input')) {
-            if (e.target.value.length === 1) {
-                let inputs = Array.from(document.querySelectorAll('.otp-input'));
-                let idx = inputs.indexOf(e.target);
-                if (idx !== -1 && idx < inputs.length - 1) {
-                    inputs[idx + 1].focus();
-                }
-            }
-        }
-    });
-
-    container.addEventListener('keydown', function(e) {
-        if (e.target.classList.contains('otp-input') && e.key === 'Backspace') {
-            if (e.target.value === '') {
-                let inputs = Array.from(document.querySelectorAll('.otp-input'));
-                let idx = inputs.indexOf(e.target);
-                if (idx > 0) {
-                    inputs[idx - 1].focus();
-                }
-            }
-        }
-    });
-});
+// No custom JS needed for single input
 </script>
 @endpush
 

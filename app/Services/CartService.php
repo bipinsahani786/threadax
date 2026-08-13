@@ -18,10 +18,8 @@ class CartService
         $userId = Auth::id();
         $sessionId = Session::getId();
 
-        $query = Cart::with(['items.variant.product.images']);
-
         if ($userId) {
-            $cart = $query->where('user_id', $userId)->first();
+            $cart = Cart::where('user_id', $userId)->first();
             
             // If user has a session cart and just logged in, merge it
             $sessionCart = Cart::where('session_id', $sessionId)->whereNull('user_id')->first();
@@ -44,13 +42,13 @@ class CartService
                 $cart = Cart::create(['user_id' => $userId]);
             }
         } else {
-            $cart = $query->firstOrCreate(
+            $cart = Cart::firstOrCreate(
                 ['session_id' => $sessionId],
                 ['user_id' => null]
             );
         }
 
-        return $cart;
+        return $cart->fresh(['items.variant.product.images']);
     }
 
     /**

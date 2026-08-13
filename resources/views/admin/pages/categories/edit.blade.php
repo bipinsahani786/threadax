@@ -65,6 +65,16 @@
                         <label for="is_active" class="text-sm font-bold text-slate-900 cursor-pointer">Active</label>
                     </div>
                     <p class="text-xs text-slate-500 -mt-2 ml-[60px]">Inactive categories are hidden from the store.</p>
+
+                    <div class="flex items-center gap-3 pt-4">
+                        <input type="hidden" name="show_in_header" value="0">
+                        <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="show_in_header" id="show_in_header" value="1" {{ old('show_in_header', $category->show_in_header) ? 'checked' : '' }} class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-200 appearance-none cursor-pointer transition-transform duration-200 ease-in-out checked:border-slate-900 checked:translate-x-6 z-10"/>
+                            <label for="show_in_header" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer"></label>
+                        </div>
+                        <label for="show_in_header" class="text-sm font-bold text-slate-900 cursor-pointer">Show in Header Nav</label>
+                    </div>
+                    <p class="text-xs text-slate-500 -mt-2 ml-[60px]">This category will appear as a link in the main navigation bar.</p>
                 </div>
             </div>
 

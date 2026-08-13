@@ -117,15 +117,23 @@
                             {{ $category->products_count ?? 0 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($category->is_active)
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
-                                </span>
-                            @else
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                                    Inactive
-                                </span>
-                            @endif
+                            <div class="flex items-center gap-2">
+                                @if($category->is_active)
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                        Inactive
+                                    </span>
+                                @endif
+                                
+                                @if($category->show_in_header)
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                        Header
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end gap-2">
