@@ -33,7 +33,7 @@
                     <span class="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Order Reference</span>
                     <span class="text-sm sm:text-base font-black text-black font-mono tracking-wider">{{ $order->order_number }}</span>
                 </div>
-                <button type="button" @click="navigator.clipboard.writeText('{{ $order->order_number }}'); alert('Order ID Copied!');" class="text-[11px] font-bold text-gray-600 hover:text-black uppercase tracking-wider bg-white border border-gray-300 hover:border-black px-3 py-1.5 rounded transition-colors">
+                <button type="button" @click="navigator.clipboard.writeText('{{ $order->order_number }}'); if (window.showToast) window.showToast('Order ID Copied to Clipboard!', 'success');" class="text-[11px] font-bold text-gray-600 hover:text-black uppercase tracking-wider bg-white border border-gray-300 hover:border-black px-3 py-1.5 rounded transition-colors cursor-pointer">
                     Copy 📋
                 </button>
             </div>

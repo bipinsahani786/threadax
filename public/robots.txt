@@ -1,2 +1,35 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# THREADAX STREETWEAR — PRODUCTION ROBOTS.TXT
+# ══════════════════════════════════════════════════════════════════════════════
+
 User-agent: *
-Disallow:
+Allow: /
+Allow: /shop
+Allow: /product/
+Allow: /category/
+Allow: /blog/
+Allow: /page/
+Allow: /track-order
+Allow: /images/
+Allow: /build/
+
+# Disallow administrative, checkout, and private customer areas
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /account
+Disallow: /account/
+Disallow: /account/*
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /checkout/*
+Disallow: /cart
+Disallow: /webhooks/
+Disallow: /webhooks/*
+Disallow: /api/
+Disallow: /impersonate/
+Disallow: /push-tokens/
+
+# Sitemap Location for Search Engine Crawlers (Google, Bing, Yahoo, Yandex)
+Sitemap: http://127.0.0.1:8000/sitemap.xml
+Sitemap: https://threadax.co.in/sitemap.xml

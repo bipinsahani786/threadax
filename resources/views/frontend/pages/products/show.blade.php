@@ -135,19 +135,19 @@
                 @if($product->variants->count() > 0)
                     
                     {{-- Size Selector --}}
-                    <div class="mb-8" x-show="availableSizes.length > 0">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-bold uppercase tracking-widest text-brand-text">Select Size</span>
-                            @if($product->size_guide_url)
-                                <button type="button" @click="sizeGuideOpen = true" class="text-xs text-brand-muted underline hover:text-brand-text">Size Guide</button>
-                            @endif
+                    <div class="mb-6 sm:mb-8" x-show="availableSizes.length > 0">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-brand-dark">Select Size</span>
+                            <button type="button" @click="sizeGuideOpen = true" class="text-xs font-bold text-brand-dark underline hover:text-brand-muted flex items-center gap-1 cursor-pointer">
+                                <span>📏 Size Guide</span>
+                            </button>
                         </div>
-                        <div class="flex flex-wrap gap-3">
+                        <div class="flex flex-wrap gap-2.5">
                             <template x-for="size in availableSizes" :key="size">
                                 <button type="button" 
                                     @click="selectSize(size)"
-                                    class="h-12 px-6 border text-sm font-semibold transition-colors"
-                                    :class="selectedSize === size ? 'border-brand-text bg-brand-text text-white' : 'border-brand-border bg-white text-brand-text hover:border-brand-muted'"
+                                    class="h-11 min-w-[3.2rem] px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+                                    :class="selectedSize === size ? 'border-brand-dark bg-brand-dark text-white shadow-sm' : 'border-brand-border bg-white text-brand-dark hover:border-brand-dark/50'"
                                     x-text="size">
                                 </button>
                             </template>
@@ -156,14 +156,14 @@
                     </div>
 
                     {{-- Color Selector --}}
-                    <div class="mb-8" x-show="availableColors.length > 0">
-                        <span class="text-xs font-bold uppercase tracking-widest text-brand-text block mb-4">Select Color <span x-show="selectedColor" class="text-brand-muted normal-case ml-2" x-text="'- ' + selectedColor"></span></span>
-                        <div class="flex flex-wrap gap-3">
+                    <div class="mb-6 sm:mb-8" x-show="availableColors.length > 0">
+                        <span class="text-xs font-bold uppercase tracking-wider text-brand-dark block mb-3">Select Color <span x-show="selectedColor" class="text-brand-muted normal-case ml-2" x-text="'- ' + selectedColor"></span></span>
+                        <div class="flex flex-wrap gap-2.5">
                             <template x-for="color in availableColors" :key="color">
                                 <button type="button" 
                                     @click="selectColor(color)"
-                                    class="h-12 px-6 border text-sm font-semibold transition-colors"
-                                    :class="selectedColor === color ? 'border-brand-text bg-brand-text text-white' : 'border-brand-border bg-white text-brand-text hover:border-brand-muted'"
+                                    class="h-11 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+                                    :class="selectedColor === color ? 'border-brand-dark bg-brand-dark text-white shadow-sm' : 'border-brand-border bg-white text-brand-dark hover:border-brand-dark/50'"
                                     x-text="color">
                                 </button>
                             </template>
@@ -172,40 +172,60 @@
                     </div>
                 @endif
 
-                {{-- Stock Status --}}
-                <div class="mb-8 h-6 flex items-center">
+                {{-- Stock Status & Urgency Banner --}}
+                <div class="mb-6">
                     <template x-if="selectedVariant">
                         <div>
-                            <span x-show="selectedVariant.stock > 10" class="text-sm font-bold text-green-600 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> In Stock</span>
-                            <span x-show="selectedVariant.stock > 0 && selectedVariant.stock <= 10" class="text-sm font-bold text-orange-500 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-orange-500"></div> Only <span x-text="selectedVariant.stock"></span> left in stock!</span>
-                            <span x-show="selectedVariant.stock <= 0" class="text-sm font-bold text-red-500 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-red-500"></div> Out of Stock</span>
+                            <template x-if="selectedVariant.stock > 5">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>In Stock (Ready to dispatch)</span>
+                                </div>
+                            </template>
+                            <template x-if="selectedVariant.stock > 0 && selectedVariant.stock <= 5">
+                                <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold text-amber-800 flex items-center gap-2.5">
+                                    <span class="text-base">⚡</span>
+                                    <span>High Demand: Only <strong class="text-amber-950 underline" x-text="selectedVariant.stock"></strong> drops left in stock!</span>
+                                </div>
+                            </template>
+                            <template x-if="selectedVariant.stock <= 0">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                    <span>Out of Stock in this variant</span>
+                                </div>
+                            </template>
                         </div>
                     </template>
                     <template x-if="!selectedVariant && variants.length === 0">
-                        <span class="text-sm font-bold text-green-600 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> In Stock</span>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>In Stock (Ships in 24-48 Hours)</span>
+                        </div>
                     </template>
                 </div>
 
                 {{-- Action Buttons Row --}}
-                <div class="flex gap-4 mb-10 border-t border-brand-border pt-8">
+                <div id="main-buy-row" class="flex items-center gap-2.5 sm:gap-3.5 mb-8 border-t border-brand-border pt-6 sm:pt-8">
                     {{-- Add to Cart Form --}}
-                    <form action="#" method="POST" @submit.prevent="addToCart" class="flex flex-1 gap-4">
+                    <form action="#" method="POST" @submit.prevent="addToCart" class="flex flex-1 items-center gap-2.5 sm:gap-3.5 min-w-0">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="variant_id" :value="selectedVariant ? selectedVariant.id : ''">
                         
-                        <div class="w-24 h-14 border border-brand-border flex items-center justify-between px-4 shrink-0 bg-white">
-                            <button type="button" @click="quantity > 1 ? quantity-- : null" class="text-brand-muted hover:text-brand-text transition-colors font-bold">&minus;</button>
-                            <span class="text-sm font-bold" x-text="quantity"></span>
-                            <button type="button" @click="quantity++" class="text-brand-muted hover:text-brand-text transition-colors font-bold">&plus;</button>
+                        {{-- Quantity Pill --}}
+                        <div class="w-24 sm:w-28 h-12 bg-brand-off-white border border-brand-border rounded-xl flex items-center justify-between px-2.5 shrink-0 shadow-xs">
+                            <button type="button" @click="quantity > 1 ? quantity-- : null" class="w-7 h-7 rounded-lg flex items-center justify-center text-brand-dark hover:bg-white hover:shadow-xs active:scale-95 transition-all text-base font-bold cursor-pointer" aria-label="Decrease quantity">&minus;</button>
+                            <span class="text-xs sm:text-sm font-extrabold text-brand-dark font-heading w-6 text-center select-none" x-text="quantity"></span>
+                            <button type="button" @click="quantity++" class="w-7 h-7 rounded-lg flex items-center justify-center text-brand-dark hover:bg-white hover:shadow-xs active:scale-95 transition-all text-base font-bold cursor-pointer" aria-label="Increase quantity">&plus;</button>
                             <input type="hidden" name="quantity" :value="quantity">
                         </div>
                         
+                        {{-- Add to Bag Button --}}
                         <button type="submit" 
-                            class="flex-1 h-14 bg-brand-text text-white text-sm font-bold uppercase tracking-widest hover:bg-brand-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="flex-1 h-12 bg-brand-dark text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-brand-text active:scale-[0.99] rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap px-4 sm:px-6 cursor-pointer min-w-0"
                             :disabled="!canAddToCart">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                            <span x-text="buttonText"></span>
+                            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                            <span x-text="buttonText" class="truncate"></span>
                         </button>
                     </form>
 
@@ -217,12 +237,12 @@
                         <form action="{{ route('account.wishlist.toggle') }}" method="POST" class="shrink-0">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <button type="submit" class="w-14 h-14 border flex items-center justify-center transition-colors bg-white {{ $inWishlist ? 'border-red-500 text-red-500 hover:bg-red-50' : 'border-brand-border text-brand-muted hover:text-red-500 hover:border-red-500' }}">
+                            <button type="submit" class="w-12 h-12 rounded-xl border flex items-center justify-center transition-all shadow-xs hover:shadow-sm active:scale-95 cursor-pointer {{ $inWishlist ? 'border-red-200 bg-red-50/60 text-red-500 hover:bg-red-100/60' : 'border-brand-border bg-white text-brand-muted hover:text-red-500 hover:border-red-200 hover:bg-red-50/30' }}" title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
                                 <svg class="w-5 h-5 {{ $inWishlist ? 'fill-current' : 'fill-none' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
                             </button>
                         </form>
                     @else
-                        <a href="{{ route('auth.login') }}" class="w-14 h-14 border border-brand-border flex items-center justify-center text-brand-muted hover:text-red-500 hover:border-red-500 transition-colors bg-white shrink-0">
+                        <a href="{{ route('auth.login') }}" class="w-12 h-12 rounded-xl border border-brand-border flex items-center justify-center text-brand-muted hover:text-red-500 hover:border-red-200 hover:bg-red-50/30 transition-all bg-white shrink-0 shadow-xs hover:shadow-sm active:scale-95" title="Login to Add to Wishlist">
                             <svg class="w-5 h-5 fill-none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
                         </a>
                     @endauth
@@ -413,18 +433,145 @@
         </section>
     @endif
 
-    {{-- Size Guide Modal --}}
-    @if($product->size_guide_url)
-        <div x-show="sizeGuideOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" @keydown.escape.window="sizeGuideOpen = false">
-            <button @click="sizeGuideOpen = false" class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors z-50">
-                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <div class="w-full max-w-3xl max-h-[90vh] bg-white rounded overflow-y-auto relative p-6 md:p-10 shadow-2xl" @click.away="sizeGuideOpen = false">
-                <h3 class="text-2xl font-bold font-heading mb-6 border-b pb-4">Size Guide</h3>
-                <img src="{{ $product->size_guide_url }}" alt="Size Guide" class="w-full h-auto">
+    {{-- Universal Interactive Size Guide Modal --}}
+    <div x-show="sizeGuideOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4" @keydown.escape.window="sizeGuideOpen = false" x-cloak>
+        <div class="w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl overflow-y-auto relative p-6 sm:p-8 shadow-2xl border border-slate-200" @click.away="sizeGuideOpen = false" x-data="{ unit: 'in' }">
+            
+            <div class="flex items-center justify-between border-b border-brand-border pb-4 mb-6">
+                <div>
+                    <h3 class="text-xl font-heading font-extrabold text-brand-dark uppercase">Streetwear Sizing Guide</h3>
+                    <p class="text-xs text-brand-muted">Drop-shoulder relaxed oversized fit standard</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                        <button type="button" @click="unit = 'in'" class="px-3 py-1 rounded-lg transition-all" :class="unit === 'in' ? 'bg-black text-white shadow-xs' : 'text-slate-600 hover:text-black'">INCHES</button>
+                        <button type="button" @click="unit = 'cm'" class="px-3 py-1 rounded-lg transition-all" :class="unit === 'cm' ? 'bg-black text-white shadow-xs' : 'text-slate-600 hover:text-black'">CM</button>
+                    </div>
+                    <button @click="sizeGuideOpen = false" class="text-slate-400 hover:text-black transition-colors p-1 cursor-pointer">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
             </div>
+
+            @if($product->size_guide_url)
+                <div class="mb-6 rounded-xl overflow-hidden border border-slate-200">
+                    <img src="{{ $product->size_guide_url }}" alt="Size Guide" class="w-full h-auto">
+                </div>
+            @endif
+
+            {{-- Interactive Measurement Table --}}
+            <div class="overflow-x-auto rounded-xl border border-brand-border mb-6">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-brand-dark text-white uppercase text-[10px] font-black tracking-wider">
+                        <tr>
+                            <th class="p-3">Size</th>
+                            <th class="p-3">Chest Width</th>
+                            <th class="p-3">Body Length</th>
+                            <th class="p-3">Shoulder Drop</th>
+                            <th class="p-3">Sleeve Length</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-brand-border font-medium text-brand-dark">
+                        <tr class="hover:bg-brand-light/50 transition-colors">
+                            <td class="p-3 font-extrabold">S (Small)</td>
+                            <td class="p-3" x-text="unit === 'in' ? '42 in' : '107 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '28 in' : '71 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '21 in' : '53 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '8.5 in' : '22 cm'"></td>
+                        </tr>
+                        <tr class="hover:bg-brand-light/50 transition-colors bg-slate-50/50">
+                            <td class="p-3 font-extrabold">M (Medium)</td>
+                            <td class="p-3" x-text="unit === 'in' ? '44 in' : '112 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '29 in' : '74 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '22 in' : '56 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '9.0 in' : '23 cm'"></td>
+                        </tr>
+                        <tr class="hover:bg-brand-light/50 transition-colors">
+                            <td class="p-3 font-extrabold">L (Large)</td>
+                            <td class="p-3" x-text="unit === 'in' ? '46 in' : '117 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '30 in' : '76 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '23 in' : '58 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '9.5 in' : '24 cm'"></td>
+                        </tr>
+                        <tr class="hover:bg-brand-light/50 transition-colors bg-slate-50/50">
+                            <td class="p-3 font-extrabold">XL (Extra Large)</td>
+                            <td class="p-3" x-text="unit === 'in' ? '48 in' : '122 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '31 in' : '79 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '24 in' : '61 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '10.0 in' : '25 cm'"></td>
+                        </tr>
+                        <tr class="hover:bg-brand-light/50 transition-colors">
+                            <td class="p-3 font-extrabold">XXL (Double XL)</td>
+                            <td class="p-3" x-text="unit === 'in' ? '50 in' : '127 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '32 in' : '81 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '25 in' : '64 cm'"></td>
+                            <td class="p-3" x-text="unit === 'in' ? '10.5 in' : '27 cm'"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
+                <strong class="text-black font-extrabold">💡 Fit Guide Note:</strong> Our cuts are tailored with an authentic oversized street silhouette. For a standard tailored fit, consider sizing down one size.
+            </div>
+
         </div>
-    @endif
+    </div>
+
+    {{-- Floating Sticky Bottom Bar on Mobile & Desktop --}}
+    <div x-data="{ showSticky: false }" 
+         x-init="window.addEventListener('scroll', () => { 
+             const buyRow = document.getElementById('main-buy-row');
+             if (buyRow) {
+                 const rect = buyRow.getBoundingClientRect();
+                 showSticky = rect.bottom < 0;
+             }
+         })"
+         x-show="showSticky" 
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="translate-y-full opacity-0"
+         x-transition:enter-end="translate-y-0 opacity-100"
+         x-transition:leave="transition ease-in duration-200 transform"
+         x-transition:leave-start="translate-y-0 opacity-100"
+         x-transition:leave-end="translate-y-full opacity-0"
+         style="display: none;"
+         class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-brand-border/80 shadow-[0_-4px_25px_rgba(0,0,0,0.12)] p-3 sm:py-3.5 sm:px-6">
+        
+        <div class="max-w-[1440px] mx-auto flex items-center justify-between gap-4">
+            
+            {{-- Left: Item Thumbnail & Title --}}
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-lg bg-brand-light overflow-hidden shrink-0 border border-brand-border">
+                    @if($product->primaryImage)
+                        <img src="{{ $product->primaryImage->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                    @endif
+                </div>
+                <div class="min-w-0 hidden sm:block">
+                    <h4 class="text-xs font-extrabold text-brand-dark truncate">{{ $product->name }}</h4>
+                    <p class="text-[11px] font-extrabold text-brand-text" x-text="formatPrice(currentPrice)"></p>
+                </div>
+            </div>
+
+            {{-- Right: Variant status + Quick Add Button --}}
+            <div class="flex items-center gap-3 shrink-0">
+                <div class="text-right sm:text-left">
+                    <div class="text-xs font-black text-brand-dark sm:hidden" x-text="formatPrice(currentPrice)"></div>
+                    <div class="text-[10px] text-brand-muted font-bold" x-show="selectedSize">
+                        Size: <strong class="text-brand-dark" x-text="selectedSize"></strong>
+                    </div>
+                </div>
+
+                <button type="button" 
+                        @click="addToCart" 
+                        class="h-11 px-6 bg-brand-dark hover:bg-brand-text text-white text-xs font-extrabold uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="!canAddToCart">
+                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    <span x-text="buttonText"></span>
+                </button>
+            </div>
+
+        </div>
+    </div>
 
 @endsection
 

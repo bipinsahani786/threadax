@@ -28,16 +28,23 @@ class AccountController extends Controller
         ];
         $profileComplete = collect($profileChecks)->every(fn($c) => $c['done']);
         $profilePercent = round(collect($profileChecks)->filter(fn($c) => $c['done'])->count() / count($profileChecks) * 100);
+        
+        // Recommended products for quick-add on dashboard
+        $recommendedProducts = \App\Models\Product::with(['images', 'variants'])
+            ->where('is_active', true)
+            ->latest()
+            ->take(4)
+            ->get();
 
         return view('frontend.pages.account.dashboard', compact(
             'user', 'recentOrder', 'orderCount', 'wishlistCount', 'totalSpent', 'recentOrders',
-            'profileChecks', 'profileComplete', 'profilePercent'
+            'profileChecks', 'profileComplete', 'profilePercent', 'recommendedProducts'
         ));
     }
 
     public function orders()
     {
-        $orders = Auth::user()->orders()->with('items.variant.product.images')->latest()->paginate(10);
+        $orders = Auth::user()->orders()->with(['items.variant.product.images', 'address', 'payment'])->latest()->paginate(10);
         return view('frontend.pages.account.orders', compact('orders'));
     }
 
@@ -130,5 +137,11 @@ class AccountController extends Controller
     {
         Auth::user()->unreadNotifications->markAsRead();
         return back()->with('success', 'All notifications marked as read.');
+    }
+
+    public function transactions()
+    {
+        $transactions = Auth::user()->paymentTransactions()->with('order')->latest()->paginate(15);
+        return view('frontend.pages.account.transactions', compact('transactions'));
     }
 }

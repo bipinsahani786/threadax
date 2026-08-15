@@ -21,6 +21,7 @@ class CategoryRepository implements CategoryRepositoryInterface
     public function paginateAdmin(array $filters = [], int $perPage = 15): \Illuminate\Pagination\LengthAwarePaginator
     {
         return Category::with('parent')
+            ->withCount(['products', 'children'])
             ->filter($filters)
             ->ordered()
             ->paginate($perPage);

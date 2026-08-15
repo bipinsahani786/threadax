@@ -25,13 +25,17 @@ trait Filterable
             match ($key) {
                 'search'     => $query->where(function ($q) use ($value) {
                     $q->where('name', 'like', "%{$value}%")
+                        ->orWhere('sku', 'like', "%{$value}%")
                         ->orWhere('description', 'like', "%{$value}%");
                 }),
-                'category'   => $query->where('category_id', $value),
-                'min_price'  => $query->where('price', '>=', $value),
-                'max_price'  => $query->where('price', '<=', $value),
+                'category'   => is_numeric($value) 
+                    ? $query->where('category_id', $value) 
+                    : $query->whereHas('category', fn($q) => $q->where('slug', $value)->orWhere('id', $value)),
+                'min_price'  => $query->where('price', '>=', (float) $value),
+                'max_price'  => $query->where('price', '<=', (float) $value),
                 'is_active'  => $query->where('is_active', (bool) $value),
                 'is_featured' => $query->where('is_featured', (bool) $value),
+                'in_stock'   => $query->whereHas('variants', fn($q) => $q->where('stock', '>', 0)),
                 'sizes'      => $query->whereHas('variants', function ($q) use ($value) {
                     $q->whereIn('size', (array) $value);
                 }),

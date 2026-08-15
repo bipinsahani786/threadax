@@ -40,7 +40,7 @@ class Product extends Model
 
     /** Fields allowed for filtering */
     protected array $filterableFields = [
-        'category', 'min_price', 'max_price', 'is_active', 'is_featured', 'search', 'sizes', 'colors'
+        'category', 'min_price', 'max_price', 'is_active', 'is_featured', 'search', 'sizes', 'colors', 'in_stock'
     ];
 
     /** Fields allowed for sorting */
@@ -63,6 +63,15 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    public function primaryImage(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ProductImage::class)->ofMany([
+            'is_primary' => 'max',
+            'sort_order' => 'min',
+            'id' => 'min',
+        ]);
     }
 
     public function reviews(): HasMany

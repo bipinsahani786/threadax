@@ -1,233 +1,450 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Edit Product')
+@section('title', 'Edit Product - ' . $product->name)
 @section('page-title')
     <div class="flex items-center gap-3">
-        <a href="{{ route('admin.products.index') }}" class="text-slate-400 hover:text-slate-900 transition-colors">
+        <a href="{{ route('admin.products.index') }}" class="text-slate-400 hover:text-slate-900 transition-colors p-1.5 rounded-xl hover:bg-slate-100">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
         </a>
-        <span>Edit Product: {{ $product->name }}</span>
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="text-lg font-extrabold text-slate-900">Edit Drop: {{ $product->name }}</span>
+                @if($product->is_active)
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+                        Draft
+                    </span>
+                @endif
+            </div>
+            <p class="text-xs text-slate-400">SKU: {{ $product->sku ?? 'TX-GEN' }} • Category: {{ $product->category->name ?? 'Streetwear' }}</p>
+        </div>
     </div>
 @endsection
 
 @section('content')
+<div class="max-w-7xl mx-auto space-y-6 sm:space-y-8" 
+     x-data="{ 
+         price: {{ old('price', (float)$product->price) }}, 
+         comparePrice: {{ old('compare_price', (float)($product->compare_price ?? 0)) }},
+         name: '{{ addslashes(old('name', $product->name)) }}',
+         metaTitle: '{{ addslashes(old('meta_title', $product->meta_title ?? '')) }}',
+         metaDescription: '{{ addslashes(old('meta_description', $product->meta_description ?? '')) }}',
+         isActive: {{ old('is_active', $product->is_active ? 1 : 0) ? 'true' : 'false' }},
+         isFeatured: {{ old('is_featured', $product->is_featured ? 1 : 0) ? 'true' : 'false' }},
 
-<form action="{{ route('admin.products.update', $product) }}" method="POST">
-    @csrf
-    @method('PUT')
-    
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {{-- Main Column --}}
-        <div class="lg:col-span-2 space-y-8">
-            
-            {{-- Basic Info Card --}}
-            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Basic Information</h3>
-                
-                <div class="space-y-6">
-                    <div>
-                        <label for="name" class="block text-sm font-bold text-slate-900 mb-2">Product Name *</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', $product->name) }}" required
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('name') border-red-500 @enderror">
-                        @error('name') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
+         get discountPercent() {
+             if (this.comparePrice > this.price && this.comparePrice > 0) {
+                 return Math.round(((this.comparePrice - this.price) / this.comparePrice) * 100);
+             }
+             return 0;
+         },
+         get discountSavings() {
+             if (this.comparePrice > this.price && this.comparePrice > 0) {
+                 return (this.comparePrice - this.price).toFixed(2);
+             }
+             return 0;
+         }
+     }">
 
-                    <div>
-                        <label for="short_description" class="block text-sm font-bold text-slate-900 mb-2">Short Description</label>
-                        <textarea id="short_description" name="short_description" rows="2"
-                                  class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('short_description') border-red-500 @enderror">{{ old('short_description', $product->short_description) }}</textarea>
-                        @error('short_description') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="description" class="block text-sm font-bold text-slate-900 mb-2">Full Description</label>
-                        <textarea id="description" name="description" rows="6"
-                                  class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('description') border-red-500 @enderror">{{ old('description', $product->description) }}</textarea>
-                        @error('description') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
+    {{-- Top Action Toolbar --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                @if($product->primaryImage)
+                    <img src="{{ $product->primaryImage->url }}" class="w-full h-full object-cover" alt="{{ $product->name }}">
+                @else
+                    <span class="font-bold text-slate-400 text-xs">TX</span>
+                @endif
+            </div>
+            <div>
+                <h3 class="text-sm font-extrabold text-slate-900 line-clamp-1">{{ $product->name }}</h3>
+                <div class="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                    <span>{{ $product->variants->count() }} Variants ({{ $product->variants->sum('stock') }} units in stock)</span>
                 </div>
             </div>
-
-            {{-- Pricing & Inventory --}}
-            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Pricing & Inventory</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="price" class="block text-sm font-bold text-slate-900 mb-2">Selling Price (₹) *</label>
-                        <input type="number" step="0.01" id="price" name="price" value="{{ old('price', $product->price) }}" required
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('price') border-red-500 @enderror">
-                        @error('price') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="compare_price" class="block text-sm font-bold text-slate-900 mb-2">Compare at Price / MRP (₹)</label>
-                        <input type="number" step="0.01" id="compare_price" name="compare_price" value="{{ old('compare_price', $product->compare_price) }}"
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('compare_price') border-red-500 @enderror">
-                        <p class="mt-2 text-xs text-slate-500">Original price (strikethrough).</p>
-                        @error('compare_price') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label for="sku" class="block text-sm font-bold text-slate-900 mb-2">Base SKU</label>
-                        <input type="text" id="sku" name="sku" value="{{ old('sku', $product->sku) }}"
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('sku') border-red-500 @enderror">
-                        @error('sku') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-                
-                <div class="mt-8">
-                    <a href="{{ route('admin.products.variants', $product) }}" class="block p-4 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition-colors group">
-                        <div class="flex items-start gap-4">
-                            <svg class="w-6 h-6 text-blue-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            <div>
-                                <h4 class="text-sm font-bold text-blue-900 flex items-center gap-2">
-                                    Manage Variants & Images
-                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                </h4>
-                                <p class="text-sm text-blue-700 mt-1">Add specific sizes, colors, manage inventory, and upload product photos.</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            
-            {{-- Rich Media --}}
-            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Rich Media URLs (Optional)</h3>
-                
-                <div class="space-y-6">
-                    <div>
-                        <label for="video_url" class="block text-sm font-bold text-slate-900 mb-2">Video URL</label>
-                        <input type="url" id="video_url" name="video_url" value="{{ old('video_url', $product->video_url) }}"
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('video_url') border-red-500 @enderror"
-                               placeholder="e.g., YouTube link or direct MP4 URL">
-                        <p class="mt-2 text-xs text-slate-500">Will be embedded in the product gallery.</p>
-                        @error('video_url') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="model_3d_url" class="block text-sm font-bold text-slate-900 mb-2">3D Model URL (.glb / .gltf)</label>
-                        <input type="url" id="model_3d_url" name="model_3d_url" value="{{ old('model_3d_url', $product->model_3d_url) }}"
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('model_3d_url') border-red-500 @enderror"
-                               placeholder="e.g., https://example.com/model.glb">
-                        <p class="mt-2 text-xs text-slate-500">For 3D interactive viewer on product page.</p>
-                        @error('model_3d_url') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="size_guide_url" class="block text-sm font-bold text-slate-900 mb-2">Size Guide Image URL</label>
-                        <input type="url" id="size_guide_url" name="size_guide_url" value="{{ old('size_guide_url', $product->size_guide_url) }}"
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('size_guide_url') border-red-500 @enderror"
-                               placeholder="e.g., https://example.com/size-guide.jpg">
-                        <p class="mt-2 text-xs text-slate-500">Optional size chart image specific to this product.</p>
-                        @error('size_guide_url') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-            </div>
-
-            {{-- SEO --}}
-            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Search Engine Optimization</h3>
-                
-                <div class="space-y-6">
-                    <div>
-                        <label for="meta_title" class="block text-sm font-bold text-slate-900 mb-2">Meta Title</label>
-                        <input type="text" id="meta_title" name="meta_title" value="{{ old('meta_title', $product->meta_title) }}"
-                               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('meta_title') border-red-500 @enderror">
-                        @error('meta_title') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="meta_description" class="block text-sm font-bold text-slate-900 mb-2">Meta Description</label>
-                        <textarea id="meta_description" name="meta_description" rows="3"
-                                  class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('meta_description') border-red-500 @enderror">{{ old('meta_description', $product->meta_description) }}</textarea>
-                        @error('meta_description') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-            </div>
-            
         </div>
-        
-        {{-- Sidebar Column --}}
-        <div class="space-y-8">
-            
-            {{-- Organization --}}
-            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Organization</h3>
-                
-                <div>
-                    <label for="category_id" class="block text-sm font-bold text-slate-900 mb-2">Category *</label>
-                    <select id="category_id" name="category_id" required
-                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm @error('category_id') border-red-500 @enderror bg-white">
-                        <option value="">Select Category</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                {{ $category->parent ? $category->parent->name . ' > ' : '' }}{{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('category_id') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-            </div>
-            
-            {{-- Status --}}
-            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 font-heading">Status</h3>
-                
-                <div class="space-y-6">
-                    <div class="flex items-center gap-3">
-                        <input type="hidden" name="is_active" value="0">
-                        <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }} class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-200 appearance-none cursor-pointer transition-transform duration-200 ease-in-out checked:border-slate-900 checked:translate-x-6 z-10"/>
-                            <label for="is_active" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer"></label>
-                        </div>
-                        <div>
-                            <label for="is_active" class="text-sm font-bold text-slate-900 cursor-pointer block">Active</label>
-                            <span class="text-xs text-slate-500">Show on store</span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-3">
-                        <input type="hidden" name="is_featured" value="0">
-                        <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="is_featured" id="is_featured" value="1" {{ old('is_featured', $product->is_featured) ? 'checked' : '' }} class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-200 appearance-none cursor-pointer transition-transform duration-200 ease-in-out checked:border-slate-900 checked:translate-x-6 z-10"/>
-                            <label for="is_featured" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer"></label>
-                        </div>
-                        <div>
-                            <label for="is_featured" class="text-sm font-bold text-slate-900 cursor-pointer block">Featured</label>
-                            <span class="text-xs text-slate-500">Show on homepage</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            {{-- Submit --}}
-            <div class="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 p-8 text-center">
-                <button type="submit" class="w-full mb-4 px-6 py-3.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-shadow shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.15)] flex justify-center items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                    Update Product
+
+        <div class="flex items-center gap-2.5 flex-wrap">
+            {{-- Live Preview --}}
+            <a href="{{ route('frontend.products.show', $product->slug) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                <span>👁️ View Live</span>
+            </a>
+
+            {{-- Manage Variants & Media --}}
+            <a href="{{ route('admin.products.variants', $product) }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition-colors">
+                <span>⚡ Variants & Images ({{ $product->variants->count() }})</span>
+            </a>
+
+            {{-- Duplicate --}}
+            <form action="{{ route('admin.products.duplicate', $product) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer" title="Duplicate as Draft">
+                    <span>📋 Duplicate</span>
                 </button>
-                <a href="{{ route('admin.products.index') }}" class="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors">
-                    Discard changes
-                </a>
-            </div>
-            
+            </form>
         </div>
     </div>
-</form>
 
-@push('styles')
-<style>
-    /* Custom Toggle Switch Styles */
-    .toggle-checkbox:checked {
-        right: 0;
-        border-color: #0F172A; /* slate-900 */
-    }
-    .toggle-checkbox:checked + .toggle-label {
-        background-color: #0F172A;
-    }
-</style>
-@endpush
+    {{-- Main Form --}}
+    <form action="{{ route('admin.products.update', $product) }}" method="POST">
+        @csrf
+        @method('PUT')
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            
+            {{-- Main Column (2/3 width) --}}
+            <div class="lg:col-span-2 space-y-6 sm:space-y-8">
+                
+                {{-- 1. Basic Information Card --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
+                            👕
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-heading font-extrabold text-slate-900">General Information</h3>
+                            <p class="text-xs text-slate-400">Title, product story and detailed descriptions</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        {{-- Product Name --}}
+                        <div>
+                            <label for="name" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Product Name <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" 
+                                   id="name" 
+                                   name="name" 
+                                   x-model="name"
+                                   value="{{ old('name', $product->name) }}" 
+                                   required
+                                   class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-bold text-slate-900 outline-none transition-all @error('name') border-rose-500 @enderror">
+                            @error('name') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Short Description --}}
+                        <div>
+                            <label for="short_description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Short Catchy Subtitle (Product Card & Preview)
+                            </label>
+                            <textarea id="short_description" 
+                                      name="short_description" 
+                                      rows="2"
+                                      placeholder="A brief punchy hook (e.g. Heavyweight 240 GSM drop-shoulder streetwear cut)..."
+                                      class="w-full p-3 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all leading-relaxed @error('short_description') border-rose-500 @enderror">{{ old('short_description', $product->short_description) }}</textarea>
+                            @error('short_description') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Full Description --}}
+                        <div>
+                            <label for="description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Full Product Description & Fit Details
+                            </label>
+                            <textarea id="description" 
+                                      name="description" 
+                                      rows="5"
+                                      placeholder="Fabric composition, wash care instructions, model sizing reference, etc..."
+                                      class="w-full p-3 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all leading-relaxed @error('description') border-rose-500 @enderror">{{ old('description', $product->description) }}</textarea>
+                            @error('description') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2. Pricing & Base SKU Card --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base">
+                                🏷️
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-heading font-extrabold text-slate-900">Pricing & Base SKU</h3>
+                                <p class="text-xs text-slate-400">Regular selling price and compare-at MRP calculation</p>
+                            </div>
+                        </div>
+                        
+                        {{-- Live Discount Pill --}}
+                        <div x-show="discountPercent > 0" class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-black">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span x-text="discountPercent + '% OFF (Save ₹' + discountSavings + ')'"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {{-- Selling Price --}}
+                        <div>
+                            <label for="price" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Selling Price (₹) <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-bold text-xs">₹</span>
+                                <input type="number" 
+                                       step="0.01" 
+                                       id="price" 
+                                       name="price" 
+                                       x-model.number="price"
+                                       value="{{ old('price', $product->price) }}" 
+                                       required
+                                       class="w-full pl-8 pr-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-extrabold text-slate-900 outline-none transition-all @error('price') border-rose-500 @enderror">
+                            </div>
+                            @error('price') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Compare At MRP --}}
+                        <div>
+                            <label for="compare_price" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Compare At Price / MRP (₹)
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-bold text-xs">₹</span>
+                                <input type="number" 
+                                       step="0.01" 
+                                       id="compare_price" 
+                                       name="compare_price" 
+                                       x-model.number="comparePrice"
+                                       value="{{ old('compare_price', $product->compare_price) }}" 
+                                       placeholder="Optional (Strikethrough)"
+                                       class="w-full pl-8 pr-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-extrabold text-slate-900 outline-none transition-all @error('compare_price') border-rose-500 @enderror">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Leave empty or higher than price to show discount badge.</p>
+                            @error('compare_price') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        </div>
+                        
+                        {{-- Base SKU --}}
+                        <div class="sm:col-span-2">
+                            <label for="sku" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Base Master SKU
+                            </label>
+                            <input type="text" 
+                                   id="sku" 
+                                   name="sku" 
+                                   value="{{ old('sku', $product->sku) }}"
+                                   placeholder="e.g. TX-VWT-001-GRY"
+                                   class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-mono font-bold text-slate-900 outline-none transition-all @error('sku') border-rose-500 @enderror">
+                            @error('sku') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </div>
+                
+                {{-- 3. Rich Media & 3D Model URLs Card --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-base">
+                            🎬
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-heading font-extrabold text-slate-900">Interactive Rich Media</h3>
+                            <p class="text-xs text-slate-400">Optional video reels, 3D model viewer, and size guide assets</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        {{-- Video URL --}}
+                        <div>
+                            <label for="video_url" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Lookbook Video URL (YouTube / MP4)
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">🎥</span>
+                                <input type="url" 
+                                       id="video_url" 
+                                       name="video_url" 
+                                       value="{{ old('video_url', $product->video_url) }}"
+                                       placeholder="e.g. https://www.youtube.com/watch?v=..."
+                                       class="w-full pl-9 pr-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all @error('video_url') border-rose-500 @enderror">
+                            </div>
+                        </div>
+
+                        {{-- 3D Model URL --}}
+                        <div>
+                            <label for="model_3d_url" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                3D AR Model URL (.glb / .gltf)
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">👓</span>
+                                <input type="url" 
+                                       id="model_3d_url" 
+                                       name="model_3d_url" 
+                                       value="{{ old('model_3d_url', $product->model_3d_url) }}"
+                                       placeholder="e.g. https://cdn.threadax.co.in/models/tee.glb"
+                                       class="w-full pl-9 pr-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all @error('model_3d_url') border-rose-500 @enderror">
+                            </div>
+                        </div>
+
+                        {{-- Size Guide URL --}}
+                        <div>
+                            <label for="size_guide_url" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Custom Sizing Chart Image URL
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">📏</span>
+                                <input type="url" 
+                                       id="size_guide_url" 
+                                       name="size_guide_url" 
+                                       value="{{ old('size_guide_url', $product->size_guide_url) }}"
+                                       placeholder="e.g. https://example.com/oversized-tee-chart.jpg"
+                                       class="w-full pl-9 pr-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all @error('size_guide_url') border-rose-500 @enderror">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 4. Google SERP SEO Preview Card --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-base">
+                            🔍
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-heading font-extrabold text-slate-900">Search Engine Optimization (SEO)</h3>
+                            <p class="text-xs text-slate-400">Live preview of how this product appears on Google Search</p>
+                        </div>
+                    </div>
+
+                    {{-- Google Search Result Snippet Preview --}}
+                    <div class="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                        <div class="text-[11px] text-slate-500 font-mono flex items-center gap-1.5">
+                            <span class="w-3.5 h-3.5 rounded-full bg-slate-200 flex items-center justify-center text-[9px]">🌐</span>
+                            <span>https://threadax.co.in &rsaquo; product &rsaquo; {{ $product->slug }}</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-blue-700 hover:underline cursor-pointer" x-text="metaTitle || name || 'Product Title on Google'"></h4>
+                        <p class="text-xs text-slate-600 leading-relaxed line-clamp-2" x-text="metaDescription || 'Buy the latest ' + name + ' from ThreadAX. Premium streetwear, fast delivery and easy returns.'"></p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        {{-- Meta Title --}}
+                        <div>
+                            <label for="meta_title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Meta Title Tag
+                            </label>
+                            <input type="text" 
+                                   id="meta_title" 
+                                   name="meta_title" 
+                                   x-model="metaTitle"
+                                   value="{{ old('meta_title', $product->meta_title) }}"
+                                   placeholder="e.g. Essential Oversized Streetwear Tee — ThreadAX"
+                                   class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all">
+                        </div>
+
+                        {{-- Meta Description --}}
+                        <div>
+                            <label for="meta_description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Meta Description
+                            </label>
+                            <textarea id="meta_description" 
+                                      name="meta_description" 
+                                      x-model="metaDescription"
+                                      rows="2"
+                                      placeholder="Compelling 150-160 character summary for search engines..."
+                                      class="w-full p-3 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all leading-relaxed">{{ old('meta_description', $product->meta_description) }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            {{-- Right Sidebar Column (1/3 width) --}}
+            <div class="space-y-6 sm:space-y-8">
+                
+                {{-- 1. Category Organization --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
+                    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                        <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm">
+                            📁
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-heading font-extrabold text-slate-900 uppercase tracking-wider">Category Collection</h3>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="category_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Select Category <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="category_id" 
+                                name="category_id" 
+                                required
+                                class="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-bold text-slate-900 outline-none transition-all cursor-pointer">
+                            <option value="">Choose Category</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                    {{ $category->parent ? $category->parent->name . ' > ' : '' }}{{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('category_id') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+                
+                {{-- 2. Clean Status & Visibility Switches --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                            ⚙️
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-heading font-extrabold text-slate-900 uppercase tracking-wider">Status & Visibility</h3>
+                        </div>
+                    </div>
+                    
+                    {{-- Active Toggle Switch --}}
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <div>
+                            <span class="text-xs font-bold text-slate-900 block">Live on Storefront</span>
+                            <span class="text-[11px] text-slate-400">Enable purchasing</span>
+                        </div>
+                        <button type="button" 
+                                @click="isActive = !isActive" 
+                                :class="isActive ? 'bg-slate-900' : 'bg-slate-200'" 
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-2xs">
+                            <span :class="isActive ? 'translate-x-5' : 'translate-x-0'" 
+                                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                        <input type="hidden" name="is_active" :value="isActive ? '1' : '0'">
+                    </div>
+
+                    {{-- Featured Toggle Switch --}}
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <div>
+                            <span class="text-xs font-bold text-slate-900 block">Featured Drop</span>
+                            <span class="text-[11px] text-slate-400">Spotlight on homepage</span>
+                        </div>
+                        <button type="button" 
+                                @click="isFeatured = !isFeatured" 
+                                :class="isFeatured ? 'bg-amber-500' : 'bg-slate-200'" 
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-2xs">
+                            <span :class="isFeatured ? 'translate-x-5' : 'translate-x-0'" 
+                                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                        <input type="hidden" name="is_featured" :value="isFeatured ? '1' : '0'">
+                    </div>
+                </div>
+                
+                {{-- 3. Update CTA Card --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-3">
+                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl text-xs font-extrabold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-sm hover:shadow-md flex justify-center items-center gap-2 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>Update Product</span>
+                    </button>
+                    
+                    <a href="{{ route('admin.products.variants', $product) }}" class="w-full py-3 px-6 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-all flex justify-center items-center gap-2">
+                        <span>⚡ Edit Variants & Photos</span>
+                    </a>
+
+                    <div class="text-center pt-1">
+                        <a href="{{ route('admin.products.index') }}" class="text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors">
+                            Discard & Go Back
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </form>
+
+</div>
 @endsection

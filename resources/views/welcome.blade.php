@@ -39,12 +39,6 @@
         @endforeach
 
         @if($banners['hero']->count() > 1)
-            <button @click.prevent="activeSlide = activeSlide === 0 ? slides - 1 : activeSlide - 1" class="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 flex items-center justify-center transition-all">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            </button>
-            <button @click.prevent="activeSlide = activeSlide === slides - 1 ? 0 : activeSlide + 1" class="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 flex items-center justify-center transition-all">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </button>
             <div class="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-20">
                 @foreach($banners['hero'] as $index => $banner)
                     <button @click.prevent="activeSlide = {{ $index }}" :class="{'bg-white w-8': activeSlide === {{ $index }}, 'bg-white/40 w-2': activeSlide !== {{ $index }}}" class="h-1.5 rounded-full transition-all duration-500"></button>
@@ -422,22 +416,28 @@
 
             {{-- FAQ --}}
             <div>
-                <h2 class="text-2xl sm:text-3xl font-heading font-extrabold mb-6">Frequently Asked Questions</h2>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl sm:text-2xl font-heading font-extrabold text-brand-dark">Frequently Asked Questions</h2>
+                    <a href="{{ route('frontend.page.show', 'faq') }}" class="text-xs font-bold text-brand-dark hover:underline flex items-center gap-1">
+                        View All
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
                 <div class="space-y-3" x-data="{ openFaq: null }">
                     @forelse($faqs ?? collect() as $faq)
-                    <div class="bg-white border border-brand-border rounded-[16px] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                        <button @click="openFaq = openFaq === {{ $faq->id }} ? null : {{ $faq->id }}" class="w-full flex items-center justify-between px-6 py-5 text-left text-sm font-bold transition-colors">
-                            <span class="pr-4">{{ $faq->question }}</span>
-                            <svg :class="openFaq === {{ $faq->id }} ? 'rotate-180 text-brand-text' : 'text-brand-muted'" class="w-5 h-5 shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <div class="bg-white border border-brand-border rounded-[16px] overflow-hidden shadow-sm hover:border-brand-dark/30 transition-all">
+                        <button @click="openFaq = openFaq === {{ $faq->id }} ? null : {{ $faq->id }}" class="w-full flex items-center justify-between px-5 py-4 text-left text-xs sm:text-sm font-bold transition-colors">
+                            <span class="pr-4 text-brand-dark">{{ $faq->question }}</span>
+                            <svg :class="openFaq === {{ $faq->id }} ? 'rotate-180 text-brand-text' : 'text-brand-muted'" class="w-4 h-4 shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div x-show="openFaq === {{ $faq->id }}" x-collapse x-transition.duration.300ms>
-                            <div class="px-6 pb-5 pt-1 text-sm text-brand-muted leading-relaxed border-t border-brand-light mt-1">
+                            <div class="px-5 pb-4 pt-1 text-xs text-brand-muted leading-relaxed border-t border-brand-light mt-1">
                                 {!! nl2br(e($faq->answer)) !!}
                             </div>
                         </div>
                     </div>
                     @empty
-                        <div class="text-sm text-brand-muted italic">FAQs will be added soon.</div>
+                        <div class="text-xs text-brand-muted italic">FAQs will be added soon.</div>
                     @endforelse
                 </div>
             </div>

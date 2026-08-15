@@ -12,7 +12,7 @@ class WishlistController extends Controller
 {
     public function index()
     {
-        $wishlists = Auth::user()->wishlists()->with('product.images')->latest()->paginate(12);
+        $wishlists = Auth::user()->wishlists()->with(['product.images', 'product.variants'])->latest()->paginate(12);
         return view('frontend.pages.account.wishlist', compact('wishlists'));
     }
 

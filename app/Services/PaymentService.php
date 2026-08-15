@@ -13,8 +13,8 @@ class PaymentService
 
     public function __construct()
     {
-        $keyId     = config('services.razorpay.key_id');
-        $keySecret = config('services.razorpay.key_secret');
+        $keyId     = config('services.razorpay.key_id') ?: env('RAZORPAY_KEY_ID', env('RAZORPAY_KEY'));
+        $keySecret = config('services.razorpay.key_secret') ?: env('RAZORPAY_KEY_SECRET', env('RAZORPAY_SECRET'));
 
         if ($keyId && $keySecret) {
             $this->api = new Api($keyId, $keySecret);

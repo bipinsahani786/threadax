@@ -69,4 +69,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Wishlist::class);
     }
+
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class)->latest();
+    }
 }

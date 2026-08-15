@@ -8,12 +8,17 @@ use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
 use App\Services\CouponService;
+use App\Mail\OrderConfirmedMail;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentTransaction;
+use App\Notifications\OrderStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class CheckoutController extends Controller
 {
@@ -26,14 +31,9 @@ class CheckoutController extends Controller
 
     public function index()
     {
-        $cart = $this->cartService->getCart();
-
-        if ($cart->items->isEmpty()) {
-            return redirect()->route('frontend.products.index')->with('error', 'Your cart is empty.');
-        }
-
+        $cart      = $this->cartService->getCart();
         $summary   = $this->cartService->getSummary();
-        $addresses = Auth::user()->addresses;
+        $addresses = Auth::check() ? Auth::user()->addresses : collect();
 
         // Rehydrate any coupon stored in session
         $coupon   = null;
@@ -187,7 +187,7 @@ class CheckoutController extends Controller
             if ($request->payment_method === 'razorpay') {
                 $razorpayOrderId = $this->paymentService->initializeRazorpayPayment($order);
 
-                Payment::create([
+                $payment = Payment::create([
                     'order_id'       => $order->id,
                     'transaction_id' => $razorpayOrderId,
                     'amount'         => $order->total,
@@ -195,11 +195,27 @@ class CheckoutController extends Controller
                     'payment_method' => 'razorpay',
                 ]);
 
+                // Audit Log: Order initialized
+                PaymentTransaction::log([
+                    'order_id'       => $order->id,
+                    'user_id'        => $user->id,
+                    'payment_id'     => $payment->id,
+                    'transaction_id' => $razorpayOrderId,
+                    'gateway'        => 'razorpay',
+                    'event'          => 'order_initialized',
+                    'amount'         => $order->total,
+                    'status'         => 'pending',
+                    'payload'        => ['razorpay_order_id' => $razorpayOrderId],
+                ]);
+
+                $razorpayKey = config('services.razorpay.key_id') ?: env('RAZORPAY_KEY_ID', env('RAZORPAY_KEY'));
+
                 $razorpayData = [
+                    'key'               => $razorpayKey,
                     'razorpay_order_id' => $razorpayOrderId,
                     'amount'            => (int) ($order->total * 100),
                     'currency'          => 'INR',
-                    'name'              => 'ThreadAx',
+                    'name'              => 'ThreadAX Streetwear',
                     'description'       => 'Order #' . $order->order_number,
                     'prefill'           => [
                         'name'    => $user->name,
@@ -217,6 +233,30 @@ class CheckoutController extends Controller
 
             // COD flow
             $order->update(['payment_status' => 'pending', 'status' => 'processing']);
+
+            // Audit Log: COD order
+            PaymentTransaction::log([
+                'order_id'       => $order->id,
+                'user_id'        => $user->id,
+                'transaction_id' => 'COD-' . $order->order_number,
+                'gateway'        => 'cod',
+                'method'         => 'cod',
+                'event'          => 'cod_order_placed',
+                'amount'         => $order->total,
+                'status'         => 'pending',
+            ]);
+
+            // Dispatch customer order confirmation notification & email
+            try {
+                $user->notify(new OrderStatusNotification($order));
+                $email = $order->shipping_email ?? $user->email;
+                if ($email) {
+                    Mail::to($email)->send(new OrderConfirmedMail($order));
+                }
+            } catch (\Exception $ne) {
+                Log::error("Failed to dispatch order confirmation notification: " . $ne->getMessage());
+            }
+
             $redirectUrl = route('frontend.checkout.success', $order->id);
 
             return response()->json([
@@ -242,7 +282,7 @@ class CheckoutController extends Controller
             'razorpay_signature'  => 'required|string',
             'razorpay_payment_id' => 'required|string',
             'razorpay_order_id'   => 'required|string',
-            'order_id_db'         => 'required|integer|exists:orders,id',
+            'order_id_db'         => 'nullable|integer',
         ]);
 
         $attributes = [
@@ -263,19 +303,52 @@ class CheckoutController extends Controller
                     'transaction_id'      => $request->razorpay_order_id,
                 ]);
 
-                $payment->order->update([
+                $confirmedOrder = $payment->order;
+                $confirmedOrder->update([
                     'payment_status' => 'paid',
                     'status'         => 'processing',
                 ]);
 
-                Log::info('Razorpay payment confirmed', [
-                    'order_id'   => $payment->order_id,
-                    'payment_id' => $request->razorpay_payment_id,
+                // Dispatch customer order confirmation notification & email
+                try {
+                    if ($confirmedOrder->user) {
+                        $confirmedOrder->user->notify(new OrderStatusNotification($confirmedOrder));
+                    }
+                    $email = $confirmedOrder->shipping_email ?? $confirmedOrder->user?->email;
+                    if ($email) {
+                        Mail::to($email)->send(new OrderConfirmedMail($confirmedOrder));
+                    }
+                } catch (\Exception $ne) {
+                    Log::error("Failed to dispatch razorpay order confirmation notification: " . $ne->getMessage());
+                }
+
+                // Audit Log: Payment success
+                PaymentTransaction::log([
+                    'order_id'       => $confirmedOrder->id,
+                    'user_id'        => $confirmedOrder->user_id,
+                    'payment_id'     => $payment->id,
+                    'transaction_id' => $request->razorpay_payment_id,
+                    'gateway'        => 'razorpay',
+                    'event'          => 'payment_success',
+                    'amount'         => $confirmedOrder->total,
+                    'status'         => 'success',
+                    'payload'        => $attributes,
                 ]);
 
                 return redirect()->route('frontend.checkout.success', $payment->order_id);
             }
         }
+
+        // Audit Log: Payment verification failure
+        PaymentTransaction::log([
+            'transaction_id'    => $request->razorpay_payment_id ?? $request->razorpay_order_id,
+            'gateway'           => 'razorpay',
+            'event'             => 'payment_failed',
+            'amount'            => 0,
+            'status'            => 'failed',
+            'error_description' => 'Cryptographic signature verification failed',
+            'payload'           => $attributes,
+        ]);
 
         Log::warning('Razorpay callback verification failed', [
             'razorpay_order_id'   => $request->razorpay_order_id,

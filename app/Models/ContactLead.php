@@ -10,6 +10,7 @@ class ContactLead extends Model
         'first_name',
         'last_name',
         'email',
+        'phone',
         'order_number',
         'message',
         'status',

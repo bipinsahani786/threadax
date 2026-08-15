@@ -17,8 +17,11 @@ use App\Http\Controllers\Frontend\ReviewController;
 use App\Http\Controllers\Frontend\WishlistController;
 use App\Http\Controllers\Frontend\NewsletterController;
 use App\Http\Controllers\Frontend\SearchController;
+use App\Http\Controllers\Frontend\TrackingController;
+use App\Http\Controllers\Frontend\SitemapController;
 use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
+use App\Http\Controllers\Webhook\ShiprocketWebhookController;
 
 // ─── Admin Controllers ─────────────────────────────────────────────────────
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
@@ -36,7 +39,8 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
-use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
+use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Webhook\RazorpayWebhookController;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -47,6 +51,8 @@ Route::name('frontend.')->group(function () {
     Route::get('/shop', [ProductController::class, 'index'])->name('products.index');
     Route::get('/product/{slug}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/search', [SearchController::class, 'index'])->name('search');
+    Route::get('/track-order', [TrackingController::class, 'index'])->name('tracking');
+    Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
     Route::post('/newsletter', [NewsletterController::class, 'store'])->name('newsletter.store');
 
     // Blog
@@ -122,6 +128,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
         Route::get('/orders/{id}', [AccountController::class, 'showOrder'])->name('orders.show');
         Route::get('/orders/{id}/invoice', [AccountController::class, 'downloadInvoice'])->name('orders.invoice');
+        Route::get('/transactions', [AccountController::class, 'transactions'])->name('transactions');
         
         Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
         Route::post('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
@@ -143,10 +150,22 @@ Route::middleware('auth')->group(function () {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
+// CUSTOMER IMPERSONATION & PUSH TOKENS
+// ══════════════════════════════════════════════════════════════════════════════
+Route::get('/impersonate/leave', [\App\Http\Controllers\Admin\CustomerController::class, 'leaveImpersonation'])
+    ->name('impersonate.leave');
+Route::post('/push-tokens/save', [\App\Http\Controllers\Api\PushTokenController::class, 'store'])
+    ->name('push-tokens.save');
+Route::post('/push-tokens/remove', [\App\Http\Controllers\Api\PushTokenController::class, 'destroy'])
+    ->name('push-tokens.remove');
+
+// ══════════════════════════════════════════════════════════════════════════════
 // WEBHOOKS (excluded from CSRF in bootstrap/app.php)
 // ══════════════════════════════════════════════════════════════════════════════
 Route::post('/webhooks/razorpay', [RazorpayWebhookController::class, 'handle'])
     ->name('webhooks.razorpay');
+Route::post('/webhooks/shiprocket', [ShiprocketWebhookController::class, 'handle'])
+    ->name('webhooks.shiprocket');
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ADMIN ROUTES
@@ -164,9 +183,11 @@ Route::prefix('/admin')->name('admin.')->group(function () {
     // Admin authenticated routes
     Route::middleware('auth:admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/notifications/mark-read', [DashboardController::class, 'markNotificationsRead'])->name('notifications.markRead');
 
         // Categories & Products
         Route::resource('/categories', CategoryController::class)->except(['show']);
+        Route::post('/products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->name('products.duplicate');
         Route::resource('/products', AdminProductController::class)->except(['show']);
 
         // Product Variants & Images
@@ -180,7 +201,17 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status.update');
+        Route::post('/orders/{id}/refund', [AdminOrderController::class, 'issueRefund'])->name('orders.refund');
+        Route::post('/orders/{id}/tracking', [AdminOrderController::class, 'addTracking'])->name('orders.tracking.store');
+        Route::post('/orders/{id}/shiprocket-push', [AdminOrderController::class, 'pushToShiprocket'])->name('orders.shiprocket.push');
+        Route::post('/orders/{id}/shiprocket-awb', [AdminOrderController::class, 'generateShiprocketAwb'])->name('orders.shiprocket.awb');
+        Route::post('/orders/{id}/shiprocket-sync', [AdminOrderController::class, 'syncShiprocketTracking'])->name('orders.shiprocket.sync');
+        Route::get('/orders/{id}/shipping-label', [AdminOrderController::class, 'shippingLabel'])->name('orders.shipping.label');
         Route::get('/orders/{id}/invoice', [AdminOrderController::class, 'downloadInvoice'])->name('orders.invoice.download');
+
+        // Transactions & Payment Gateway Ledger
+        Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/{id}', [AdminTransactionController::class, 'show'])->name('transactions.show');
 
         // Coupons
         Route::resource('/coupons', CouponController::class)->except(['show']);
@@ -188,6 +219,7 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         // Reviews
         Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/{review}/status', [AdminReviewController::class, 'updateStatus'])->name('reviews.status.update');
+        Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
 
         // Banners
         Route::resource('/banners', BannerController::class)->except(['show']);
@@ -196,12 +228,20 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 
+        // System Logs & Optimizer
+        Route::get('/logs', [SystemLogController::class, 'index'])->name('logs.index');
+        Route::post('/logs/clear', [SystemLogController::class, 'clear'])->name('logs.clear');
+        Route::get('/logs/download', [SystemLogController::class, 'download'])->name('logs.download');
+        Route::post('/logs/optimize', [SystemLogController::class, 'optimize'])->name('logs.optimize');
+
         // Reports
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export', [ReportController::class, 'exportCsv'])->name('reports.export');
 
-        // Customers
+        // Customers & Impersonation
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::post('/customers/{user}/impersonate', [CustomerController::class, 'impersonate'])->name('customers.impersonate');
+        Route::post('/customers/{user}/send-email', [CustomerController::class, 'sendEmail'])->name('customers.email.send');
 
         // Testimonials
         Route::resource('/testimonials', TestimonialController::class)->except(['show']);
@@ -222,6 +262,7 @@ Route::prefix('/admin')->name('admin.')->group(function () {
 
         // Leads
         Route::resource('/leads', \App\Http\Controllers\Admin\LeadController::class)->except(['create', 'store', 'edit']);
+        Route::post('/leads/{lead}/reply', [\App\Http\Controllers\Admin\LeadController::class, 'sendReply'])->name('leads.reply');
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     });

@@ -42,9 +42,27 @@ return [
     ],
 
     'razorpay' => [
-        'key_id'         => env('RAZORPAY_KEY_ID'),
-        'key_secret'     => env('RAZORPAY_KEY_SECRET'),
+        'key_id'         => env('RAZORPAY_KEY_ID', env('RAZORPAY_KEY')),
+        'key_secret'     => env('RAZORPAY_KEY_SECRET', env('RAZORPAY_SECRET')),
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+    ],
+
+    'firebase' => [
+        'credentials'        => env('FIREBASE_CREDENTIALS', storage_path('app/firebase-credentials.json')),
+        'server_key'         => env('FCM_SERVER_KEY', env('FIREBASE_SERVER_KEY')),
+        'api_key'            => env('FIREBASE_API_KEY'),
+        'auth_domain'        => env('FIREBASE_AUTH_DOMAIN'),
+        'project_id'         => env('FIREBASE_PROJECT_ID', 'threadax'),
+        'storage_bucket'     => env('FIREBASE_STORAGE_BUCKET'),
+        'messaging_sender_id'=> env('FIREBASE_MESSAGING_SENDER_ID', env('FCM_SENDER_ID')),
+        'app_id'             => env('FIREBASE_APP_ID'),
+        'vapid_key'          => env('FIREBASE_VAPID_KEY'),
+    ],
+
+    'analytics' => [
+        'gtag_id'                  => env('GA_MEASUREMENT_ID', env('GTAG_ID', env('GOOGLE_ANALYTICS_ID'))),
+        'pixel_id'                 => env('META_PIXEL_ID', env('FB_PIXEL_ID', env('FACEBOOK_PIXEL_ID'))),
+        'google_site_verification' => env('GOOGLE_SITE_VERIFICATION'),
     ],
 
 ];

@@ -7,6 +7,13 @@
     <meta name="description"
         content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
     <title>@yield('title', 'ThreadAx — Premium Streetwear')</title>
+    <link rel="canonical" href="@yield('canonical_url', url()->current())">
+
+    {{-- Google Search Console Verification --}}
+    @php $googleVerification = config('services.analytics.google_site_verification', env('GOOGLE_SITE_VERIFICATION')); @endphp
+    @if($googleVerification)
+        <meta name="google-site-verification" content="{{ $googleVerification }}">
+    @endif
 
     {{-- Open Graph / Facebook --}}
     <meta property="og:type" content="website">
@@ -15,21 +22,60 @@
     <meta property="og:description"
         content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
     <meta property="og:image" content="@yield('meta_image', asset('images/banner-men.png'))">
+
+    {{-- Twitter Cards --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', 'ThreadAx — Premium Streetwear')">
+    <meta name="twitter:description" content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
+    <meta name="twitter:image" content="@yield('meta_image', asset('images/banner-men.png'))">
+
+    {{-- JSON-LD Structured Data Schema for Google Indexing --}}
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        'name' => 'ThreadAX Streetwear',
+        'url' => url('/'),
+        'logo' => asset('images/logo.png'),
+        'contactPoint' => [
+            '@type' => 'ContactPoint',
+            'telephone' => '+91-9876543210',
+            'contactType' => 'customer service',
+            'areaServed' => 'IN',
+            'availableLanguage' => ['English', 'Hindi']
+        ]
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => 'ThreadAX',
+        'url' => url('/'),
+        'potentialAction' => [
+            '@type' => 'SearchAction',
+            'target' => url('/search') . '?q={search_term_string}',
+            'query-input' => 'required name=search_term_string'
+        ]
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- Google Analytics 4 (GA4) --}}
-    @if(env('GA_MEASUREMENT_ID'))
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GA_MEASUREMENT_ID') }}"></script>
+    {{-- Google Analytics 4 (GA4) / GTag --}}
+    @php $gtagId = config('services.analytics.gtag_id'); @endphp
+    @if($gtagId)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gtagId }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag() { dataLayer.push(arguments); }
             gtag('js', new Date());
-            gtag('config', '{{ env('GA_MEASUREMENT_ID') }}');
+            gtag('config', '{{ $gtagId }}');
         </script>
     @endif
 
-    {{-- Meta Pixel Code --}}
-    @if(env('META_PIXEL_ID'))
+    {{-- Meta (Facebook) Pixel Code --}}
+    @php $pixelId = config('services.analytics.pixel_id'); @endphp
+    @if($pixelId)
         <script>
             !function (f, b, e, v, n, t, s) {
                 if (f.fbq) return; n = f.fbq = function () {
@@ -42,15 +88,31 @@
                 s.parentNode.insertBefore(t, s)
             }(window, document, 'script',
                 'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '{{ env('META_PIXEL_ID') }}');
+            fbq('init', '{{ $pixelId }}');
             fbq('track', 'PageView');
         </script>
         <noscript><img height="1" width="1" style="display:none"
-                src="https://www.facebook.com/tr?id={{ env('META_PIXEL_ID') }}&ev=PageView&noscript=1" /></noscript>
+                src="https://www.facebook.com/tr?id={{ $pixelId }}&ev=PageView&noscript=1" /></noscript>
     @endif
 </head>
 
 <body class="antialiased min-h-screen flex flex-col" x-data="globalApp">
+
+    {{-- ═══════════ IMPERSONATION MODE BANNER ═══════════ --}}
+    @if(session()->has('admin_impersonator_id'))
+        <div class="w-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 px-4 py-2.5 text-xs font-black flex items-center justify-between sticky top-0 z-[100] shadow-md border-b border-amber-600">
+            <div class="flex items-center gap-2">
+                <span class="text-base animate-pulse">⚠️</span>
+                <span>
+                    <strong>IMPERSONATION MODE:</strong> You are logged in as customer <strong class="underline">{{ session('impersonated_user_name') }}</strong> ({{ session('impersonated_user_email') }}).
+                </span>
+            </div>
+            <a href="{{ route('impersonate.leave') }}" class="px-3.5 py-1 bg-slate-950 hover:bg-slate-900 text-white font-extrabold rounded-lg shadow-sm hover:shadow transition-all text-xs flex items-center gap-1.5 cursor-pointer">
+                <span>Exit to Admin Panel</span>
+                <span>➔</span>
+            </a>
+        </div>
+    @endif
 
     {{-- ═══════════ TOP STRIP — Animated Marquee ═══════════ --}}
     <div class="w-full bg-brand-text text-white text-[11px] font-semibold tracking-wider overflow-hidden"
@@ -145,8 +207,8 @@
 
                 {{-- Notifications (Auth Only) --}}
                 @auth
-                <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                    <a href="{{ route('account.notifications.index') }}" class="p-2 text-brand-text hover:text-brand-muted transition-colors flex items-center relative">
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false" @mouseenter="if(window.innerWidth >= 1024) open = true" @mouseleave="if(window.innerWidth >= 1024) open = false">
+                    <button type="button" @click.stop="open = !open" class="p-2 text-brand-text hover:text-brand-muted transition-colors flex items-center relative cursor-pointer" aria-label="Notifications">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                         </svg>
@@ -156,59 +218,65 @@
                                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                             </span>
                         @endif
-                    </a>
+                    </button>
                     
-                    {{-- Dropdown --}}
-                    <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                    {{-- Dropdown (Clean, Minimal, Responsive) --}}
+                    <div x-show="open" x-transition:enter="transition ease-out duration-150"
                         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave="transition ease-in duration-100"
                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                        class="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-brand-border/60 overflow-hidden z-50"
+                        class="absolute right-0 top-full mt-2 w-[280px] sm:w-80 max-w-[calc(100vw-1.5rem)] bg-white rounded-xl shadow-lg border border-brand-border overflow-hidden z-50"
                         style="display:none;">
                         
-                        <div class="px-4 py-3 border-b border-brand-border/60 flex justify-between items-center bg-brand-light/30">
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-brand-dark">Notifications</h3>
+                        <div class="px-4 py-2.5 border-b border-brand-border flex justify-between items-center bg-brand-off-white">
+                            <h3 class="text-[11px] font-bold uppercase tracking-wider text-brand-dark">Notifications</h3>
                             @if(auth()->user()->unreadNotifications->count() > 0)
                                 <form action="{{ route('account.notifications.markAllRead') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="text-[10px] font-bold text-brand-text hover:underline uppercase">Mark all read</button>
+                                    <button type="submit" class="text-[10px] font-semibold text-brand-muted hover:text-brand-dark hover:underline uppercase">Mark all read</button>
                                 </form>
                             @endif
                         </div>
                         
-                        <div class="max-h-80 overflow-y-auto">
+                        <div class="max-h-72 overflow-y-auto divide-y divide-brand-border/40">
                             @forelse(auth()->user()->notifications->take(5) as $notification)
-                                <a href="{{ $notification->data['link'] ?? route('account.notifications.index') }}" class="block p-4 border-b border-brand-border/40 hover:bg-brand-light/50 transition-colors {{ is_null($notification->read_at) ? 'bg-blue-50/50' : '' }}">
-                                    <div class="flex gap-3">
+                                <a href="{{ $notification->data['link'] ?? route('account.notifications.index') }}" class="block p-3 sm:p-3.5 hover:bg-brand-off-white transition-colors {{ is_null($notification->read_at) ? 'bg-blue-50/40' : '' }}">
+                                    <div class="flex items-start gap-2.5">
                                         <div class="shrink-0 mt-0.5">
-                                            @if(($notification->data['type'] ?? '') === 'offer')
-                                                <span class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
-                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                            @if(($notification->data['type'] ?? '') === 'order_status')
+                                                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100 text-xs font-bold">
+                                                    {{ $notification->data['icon'] ?? '🛍️' }}
+                                                </span>
+                                            @elseif(($notification->data['type'] ?? '') === 'offer')
+                                                <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
                                                 </span>
                                             @else
-                                                <span class="w-8 h-8 rounded-full bg-brand-light text-brand-dark flex items-center justify-center">
-                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                                                <span class="w-7 h-7 rounded-lg bg-brand-light text-brand-dark flex items-center justify-center border border-brand-border">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
                                                 </span>
                                             @endif
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-brand-dark mb-0.5 truncate {{ is_null($notification->read_at) ? '' : 'text-brand-muted' }}">{{ $notification->data['title'] ?? 'Notification' }}</p>
-                                            <p class="text-xs text-brand-muted line-clamp-2">{{ $notification->data['message'] ?? '' }}</p>
-                                            <p class="text-[10px] text-brand-muted/70 mt-1 uppercase">{{ $notification->created_at->diffForHumans() }}</p>
+                                            <p class="text-xs font-bold text-brand-dark mb-0.5 truncate {{ is_null($notification->read_at) ? '' : 'text-brand-muted font-medium' }}">{{ $notification->data['title'] ?? 'Notification' }}</p>
+                                            <p class="text-[11px] text-brand-muted line-clamp-2 leading-relaxed">{{ $notification->data['message'] ?? '' }}</p>
+                                            <p class="text-[10px] text-brand-muted/70 mt-1 uppercase font-medium">{{ $notification->created_at->diffForHumans() }}</p>
                                         </div>
                                     </div>
                                 </a>
                             @empty
-                                <div class="p-6 text-center">
-                                    <svg class="w-8 h-8 text-brand-muted/50 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                                <div class="py-7 px-4 text-center">
+                                    <div class="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand-muted/60 mx-auto mb-2">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                                    </div>
                                     <p class="text-xs font-medium text-brand-muted">No notifications yet</p>
                                 </div>
                             @endforelse
                         </div>
                         
-                        <a href="{{ route('account.notifications.index') }}" class="block px-4 py-3 bg-brand-light/30 text-center text-xs font-bold uppercase tracking-wider text-brand-text hover:bg-brand-light transition-colors">
+                        <a href="{{ route('account.notifications.index') }}" class="block px-4 py-2.5 bg-brand-off-white text-center text-[11px] font-bold uppercase tracking-wider text-brand-dark hover:bg-brand-light transition-colors border-t border-brand-border">
                             View All Notifications
                         </a>
                     </div>
@@ -582,7 +650,8 @@
         </button>
 
         {{-- 4. Wishlist --}}
-        <a href="#" class="flex flex-col items-center gap-1 p-2 flex-1 hover:text-brand-text">
+        <a href="{{ route('account.wishlist') }}"
+            class="flex flex-col items-center gap-1 p-2 flex-1 {{ request()->routeIs('account.wishlist') ? 'text-brand-text' : 'hover:text-brand-text' }}">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
@@ -616,89 +685,121 @@
                     x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
                     class="w-screen max-w-md">
 
-                    <div class="h-full flex flex-col bg-white shadow-xl">
+                    <div class="h-full flex flex-col bg-white shadow-2xl">
 
                         {{-- Header --}}
-                        <div class="px-6 py-6 border-b border-brand-border flex items-center justify-between">
-                            <h2 class="text-xl font-heading font-extrabold uppercase tracking-tight"
-                                id="slide-over-title">Your Bag (<span x-text="cartSummary.item_count"></span>)</h2>
-                            <button @click="cartOpen = false"
-                                class="text-brand-muted hover:text-brand-text transition-colors">
-                                <span class="sr-only">Close panel</span>
-                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12" />
+                        <div class="px-5 py-4 sm:px-6 sm:py-5 border-b border-brand-border flex items-center justify-between bg-brand-off-white">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-7 h-7 rounded-lg bg-brand-dark text-white flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+                                    </svg>
+                                </span>
+                                <h2 class="text-sm sm:text-base font-heading font-bold text-brand-dark" id="slide-over-title">
+                                    Your Bag (<span x-text="cartSummary.item_count"></span>)
+                                </h2>
+                            </div>
+                            <button @click="cartOpen = false" class="w-8 h-8 rounded-full flex items-center justify-center text-brand-muted hover:text-brand-dark hover:bg-brand-light transition-all cursor-pointer" aria-label="Close cart">
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
 
-                        {{-- Items --}}
-                        <div class="flex-1 overflow-y-auto px-6 py-6 sm:px-6">
+                        {{-- Free Delivery Dynamic Progress Bar --}}
+                        <div class="px-5 py-3.5 bg-brand-light/70 border-b border-brand-border" x-show="cartItems.length > 0">
+                            <div class="flex items-center justify-between text-xs mb-2">
+                                <span class="font-semibold text-brand-dark flex items-center gap-1.5" x-show="cartSummary.subtotal < 999">
+                                    <span>🚚</span>
+                                    <span>Add <span class="font-extrabold text-brand-dark" x-text="formatPrice(999 - cartSummary.subtotal)"></span> more to get <strong class="text-brand-dark underline underline-offset-2">FREE Delivery</strong></span>
+                                </span>
+                                <span class="font-bold text-emerald-700 flex items-center gap-1.5" x-show="cartSummary.subtotal >= 999">
+                                    <span>🎉</span>
+                                    <span>You unlocked <strong>FREE Standard Delivery!</strong></span>
+                                </span>
+                                <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white border border-brand-border text-brand-dark"
+                                      x-text="Math.min(100, Math.round((cartSummary.subtotal / 999) * 100)) + '%'"></span>
+                            </div>
+                            <div class="w-full h-2 bg-brand-border/60 rounded-full overflow-hidden p-0.5">
+                                <div class="h-full rounded-full transition-all duration-500 ease-out shadow-xs"
+                                     :class="cartSummary.subtotal >= 999 ? 'bg-emerald-500' : 'bg-brand-dark'"
+                                     :style="'width: ' + Math.min(100, Math.round((cartSummary.subtotal / 999) * 100)) + '%'"></div>
+                            </div>
+                        </div>
+
+                        {{-- Items Area --}}
+                        <div class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
 
                             {{-- Empty State --}}
                             <template x-if="cartItems.length === 0">
-                                <div class="h-full flex flex-col items-center justify-center text-center">
-                                    <svg class="w-16 h-16 text-brand-muted mb-4" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
-                                    </svg>
-                                    <p class="text-lg font-bold text-brand-dark mb-2">Your bag is empty</p>
-                                    <p class="text-brand-muted text-sm mb-6">Looks like you haven't added anything yet.
-                                    </p>
-                                    <button @click="cartOpen = false" class="btn-primary w-full max-w-[200px]">Continue
-                                        Shopping</button>
+                                <div class="h-full min-h-[320px] flex flex-col items-center justify-center text-center px-4">
+                                    <div class="w-16 h-16 rounded-2xl bg-brand-light flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-brand-muted/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-base font-heading font-bold text-brand-dark mb-1">Your bag is empty</h3>
+                                    <p class="text-xs text-brand-muted max-w-xs mb-6">Looks like you haven't added any streetwear items to your cart yet.</p>
+                                    <a href="{{ route('frontend.products.index') }}" @click="cartOpen = false" class="inline-flex items-center gap-2 bg-brand-dark text-white text-xs font-bold px-6 py-3 rounded-xl hover:bg-brand-text transition-colors">
+                                        Explore Collections
+                                    </a>
                                 </div>
                             </template>
 
                             {{-- Item List --}}
-                            <div class="flow-root">
-                                <ul role="list" class="-my-6 divide-y divide-brand-border">
+                            <div class="flow-root" x-show="cartItems.length > 0">
+                                <ul role="list" class="divide-y divide-brand-border/60">
                                     <template x-for="item in cartItems" :key="item.id">
-                                        <li class="py-6 flex">
-                                            <div
-                                                class="flex-shrink-0 w-24 h-32 border border-brand-border bg-brand-light overflow-hidden rounded-md">
-                                                <img :src="item.image || 'https://via.placeholder.com/150'"
-                                                    :alt="item.product_name"
-                                                    class="w-full h-full object-center object-cover">
+                                        <li class="py-4 sm:py-5 flex gap-3 sm:gap-4 first:pt-0">
+                                            {{-- Product Image --}}
+                                            <div class="w-20 h-24 sm:w-22 sm:h-28 border border-brand-border bg-brand-off-white overflow-hidden rounded-xl shrink-0 shadow-2xs relative">
+                                                <img :src="item.image || 'https://via.placeholder.com/150'" :alt="item.product_name" class="w-full h-full object-center object-cover">
                                             </div>
 
-                                            <div class="ml-4 flex-1 flex flex-col">
+                                            {{-- Product Info --}}
+                                            <div class="flex-1 min-w-0 flex flex-col justify-between">
                                                 <div>
-                                                    <div
-                                                        class="flex justify-between text-base font-bold text-brand-dark">
-                                                        <h3 class="line-clamp-1 mr-4">
-                                                            <a :href="'/product/' + item.product_slug"
-                                                                x-text="item.product_name"></a>
+                                                    <div class="flex justify-between items-start gap-2">
+                                                        <h3 class="text-xs sm:text-sm font-bold text-brand-dark line-clamp-2 leading-snug">
+                                                            <a :href="'/product/' + item.product_slug" class="hover:underline" x-text="item.product_name"></a>
                                                         </h3>
-                                                        <p class="ml-4 whitespace-nowrap"
-                                                            x-text="formatPrice(item.price * item.quantity)"></p>
+                                                        <div class="text-right shrink-0">
+                                                            <p class="text-xs sm:text-sm font-extrabold text-brand-dark" x-text="formatPrice(item.price * item.quantity)"></p>
+                                                            <p x-show="item.quantity > 1" class="text-[10px] text-brand-muted mt-0.5" x-text="'(' + formatPrice(item.price) + ' ea)'"></p>
+                                                        </div>
                                                     </div>
-                                                    <p class="mt-1 text-xs text-brand-muted"><span
-                                                            x-text="item.color"></span> <span
-                                                            x-show="item.size">/</span> <span x-text="item.size"></span>
-                                                    </p>
+
+                                                    {{-- Variant Attributes --}}
+                                                    <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                                        <template x-if="item.size">
+                                                            <span class="inline-flex items-center gap-1 bg-brand-off-white border border-brand-border px-2 py-0.5 rounded-md text-[10px] font-semibold text-brand-dark">
+                                                                Size: <strong x-text="item.size"></strong>
+                                                            </span>
+                                                        </template>
+                                                        <template x-if="item.color">
+                                                            <span class="inline-flex items-center gap-1 bg-brand-off-white border border-brand-border px-2 py-0.5 rounded-md text-[10px] font-semibold text-brand-dark">
+                                                                Color: <strong x-text="item.color"></strong>
+                                                            </span>
+                                                        </template>
+                                                    </div>
                                                 </div>
-                                                <div class="flex-1 flex items-end justify-between text-sm">
 
-                                                    <div
-                                                        class="flex items-center border border-brand-border rounded h-8">
-                                                        <button @click="updateCartItem(item.id, item.quantity - 1)"
-                                                            :disabled="isUpdatingCart"
-                                                            class="px-2 text-brand-muted hover:text-brand-text disabled:opacity-50">&minus;</button>
-                                                        <span class="px-2 font-semibold text-xs"
-                                                            x-text="item.quantity"></span>
-                                                        <button @click="updateCartItem(item.id, item.quantity + 1)"
-                                                            :disabled="isUpdatingCart"
-                                                            class="px-2 text-brand-muted hover:text-brand-text disabled:opacity-50">&plus;</button>
+                                                {{-- Bottom Row: Quantity & Remove --}}
+                                                <div class="flex items-center justify-between pt-2 mt-1">
+                                                    {{-- Quantity Control --}}
+                                                    <div class="flex items-center bg-brand-off-white border border-brand-border rounded-lg h-7 sm:h-8 shadow-2xs">
+                                                        <button type="button" @click="updateCartItem(item.id, item.quantity - 1)" :disabled="isUpdatingCart" class="w-6 sm:w-7 h-full flex items-center justify-center text-brand-dark hover:bg-white active:scale-95 disabled:opacity-40 transition-all font-bold text-sm cursor-pointer" aria-label="Decrease quantity">&minus;</button>
+                                                        <span class="w-6 sm:w-7 text-center font-bold text-xs text-brand-dark select-none" x-text="item.quantity"></span>
+                                                        <button type="button" @click="updateCartItem(item.id, item.quantity + 1)" :disabled="isUpdatingCart" class="w-6 sm:w-7 h-full flex items-center justify-center text-brand-dark hover:bg-white active:scale-95 disabled:opacity-40 transition-all font-bold text-sm cursor-pointer" aria-label="Increase quantity">&plus;</button>
                                                     </div>
 
-                                                    <div class="flex">
-                                                        <button @click="removeCartItem(item.id)"
-                                                            :disabled="isUpdatingCart" type="button"
-                                                            class="font-semibold text-brand-muted hover:text-red-500 text-xs tracking-widest uppercase disabled:opacity-50 transition-colors">Remove</button>
-                                                    </div>
+                                                    {{-- Remove Link --}}
+                                                    <button type="button" @click="removeCartItem(item.id)" :disabled="isUpdatingCart" class="flex items-center gap-1 text-[11px] font-semibold text-red-500 hover:text-red-700 hover:underline disabled:opacity-50 transition-colors cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                                                        </svg>
+                                                        Remove
+                                                    </button>
                                                 </div>
                                             </div>
                                         </li>
@@ -707,18 +808,40 @@
                             </div>
                         </div>
 
-                        {{-- Footer / Subtotal --}}
-                        <div class="border-t border-brand-border px-4 py-6 sm:px-6" x-show="cartItems.length > 0">
-                            <div class="flex justify-between text-base font-bold text-brand-dark mb-4">
-                                <p>Subtotal</p>
-                                <p x-text="formatPrice(cartSummary.subtotal)"></p>
+                        {{-- Footer / Summary --}}
+                        <div class="border-t border-brand-border px-5 py-4 sm:px-6 sm:py-5 bg-brand-off-white" x-show="cartItems.length > 0">
+                            {{-- Cost Breakdown --}}
+                            <div class="space-y-1.5 text-xs text-brand-muted mb-4">
+                                <div class="flex justify-between">
+                                    <span>Subtotal</span>
+                                    <span class="font-bold text-brand-dark" x-text="formatPrice(cartSummary.subtotal)"></span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Estimated Shipping</span>
+                                    <span :class="cartSummary.subtotal >= 999 ? 'text-emerald-700 font-bold uppercase tracking-wider text-[11px]' : 'text-brand-dark font-medium'"
+                                          x-text="cartSummary.subtotal >= 999 ? 'FREE' : 'Calculated at checkout'"></span>
+                                </div>
+                                <div class="flex justify-between items-center pt-2 border-t border-brand-border text-sm">
+                                    <span class="font-bold text-brand-dark uppercase tracking-wider">Total</span>
+                                    <span class="font-extrabold font-heading text-base text-brand-dark" x-text="formatPrice(cartSummary.subtotal)"></span>
+                                </div>
                             </div>
-                            <p class="mt-0.5 text-xs text-brand-muted mb-6">Shipping and taxes calculated at checkout.
-                            </p>
-                            <div class="space-y-3">
-                                <a href="{{ route('frontend.checkout.index') }}"
-                                    class="btn-primary w-full block text-center py-4 bg-brand-text text-white">Proceed
-                                    to Checkout</a>
+
+                            {{-- Checkout CTA --}}
+                            <div class="space-y-2">
+                                <a href="{{ route('frontend.checkout.index') }}" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-brand-dark text-white rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider hover:bg-brand-text transition-all shadow-sm hover:shadow-md active:scale-[0.99] cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                                    </svg>
+                                    <span>Proceed to Checkout</span>
+                                </a>
+                            </div>
+
+                            {{-- Trust Points --}}
+                            <div class="flex items-center justify-between text-[10px] text-brand-muted font-medium pt-3 mt-3 border-t border-brand-border/60">
+                                <span>🔒 Secure Checkout</span>
+                                <span>🔄 7-Day Returns</span>
+                                <span>⚡ Express Dispatch</span>
                             </div>
                         </div>
                     </div>
@@ -754,7 +877,12 @@
 
                 async fetchCart() {
                     try {
-                        let res = await fetch('/cart/data');
+                        let res = await fetch('/cart/data', {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
                         let data = await res.json();
                         if (data.success) {
                             this.cartItems = data.items;
@@ -772,6 +900,8 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             body: JSON.stringify({ variant_id: variantId, quantity: quantity })
@@ -788,9 +918,9 @@
                                     currency: 'INR',
                                     value: this.cartSummary.subtotal,
                                     items: this.cartItems.map(item => ({
-                                        item_id: item.variant.sku || item.variant.id,
-                                        item_name: item.variant.product.name,
-                                        price: item.variant.price || item.variant.product.price,
+                                        item_id: item.variant ? (item.variant.sku || item.variant.id) : item.id,
+                                        item_name: item.product_name,
+                                        price: item.price,
                                         quantity: item.quantity
                                     }))
                                 });
@@ -801,17 +931,17 @@
                                 fbq('track', 'AddToCart', {
                                     value: this.cartSummary.subtotal,
                                     currency: 'INR',
-                                    content_ids: this.cartItems.map(item => item.variant.sku || item.variant.id),
+                                    content_ids: this.cartItems.map(item => item.variant_id || item.id),
                                     content_type: 'product'
                                 });
                             }
 
                         } else {
-                            alert(data.message || 'Error adding to cart');
+                            if (window.showToast) window.showToast(data.message || 'Error adding to cart', 'error');
                         }
                     } catch (e) {
                         console.error(e);
-                        alert('Something went wrong!');
+                        if (window.showToast) window.showToast('Something went wrong!', 'error');
                     }
                     this.isUpdatingCart = false;
                 },
@@ -823,6 +953,8 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             body: JSON.stringify({ item_id: itemId })
@@ -843,12 +975,23 @@
                         return this.removeCartItem(itemId);
                     }
 
+                    // Instant optimistic UI update
+                    const item = this.cartItems.find(i => i.id === itemId);
+                    const oldQty = item ? item.quantity : 1;
+                    if (item) {
+                        item.quantity = qty;
+                        this.cartSummary.subtotal += (qty - oldQty) * item.price;
+                        this.cartSummary.item_count += (qty - oldQty);
+                    }
+
                     this.isUpdatingCart = true;
                     try {
                         let res = await fetch('/cart/update', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             body: JSON.stringify({ item_id: itemId, quantity: qty })
@@ -858,10 +1001,13 @@
                             this.cartItems = data.items;
                             this.cartSummary = data.summary;
                         } else {
-                            alert(data.message || 'Error updating cart');
+                            if (item) item.quantity = oldQty;
+                            this.fetchCart();
+                            if (window.showToast) window.showToast(data.message || 'Error updating cart', 'error');
                         }
                     } catch (e) {
                         console.error(e);
+                        this.fetchCart();
                     }
                     this.isUpdatingCart = false;
                 }
@@ -889,27 +1035,38 @@
                         });
 
                         let data = await res.json();
-                        this.message = data.message;
-                        this.isSuccess = data.success;
-
-                        if (this.isSuccess) {
+                        if (data.success) {
+                            this.message = data.message;
+                            this.isSuccess = true;
                             this.email = '';
+                            if (window.showToast) window.showToast(data.message, 'success');
+                        } else {
+                            this.message = data.message || 'Something went wrong.';
+                            this.isSuccess = false;
+                            if (window.showToast) window.showToast(this.message, 'error');
                         }
                     } catch (e) {
                         console.error(e);
                         this.message = 'Something went wrong. Please try again.';
                         this.isSuccess = false;
+                        if (window.showToast) window.showToast(this.message, 'error');
                     }
                     this.isLoading = false;
                 }
             }));
         });
+
+        // Global Toast Dispatcher Function
+        window.showToast = function(message, type = 'success') {
+            window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }));
+        };
     </script>
-    {{-- Global Toast Notification System --}}
+    {{-- Global Toast Notification System (Sleek Horizontal Top Banner/Pill) --}}
     <div x-data="{
             show: false,
             message: '',
             type: 'success',
+            timeout: null,
             init() {
                 // Check for Laravel session flashes
                 @if(session('success'))
@@ -918,6 +1075,9 @@
                 @if(session('error'))
                     this.notify('{{ session('error') }}', 'error');
                 @endif
+                @if(session('info'))
+                    this.notify('{{ session('info') }}', 'info');
+                @endif
 
                 // Listen for custom events
                 window.addEventListener('toast', (e) => {
@@ -925,55 +1085,188 @@
                 });
             },
             notify(msg, t) {
+                if (!msg) return;
                 this.message = msg;
                 this.type = t;
                 this.show = true;
-                setTimeout(() => { this.show = false; }, 4000);
+                if (this.timeout) clearTimeout(this.timeout);
+                this.timeout = setTimeout(() => { this.show = false; }, 4000);
             }
         }"
         x-show="show"
         x-transition:enter="transition ease-out duration-300 transform"
-        x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
-        x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+        x-transition:enter-start="-translate-y-8 opacity-0 scale-95"
+        x-transition:enter-end="translate-y-0 opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-200 transform"
-        x-transition:leave-start="translate-y-0 opacity-100 sm:translate-x-0"
-        x-transition:leave-end="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
-        class="fixed bottom-4 left-1/2 -translate-x-1/2 sm:left-auto sm:-translate-x-0 sm:bottom-6 sm:right-6 z-[100] max-w-sm w-full bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-brand-border/60 overflow-hidden"
+        x-transition:leave-start="translate-y-0 opacity-100 scale-100"
+        x-transition:leave-end="-translate-y-8 opacity-0 scale-95"
+        class="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-1.5rem)] sm:w-auto max-w-md pointer-events-none"
         style="display: none;"
     >
-        <div class="p-4 flex items-start gap-3 relative">
-            {{-- Accent bar --}}
-            <div class="absolute left-0 top-0 bottom-0 w-1" :class="type === 'success' ? 'bg-green-500' : 'bg-red-500'"></div>
+        <div class="pointer-events-auto bg-[#14171f]/95 text-white backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-full px-3.5 py-2.5 sm:px-4 sm:py-2.5 shadow-2xl flex items-center gap-2.5">
             
-            {{-- Icon --}}
-            <div class="shrink-0 mt-0.5">
+            {{-- Status Icon --}}
+            <div class="shrink-0">
                 <template x-if="type === 'success'">
-                    <span class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
                     </span>
                 </template>
                 <template x-if="type === 'error'">
-                    <span class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                    </span>
+                </template>
+                <template x-if="type === 'info' || type === 'warning'">
+                    <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
                     </span>
                 </template>
             </div>
             
-            {{-- Content --}}
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-brand-dark uppercase tracking-wider mb-0.5" x-text="type === 'success' ? 'Success' : 'Error'"></p>
-                <p class="text-sm text-brand-muted" x-text="message"></p>
+            {{-- Message Content (Horizontal, no vertical breaking) --}}
+            <div class="flex-1 min-w-0 pr-1">
+                <p class="text-xs sm:text-sm font-semibold text-neutral-100 leading-snug line-clamp-2" x-text="message"></p>
             </div>
             
-            {{-- Close --}}
-            <div class="shrink-0">
-                <button @click="show = false" class="text-brand-muted hover:text-brand-text transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            {{-- Dismiss Button --}}
+            <button @click="show = false" class="text-neutral-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10 shrink-0 cursor-pointer" aria-label="Dismiss notification">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    {{-- Firebase Push Notification Opt-in Prompt & Client SDK --}}
+    <div x-data="{
+            showPrompt: false,
+            loading: false,
+            init() {
+                // Check if already subscribed or dismissed
+                if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+                if (Notification.permission === 'granted') {
+                    this.registerDeviceToken();
+                    return;
+                }
+                if (Notification.permission === 'default' && !localStorage.getItem('threadax_push_dismissed')) {
+                    setTimeout(() => { this.showPrompt = true; }, 4000);
+                }
+            },
+            async subscribePush() {
+                this.loading = true;
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        this.showPrompt = false;
+                        await this.registerDeviceToken();
+                        window.dispatchEvent(new CustomEvent('notify', {
+                            detail: { message: '🎉 VIP Push Notifications enabled! You will receive drop alerts.', type: 'success' }
+                        }));
+                    } else {
+                        this.showPrompt = false;
+                        localStorage.setItem('threadax_push_dismissed', '1');
+                    }
+                } catch (e) {
+                    console.error('Push subscription failed:', e);
+                } finally {
+                    this.loading = false;
+                }
+            },
+            dismiss() {
+                this.showPrompt = false;
+                localStorage.setItem('threadax_push_dismissed', '1');
+            },
+            async registerDeviceToken() {
+                if (!('serviceWorker' in navigator)) return;
+                try {
+                    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    if (typeof firebase !== 'undefined' && firebase.messaging) {
+                        const messaging = firebase.messaging();
+                        const vapidKey = '{{ config('services.firebase.vapid_key') }}';
+                        const token = await messaging.getToken({
+                            serviceWorkerRegistration: reg,
+                            vapidKey: vapidKey || undefined
+                        });
+                        if (token) {
+                            fetch('{{ route('push-tokens.save') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    token: token,
+                                    device_type: window.innerWidth < 768 ? 'android' : 'web',
+                                    browser: navigator.userAgent
+                                })
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.debug('FCM Token sync skipped:', err.message);
+                }
+            }
+         }"
+         x-show="showPrompt"
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="translate-y-8 opacity-0"
+         x-transition:enter-end="translate-y-0 opacity-100"
+         x-transition:leave="transition ease-in duration-200 transform"
+         x-transition:leave-start="translate-y-0 opacity-100"
+         x-transition:leave-end="translate-y-8 opacity-0"
+         class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[140]"
+         style="display: none;"
+    >
+        <div class="bg-slate-950 text-white rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/15 backdrop-blur-xl">
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg shrink-0 border border-amber-500/30">
+                    🔔
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-xs sm:text-sm font-extrabold text-white tracking-wide">Never Miss a Drop!</h4>
+                    <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                        Get instant mobile notifications for exclusive streetwear drops & live order tracking.
+                    </p>
+                    <div class="flex items-center gap-2 mt-3.5">
+                        <button type="button" 
+                                @click="subscribePush()" 
+                                :disabled="loading"
+                                class="px-3.5 py-1.5 rounded-lg bg-white text-slate-950 text-xs font-extrabold hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50">
+                            <span x-text="loading ? 'Enabling...' : 'Enable Alerts ➔'"></span>
+                        </button>
+                        <button type="button" 
+                                @click="dismiss()" 
+                                class="px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition-colors cursor-pointer">
+                            Later
+                        </button>
+                    </div>
+                </div>
+                <button type="button" @click="dismiss()" class="text-slate-400 hover:text-white transition-colors p-1" aria-label="Dismiss">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
         </div>
     </div>
 
+    {{-- Firebase App & Messaging SDK --}}
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "{{ config('services.firebase.api_key', 'AIzaSy_DEFAULT') }}",
+            authDomain: "{{ config('services.firebase.auth_domain', 'threadax.firebaseapp.com') }}",
+            projectId: "{{ config('services.firebase.project_id', 'threadax-ecommerce') }}",
+            storageBucket: "{{ config('services.firebase.storage_bucket', 'threadax.appspot.com') }}",
+            messagingSenderId: "{{ config('services.firebase.messaging_sender_id', '100000000000') }}",
+            appId: "{{ config('services.firebase.app_id', '1:100000000000:web:threadax') }}"
+        };
+        try {
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch (e) {
+            console.debug('Firebase config init:', e.message);
+        }
+    </script>
 </body>
 
 </html>

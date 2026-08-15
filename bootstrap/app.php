@@ -20,9 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
-        // Exclude Razorpay webhook from CSRF verification
+        // Exclude webhooks from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'webhooks/razorpay',
+            'webhooks/shiprocket',
+            'api/webhooks/shiprocket',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

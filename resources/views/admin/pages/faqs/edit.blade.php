@@ -1,51 +1,170 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Edit FAQ')
-@section('page-title', 'Edit FAQ')
-
-@section('header')
-<div class="flex items-center gap-4">
-    <a href="{{ route('admin.faqs.index') }}" class="text-gray-500 hover:text-gray-900">← Back</a>
-    <h1 class="text-2xl font-bold text-gray-900">Edit FAQ</h1>
-</div>
+@section('title', 'Edit FAQ - Admin')
+@section('page-title')
+    <div class="flex items-center gap-3">
+        <a href="{{ route('admin.faqs.index') }}" class="text-slate-400 hover:text-slate-900 transition-colors p-1.5 rounded-xl hover:bg-slate-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        </a>
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="text-lg font-extrabold text-slate-900">Edit FAQ Question</span>
+                @if($faq->is_active)
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+                        Inactive
+                    </span>
+                @endif
+            </div>
+            <p class="text-xs text-slate-400">Sort Priority: #{{ $faq->sort_order }}</p>
+        </div>
+    </div>
 @endsection
 
 @section('content')
-<form method="POST" action="{{ route('admin.faqs.update', $faq) }}" class="max-w-3xl space-y-6">
-    @csrf @method('PUT')
+<div class="max-w-4xl mx-auto space-y-6 sm:space-y-8"
+     x-data="{
+         question: '{{ addslashes(old('question', $faq->question)) }}',
+         answer: `{{ addslashes(old('answer', $faq->answer)) }}`,
+         isActive: {{ old('is_active', $faq->is_active ? 1 : 0) ? 'true' : 'false' }}
+     }">
 
-    @if($errors->any())
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
-            <ul class="list-disc list-inside">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-        </div>
-    @endif
+    {{-- Form --}}
+    <form action="{{ route('admin.faqs.update', $faq) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-    <div class="bg-white rounded-lg shadow p-6 space-y-5">
-        <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Question *</label>
-            <input type="text" name="question" value="{{ old('question', $faq->question) }}" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-400 focus:outline-none">
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            
+            {{-- Main Column (2/3 width) --}}
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs space-y-5">
+                    <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
+                            ❓
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-heading font-extrabold text-slate-900">Question & Response</h3>
+                            <p class="text-xs text-slate-400">Customer inquiry and official response</p>
+                        </div>
+                    </div>
 
-        <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Answer *</label>
-            <textarea name="answer" rows="5" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-400 focus:outline-none">{{ old('answer', $faq->answer) }}</textarea>
-        </div>
+                    {{-- Question --}}
+                    <div>
+                        <label for="question" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Question Title <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" 
+                               id="question" 
+                               name="question" 
+                               x-model="question"
+                               value="{{ old('question', $faq->question) }}" 
+                               required
+                               class="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-sm font-bold text-slate-900 outline-none transition-all @error('question') border-rose-500 @enderror">
+                        @error('question') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                    </div>
 
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Sort Order</label>
-                <input type="number" name="sort_order" value="{{ old('sort_order', $faq->sort_order) }}" min="0" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-slate-400 focus:outline-none">
+                    {{-- Answer --}}
+                    <div>
+                        <label for="answer" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Answer Content <span class="text-rose-500">*</span>
+                        </label>
+                        <textarea id="answer" 
+                                  name="answer" 
+                                  x-model="answer"
+                                  rows="7"
+                                  required
+                                  class="w-full p-4 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all leading-relaxed @error('answer') border-rose-500 @enderror">{{ old('answer', $faq->answer) }}</textarea>
+                        @error('answer') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                {{-- Live Accordion Simulator Preview --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs space-y-4" x-data="{ expanded: true }">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-heading font-extrabold text-slate-900 uppercase tracking-wider">Live Storefront Accordion Preview</span>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50">
+                        <button type="button" @click="expanded = !expanded" class="w-full p-4 text-left flex items-center justify-between gap-3 font-extrabold text-xs text-slate-900 cursor-pointer">
+                            <span x-text="question || 'Your question title will appear here...'"></span>
+                            <span class="text-slate-400 text-sm font-bold" x-text="expanded ? '−' : '+'"></span>
+                        </button>
+                        <div x-show="expanded" class="p-4 pt-0 text-xs text-slate-600 leading-relaxed border-t border-slate-200/50">
+                            <span x-text="answer || 'Answer details and explanations will be shown when customers expand the FAQ.'"></span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <div class="flex items-center gap-3 pt-6">
-                <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $faq->is_active) ? 'checked' : '' }} class="w-4 h-4 rounded border-gray-300 text-slate-900 focus:ring-slate-400">
-                <label for="is_active" class="text-sm font-semibold text-gray-700">Active</label>
-            </div>
-        </div>
-    </div>
 
-    <div class="flex gap-3">
-        <button type="submit" class="bg-slate-900 text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-slate-700 transition-colors">Update FAQ</button>
-        <a href="{{ route('admin.faqs.index') }}" class="text-sm font-semibold px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">Cancel</a>
-    </div>
-</form>
+            {{-- Right Column (1/3 width) --}}
+            <div class="space-y-6">
+                
+                {{-- Visibility & Sort Order --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+                    <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                            ⚙️
+                        </div>
+                        <h3 class="text-xs font-heading font-extrabold text-slate-900 uppercase tracking-wider">Display Settings</h3>
+                    </div>
+
+                    {{-- Sort Order --}}
+                    <div>
+                        <label for="sort_order" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Sort Priority Order
+                        </label>
+                        <input type="number" 
+                               id="sort_order" 
+                               name="sort_order" 
+                               value="{{ old('sort_order', $faq->sort_order) }}" 
+                               min="0"
+                               class="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-mono font-bold text-slate-900 outline-none transition-all">
+                        <p class="text-[11px] text-slate-400 mt-1">Lower numbers appear first (0, 1, 2...).</p>
+                    </div>
+
+                    {{-- Active Toggle Switch --}}
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <div>
+                            <span class="text-xs font-bold text-slate-900 block">Active Status</span>
+                            <span class="text-[11px] text-slate-400">Visible on FAQ page</span>
+                        </div>
+                        <button type="button" 
+                                @click="isActive = !isActive" 
+                                :class="isActive ? 'bg-slate-900' : 'bg-slate-200'" 
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-2xs">
+                            <span :class="isActive ? 'translate-x-5' : 'translate-x-0'" 
+                                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                        <input type="hidden" name="is_active" :value="isActive ? '1' : '0'">
+                    </div>
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-3">
+                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl text-xs font-extrabold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-sm hover:shadow-md flex justify-center items-center gap-2 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>Update FAQ Question</span>
+                    </button>
+
+                    <div class="text-center pt-1">
+                        <a href="{{ route('admin.faqs.index') }}" class="text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors">
+                            Discard & Go Back
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </form>
+
+</div>
 @endsection

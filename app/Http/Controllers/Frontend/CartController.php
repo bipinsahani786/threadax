@@ -65,12 +65,12 @@ class CartController extends Controller
 
         try {
             $this->cartService->updateQuantity($request->item_id, $request->quantity);
-            if ($request->expectsJson() || $request->ajax()) {
+            if ($request->expectsJson() || $request->ajax() || $request->isJson()) {
                 return $this->index();
             }
             return back()->with('success', 'Cart updated.');
         } catch (\Exception $e) {
-            if ($request->expectsJson() || $request->ajax()) {
+            if ($request->expectsJson() || $request->ajax() || $request->isJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
             return back()->with('error', $e->getMessage());
@@ -85,12 +85,12 @@ class CartController extends Controller
 
         try {
             $this->cartService->removeItem($request->item_id);
-            if ($request->expectsJson() || $request->ajax()) {
+            if ($request->expectsJson() || $request->ajax() || $request->isJson()) {
                 return $this->index();
             }
             return back()->with('success', 'Item removed from cart.');
         } catch (\Exception $e) {
-            if ($request->expectsJson() || $request->ajax()) {
+            if ($request->expectsJson() || $request->ajax() || $request->isJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
             }
             return back()->with('error', $e->getMessage());
@@ -117,25 +117,49 @@ class CartController extends Controller
     public function moveFromWishlist(Request $request, $id)
     {
         if (!\Illuminate\Support\Facades\Auth::check()) {
+            if ($request->expectsJson() || $request->isJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Please login to manage your wishlist.'], 401);
+            }
             return back()->with('error', 'Please login to manage wishlist.');
         }
 
         $wishlistItem = \Illuminate\Support\Facades\Auth::user()->wishlists()->findOrFail($id);
         $product = $wishlistItem->product;
         
-        // We need a variant to add to cart. Let's get the default or first variant.
-        $variant = $product->variants->first();
+        // Check if a specific variant was selected, otherwise pick first in-stock or default variant
+        $variantId = $request->input('variant_id');
+        $variant = null;
+        if ($variantId) {
+            $variant = $product->variants()->where('id', $variantId)->first();
+        }
+        if (!$variant) {
+            $variant = $product->variants()->where('stock', '>', 0)->first() ?? $product->variants->first();
+        }
 
         if ($variant) {
             try {
                 $this->cartService->addItem($variant->id, 1);
                 $wishlistItem->delete(); // Remove from wishlist
-                return back()->with('success', 'Item moved to cart.');
+
+                if ($request->expectsJson() || $request->isJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Item successfully moved to your bag!',
+                        'wishlist_count' => \Illuminate\Support\Facades\Auth::user()->wishlists()->count()
+                    ]);
+                }
+                return back()->with('success', 'Item moved to bag.');
             } catch (\Exception $e) {
+                if ($request->expectsJson() || $request->isJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+                }
                 return back()->with('error', $e->getMessage());
             }
         }
 
+        if ($request->expectsJson() || $request->isJson() || $request->ajax()) {
+            return response()->json(['success' => false, 'message' => 'Product is currently unavailable.'], 404);
+        }
         return back()->with('error', 'Product is currently unavailable.');
     }
 }

@@ -10,8 +10,45 @@ class CouponController extends Controller
 {
     public function index(Request $request)
     {
-        $coupons = Coupon::latest()->paginate(15);
-        return view('admin.pages.coupons.index', compact('coupons'));
+        $search = $request->query('search');
+        $status = $request->query('status', 'all');
+        $type = $request->query('type', 'all');
+
+        $query = Coupon::latest();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($type !== 'all' && in_array($type, ['percent', 'flat'])) {
+            $query->where('type', $type);
+        }
+
+        if ($status === 'active') {
+            $query->where('is_active', true)
+                  ->where(function ($q) {
+                      $q->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+                  });
+        } elseif ($status === 'expired') {
+            $query->where('expires_at', '<', now());
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        $coupons = $query->paginate(15)->withQueryString();
+
+        $stats = [
+            'total'       => Coupon::count(),
+            'active'      => Coupon::where('is_active', true)->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>=', now()))->count(),
+            'total_uses'  => (int) Coupon::sum('used_count'),
+            'percent_cnt' => Coupon::where('type', 'percent')->count(),
+            'flat_cnt'    => Coupon::where('type', 'flat')->count(),
+        ];
+
+        return view('admin.pages.coupons.index', compact('coupons', 'stats', 'search', 'status', 'type'));
     }
 
     public function create()
@@ -32,16 +69,16 @@ class CouponController extends Controller
             'starts_at'           => 'nullable|date',
             'expires_at'          => 'nullable|date|after_or_equal:starts_at',
             'description'         => 'nullable|string|max:255',
-            'is_active'           => 'boolean',
+            'is_active'           => 'nullable',
         ]);
 
-        $validated['code'] = strtoupper($validated['code']);
+        $validated['code'] = strtoupper(trim($validated['code']));
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['max_uses_per_user'] = $validated['max_uses_per_user'] ?? 1;
 
         Coupon::create($validated);
 
-        return redirect()->route('admin.coupons.index')->with('success', 'Coupon created successfully.');
+        return redirect()->route('admin.coupons.index')->with('success', 'Coupon code ' . $validated['code'] . ' created successfully.');
     }
 
     public function edit(Coupon $coupon)
@@ -62,19 +99,20 @@ class CouponController extends Controller
             'starts_at'           => 'nullable|date',
             'expires_at'          => 'nullable|date|after_or_equal:starts_at',
             'description'         => 'nullable|string|max:255',
+            'is_active'           => 'nullable',
         ]);
 
-        $validated['code'] = strtoupper($validated['code']);
+        $validated['code'] = strtoupper(trim($validated['code']));
         $validated['is_active'] = $request->boolean('is_active', false);
 
         $coupon->update($validated);
 
-        return redirect()->route('admin.coupons.index')->with('success', 'Coupon updated successfully.');
+        return redirect()->route('admin.coupons.index')->with('success', 'Coupon code ' . $validated['code'] . ' updated successfully.');
     }
 
     public function destroy(Coupon $coupon)
     {
         $coupon->delete();
-        return redirect()->route('admin.coupons.index')->with('success', 'Coupon deleted.');
+        return redirect()->route('admin.coupons.index')->with('success', 'Coupon deleted successfully.');
     }
 }
