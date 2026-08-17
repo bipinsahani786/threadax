@@ -19,6 +19,7 @@ use App\Http\Controllers\Frontend\NewsletterController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\TrackingController;
 use App\Http\Controllers\Frontend\SitemapController;
+use App\Http\Controllers\Frontend\ReturnController as FrontendReturnController;
 use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 use App\Http\Controllers\Webhook\ShiprocketWebhookController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ReturnController as AdminReturnController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\BannerController;
@@ -39,6 +41,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Webhook\RazorpayWebhookController;
@@ -128,6 +131,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
         Route::get('/orders/{id}', [AccountController::class, 'showOrder'])->name('orders.show');
         Route::get('/orders/{id}/invoice', [AccountController::class, 'downloadInvoice'])->name('orders.invoice');
+        Route::get('/orders/{id}/return', [FrontendReturnController::class, 'create'])->name('orders.return.create');
+        Route::post('/orders/{id}/return', [FrontendReturnController::class, 'store'])->name('orders.return.store');
+        
+        Route::get('/returns', [FrontendReturnController::class, 'index'])->name('returns');
+        Route::get('/returns/{id}', [FrontendReturnController::class, 'show'])->name('returns.show');
         Route::get('/transactions', [AccountController::class, 'transactions'])->name('transactions');
         
         Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
@@ -209,6 +217,13 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         Route::get('/orders/{id}/shipping-label', [AdminOrderController::class, 'shippingLabel'])->name('orders.shipping.label');
         Route::get('/orders/{id}/invoice', [AdminOrderController::class, 'downloadInvoice'])->name('orders.invoice.download');
 
+        // Returns & Exchanges
+        Route::get('/returns', [AdminReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/{id}', [AdminReturnController::class, 'show'])->name('returns.show');
+        Route::post('/returns/{id}/status', [AdminReturnController::class, 'updateStatus'])->name('returns.status.update');
+        Route::post('/returns/{id}/refund', [AdminReturnController::class, 'processRefund'])->name('returns.refund');
+        Route::post('/returns/{id}/restock', [AdminReturnController::class, 'restockItems'])->name('returns.restock');
+
         // Transactions & Payment Gateway Ledger
         Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
         Route::get('/transactions/{id}', [AdminTransactionController::class, 'show'])->name('transactions.show');
@@ -256,9 +271,6 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         // Notifications
         Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('notifications.create');
         Route::post('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'store'])->name('notifications.store');
-
-        // Static Pages
-        Route::resource('static-pages', \App\Http\Controllers\Admin\StaticPageController::class)->except(['create', 'store', 'edit']);
 
         // Leads
         Route::resource('/leads', \App\Http\Controllers\Admin\LeadController::class)->except(['create', 'store', 'edit']);

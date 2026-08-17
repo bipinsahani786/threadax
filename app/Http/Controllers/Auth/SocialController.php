@@ -40,7 +40,17 @@ class SocialController extends Controller
 
         $user = $this->authService->findOrCreateGoogleUser($googleUser);
 
+        $guestSessionId = \Illuminate\Support\Facades\Session::getId();
+        $guestCartToken = request()->cookie(\App\Services\CartService::GUEST_COOKIE_NAME);
+
         Auth::login($user, true);
+
+        // Merge guest cart items into user's account cart
+        try {
+            app(\App\Services\CartService::class)->mergeGuestCart($user->id, $guestSessionId, $guestCartToken);
+        } catch (\Exception $e) {
+            Log::warning("Guest cart merge failed on Google login: " . $e->getMessage());
+        }
 
         return redirect()->intended(route('frontend.home'))
             ->with('success', 'Google login successful! Welcome, ' . $user->name . '!');

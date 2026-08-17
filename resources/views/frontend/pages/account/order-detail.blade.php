@@ -23,6 +23,18 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            {{-- Return / Exchange Action Button --}}
+            @if($order->isEligibleForReturn())
+                <a href="{{ route('account.orders.return.create', $order->id) }}" class="inline-flex items-center gap-1.5 bg-brand-dark text-white hover:bg-brand-text px-3.5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-xs active:scale-95 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                    <span>↩ Return / Exchange</span>
+                </a>
+            @elseif($order->activeReturn)
+                <a href="{{ route('account.returns.show', $order->activeReturn->id) }}" class="inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer">
+                    <span>🔄 Track Return #{{ $order->activeReturn->return_number }}</span>
+                </a>
+            @endif
+
             {{-- Invoice Download --}}
             <a href="{{ route('account.orders.invoice', $order->id) }}" class="inline-flex items-center gap-1.5 bg-brand-off-white border border-brand-border px-3.5 py-2 rounded-xl text-xs font-bold text-brand-dark hover:bg-white transition-all shadow-2xs hover:border-brand-dark cursor-pointer">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -48,6 +60,36 @@
             </span>
         </div>
     </div>
+
+    {{-- Active Return Banner if exists --}}
+    @if($order->activeReturn)
+        @php $retBadge = $order->activeReturn->status_badge; @endphp
+        <div class="mb-6 p-4 sm:p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg shrink-0">
+                    🔄
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white">
+                            {{ $order->activeReturn->type === 'exchange' ? 'Size Exchange' : 'Return Request' }} #{{ $order->activeReturn->return_number }}
+                        </h4>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold capitalize bg-white/20 text-white border border-white/30">
+                            {{ $retBadge['label'] }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5">
+                        Reason: <strong>{{ $order->activeReturn->reason_label }}</strong>
+                        @if($order->activeReturn->pickup_courier) • Pickup by: {{ $order->activeReturn->pickup_courier }} @endif
+                    </p>
+                </div>
+            </div>
+            <a href="{{ route('account.returns.show', $order->activeReturn->id) }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-slate-950 text-xs font-extrabold uppercase tracking-wider hover:bg-slate-100 transition-all shrink-0 cursor-pointer">
+                <span>View Return Tracker</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+            </a>
+        </div>
+    @endif
 
     {{-- Visual Tracking Stepper --}}
     @if($status !== 'cancelled')

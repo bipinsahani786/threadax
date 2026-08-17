@@ -189,6 +189,20 @@
                         </div>
 
                         <div class="flex items-center gap-2 w-full sm:w-auto">
+                            {{-- Return / Exchange quick button --}}
+                            @if($order->isEligibleForReturn())
+                                <a href="{{ route('account.orders.return.create', $order->id) }}" 
+                                   class="inline-flex items-center justify-center gap-1.5 bg-brand-off-white border border-brand-border text-brand-dark hover:bg-white text-xs font-bold px-3 py-2.5 rounded-xl transition-all shadow-2xs hover:border-brand-dark/40 active:scale-95 flex-1 sm:flex-initial cursor-pointer"
+                                   title="7-Day Return/Exchange">
+                                    <span>↩ Return</span>
+                                </a>
+                            @elseif($order->activeReturn)
+                                <a href="{{ route('account.returns.show', $order->activeReturn->id) }}" 
+                                   class="inline-flex items-center justify-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold px-3 py-2.5 rounded-xl transition-all shadow-2xs flex-1 sm:flex-initial cursor-pointer">
+                                    <span>🔄 {{ $order->activeReturn->status_badge['label'] }}</span>
+                                </a>
+                            @endif
+
                             {{-- Invoice download link (Only available once order is Delivered) --}}
                             @if($status === 'delivered')
                                 <a href="{{ route('account.orders.invoice', $order->id) }}" 

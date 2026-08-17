@@ -6,10 +6,14 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class CartService
 {
+    const GUEST_COOKIE_NAME = 'threadax_guest_cart_token';
+
     /**
      * Get the current cart for the user or guest session
      */
@@ -17,38 +21,113 @@ class CartService
     {
         $userId = Auth::id();
         $sessionId = Session::getId();
+        $cookieToken = request()->cookie(self::GUEST_COOKIE_NAME);
 
         if ($userId) {
-            $cart = Cart::where('user_id', $userId)->first();
-            
-            // If user has a session cart and just logged in, merge it
-            $sessionCart = Cart::where('session_id', $sessionId)->whereNull('user_id')->first();
-            
-            if ($sessionCart) {
-                if ($cart) {
-                    // Merge session cart items into user cart
-                    foreach ($sessionCart->items as $item) {
-                        $this->addItemToCart($cart, $item->product_variant_id, $item->quantity);
-                    }
-                    $sessionCart->delete();
-                } else {
-                    // Assign session cart to user
-                    $sessionCart->update(['user_id' => $userId]);
-                    $cart = $sessionCart;
-                }
-            }
+            // Merge any guest cart that was created before login
+            return $this->mergeGuestCart($userId, $sessionId, $cookieToken);
+        }
 
-            if (!$cart) {
-                $cart = Cart::create(['user_id' => $userId]);
+        // ── GUEST CART HANDLING ──
+        $cart = null;
+
+        // 1. Try finding by current session_id
+        if ($sessionId) {
+            $cart = Cart::where('session_id', $sessionId)->whereNull('user_id')->first();
+        }
+
+        // 2. Try finding by persistent guest cookie token if session_id changed
+        if (!$cart && $cookieToken) {
+            $cart = Cart::where('session_id', $cookieToken)->whereNull('user_id')->first();
+            if ($cart && $sessionId) {
+                // Re-link to current session_id
+                $cart->update(['session_id' => $sessionId]);
             }
-        } else {
-            $cart = Cart::firstOrCreate(
-                ['session_id' => $sessionId],
-                ['user_id' => null]
-            );
+        }
+
+        // 3. Create guest cart if not exists
+        if (!$cart) {
+            $cart = Cart::create([
+                'session_id' => $sessionId,
+                'user_id'    => null,
+            ]);
+        }
+
+        // Persist guest session ID and cookie for seamless migration upon login
+        if ($sessionId) {
+            session(['guest_cart_session_id' => $sessionId]);
+            Cookie::queue(self::GUEST_COOKIE_NAME, $sessionId, 60 * 24 * 30); // 30 days
         }
 
         return $cart->fresh(['items.variant.product.images']);
+    }
+
+    /**
+     * Merge guest cart items into authenticated user's cart upon login.
+     */
+    public function mergeGuestCart(int $userId, ?string $guestSessionId = null, ?string $cookieToken = null): Cart
+    {
+        $userCart = Cart::firstOrCreate(['user_id' => $userId]);
+
+        // Candidates for guest session IDs
+        $sessionCandidates = array_filter(array_unique([
+            $guestSessionId,
+            session('guest_cart_session_id'),
+            $cookieToken,
+            request()->cookie(self::GUEST_COOKIE_NAME),
+            Session::getId(),
+        ]));
+
+        if (!empty($sessionCandidates)) {
+            // Find all unassigned guest carts matching candidate session IDs
+            $guestCarts = Cart::whereIn('session_id', $sessionCandidates)
+                ->whereNull('user_id')
+                ->with('items.variant')
+                ->get();
+
+            foreach ($guestCarts as $guestCart) {
+                foreach ($guestCart->items as $guestItem) {
+                    if (!$guestItem->variant) {
+                        continue;
+                    }
+
+                    $existingItem = $userCart->items()
+                        ->where('product_variant_id', $guestItem->product_variant_id)
+                        ->first();
+
+                    if ($existingItem) {
+                        // Merge quantity, capped at available variant stock
+                        $maxStock = $guestItem->variant->stock;
+                        $mergedQty = min($existingItem->quantity + $guestItem->quantity, max(1, $maxStock));
+                        $existingItem->update([
+                            'quantity'      => $mergedQty,
+                            'price_at_time' => $guestItem->variant->effective_price ?? $existingItem->price_at_time,
+                        ]);
+                    } else {
+                        // Reassign item or create in user cart
+                        $userCart->items()->create([
+                            'product_variant_id' => $guestItem->product_variant_id,
+                            'quantity'           => min($guestItem->quantity, max(1, $guestItem->variant->stock)),
+                            'price_at_time'      => $guestItem->variant->effective_price ?? $guestItem->price_at_time,
+                        ]);
+                    }
+                }
+
+                // Delete the merged guest cart & its items
+                try {
+                    $guestCart->items()->delete();
+                    $guestCart->delete();
+                } catch (\Exception $e) {
+                    Log::warning("Could not delete merged guest cart ID {$guestCart->id}: " . $e->getMessage());
+                }
+            }
+        }
+
+        // Clear guest session memory & expire cookie
+        session()->forget('guest_cart_session_id');
+        Cookie::queue(Cookie::forget(self::GUEST_COOKIE_NAME));
+
+        return $userCart->fresh(['items.variant.product.images']);
     }
 
     /**
@@ -70,20 +149,20 @@ class CartService
             $newQuantity = $item->quantity + $quantity;
             // Check stock
             if ($newQuantity > $variant->stock) {
-                throw new \Exception("Not enough stock available.");
+                throw new \Exception("Only {$variant->stock} items available in stock.");
             }
             $item->update([
-                'quantity' => $newQuantity,
+                'quantity'      => $newQuantity,
                 'price_at_time' => $variant->effective_price // update price to latest
             ]);
         } else {
             if ($quantity > $variant->stock) {
-                throw new \Exception("Not enough stock available.");
+                throw new \Exception("Only {$variant->stock} items available in stock.");
             }
             $cart->items()->create([
                 'product_variant_id' => $variantId,
-                'quantity' => $quantity,
-                'price_at_time' => $variant->effective_price
+                'quantity'           => $quantity,
+                'price_at_time'      => $variant->effective_price
             ]);
         }
 
@@ -102,7 +181,7 @@ class CartService
             $item->delete();
         } else {
             if ($quantity > $item->variant->stock) {
-                throw new \Exception("Not enough stock available.");
+                throw new \Exception("Only {$item->variant->stock} items available in stock.");
             }
             $item->update(['quantity' => $quantity]);
         }

@@ -141,6 +141,38 @@
         </div>
     @endif
 
+    {{-- Active / Past Return Request Banner if exists --}}
+    @if($order->returns->isNotEmpty())
+        @php $latestRet = $order->returns->first(); $retBadge = $latestRet->status_badge; @endphp
+        <div class="p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-purple-500/10 border-2 border-amber-300 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                    🔄
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h4 class="text-sm font-extrabold text-slate-900">
+                            {{ $latestRet->type === 'exchange' ? 'Size Exchange' : 'Return Request' }} #{{ $latestRet->return_number }}
+                        </h4>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold capitalize border {{ $retBadge['bg'] }} {{ $retBadge['text'] }} {{ $retBadge['border'] }}">
+                            {{ $retBadge['label'] }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-0.5">
+                        Reason: <strong>{{ $latestRet->reason_label }}</strong> 
+                        • Value: <strong class="text-emerald-700">₹{{ number_format($latestRet->refund_amount, 2) }}</strong>
+                        @if($latestRet->pickup_courier) • Pickup by: {{ $latestRet->pickup_courier }} (AWB: {{ $latestRet->pickup_awb ?? 'Pending' }}) @endif
+                    </p>
+                </div>
+            </div>
+
+            <a href="{{ route('admin.returns.show', $latestRet->id) }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer">
+                <span>Manage Return & Refund</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+            </a>
+        </div>
+    @endif
+
     {{-- Main Grid: 2 Columns on XL --}}
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 

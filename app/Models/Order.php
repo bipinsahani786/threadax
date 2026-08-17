@@ -109,4 +109,55 @@ class Order extends Model
     {
         return $this->hasMany(PaymentTransaction::class)->latest();
     }
+
+    public function returns()
+    {
+        return $this->hasMany(OrderReturn::class)->latest();
+    }
+
+    public function latestReturn()
+    {
+        return $this->hasOne(OrderReturn::class)->latestOfMany();
+    }
+
+    public function activeReturn()
+    {
+        return $this->hasOne(OrderReturn::class)->whereNotIn('status', ['cancelled', 'rejected'])->latestOfMany();
+    }
+
+    /**
+     * Check if the order is eligible for Return / Size Exchange under the 7-day policy.
+     */
+    public function isEligibleForReturn(): bool
+    {
+        if ($this->status !== 'delivered') {
+            return false;
+        }
+
+        // If an active return is already in progress or completed, cannot submit another
+        if ($this->activeReturn()->exists()) {
+            return false;
+        }
+
+        // Check 7-day return window from delivered_at (or fallback to updated_at)
+        $deliveryDate = $this->delivered_at ?: $this->updated_at;
+        if (!$deliveryDate) {
+            return false;
+        }
+
+        return $deliveryDate->diffInDays(now()) <= 7;
+    }
+
+    /**
+     * Get remaining days in return window.
+     */
+    public function getReturnDaysLeftAttribute(): int
+    {
+        $deliveryDate = $this->delivered_at ?: $this->updated_at;
+        if (!$deliveryDate) return 0;
+        
+        $daysPassed = $deliveryDate->diffInDays(now());
+        return max(0, 7 - (int)$daysPassed);
+    }
 }
+

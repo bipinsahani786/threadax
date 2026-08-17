@@ -89,7 +89,17 @@ class OtpController extends Controller
             return back()->withErrors(['code' => $result['message']])->withInput();
         }
 
+        $guestSessionId = \Illuminate\Support\Facades\Session::getId();
+        $guestCartToken = $request->cookie(\App\Services\CartService::GUEST_COOKIE_NAME);
+
         Auth::login($result['user'], true);
+
+        // Merge guest cart items into user's account cart
+        try {
+            app(\App\Services\CartService::class)->mergeGuestCart($result['user']->id, $guestSessionId, $guestCartToken);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning("Guest cart merge failed on OTP login: " . $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
