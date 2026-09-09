@@ -72,13 +72,12 @@ class ProductVariantController extends Controller
             foreach ($request->file('images') as $file) {
                 // Store in public/products
                 $path = $file->store('products', 'public');
-                $url = Storage::url($path);
 
                 // If no images exist, make this one primary
                 $isPrimary = $product->images()->count() === 0;
 
                 $product->images()->create([
-                    'url' => $url,
+                    'url' => $path,
                     'is_primary' => $isPrimary,
                     'sort_order' => 0,
                 ]);
@@ -101,8 +100,13 @@ class ProductVariantController extends Controller
 
     public function deleteImage(ProductImage $image)
     {
-        // Optional: Delete physical file from storage
-        $path = str_replace('/storage/', '', $image->url);
+        // Delete physical file from storage
+        $rawUrl = $image->getRawOriginal('url') ?? $image->url;
+        $path = ltrim(parse_url($rawUrl, PHP_URL_PATH) ?? $rawUrl, '/');
+        while (str_starts_with($path, 'storage/')) {
+            $path = ltrim(substr($path, 8), '/');
+        }
+
         if (Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
         }

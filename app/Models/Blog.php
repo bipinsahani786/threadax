@@ -49,8 +49,19 @@ class Blog extends Model
 
     public function getFeaturedImageUrlAttribute()
     {
-        return $this->featured_image
-            ? asset('storage/' . $this->featured_image)
-            : null;
+        if (empty($this->featured_image)) {
+            return null;
+        }
+
+        if (str_starts_with($this->featured_image, 'http://') || str_starts_with($this->featured_image, 'https://')) {
+            return $this->featured_image;
+        }
+
+        $path = ltrim($this->featured_image, '/');
+        while (str_starts_with($path, 'storage/')) {
+            $path = ltrim(substr($path, 8), '/');
+        }
+
+        return asset('storage/' . $path);
     }
 }

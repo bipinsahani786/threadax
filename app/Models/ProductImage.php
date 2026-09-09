@@ -45,6 +45,12 @@ class ProductImage extends Model
             return $value;
         }
 
-        return asset('storage/' . $value);
+        // Clean leading slashes and strip any redundant 'storage/' prefixes
+        $path = ltrim($value, '/');
+        while (str_starts_with($path, 'storage/')) {
+            $path = ltrim(substr($path, 8), '/');
+        }
+
+        return asset('storage/' . $path);
     }
 }
