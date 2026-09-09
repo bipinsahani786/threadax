@@ -86,7 +86,19 @@ class ProductController extends Controller
     {
         $newProduct = $product->replicate(['slug']);
         $newProduct->name = $product->name . ' (Copy)';
-        $newProduct->sku = $product->sku ? $product->sku . '-COPY' : null;
+
+        $baseSku = $product->sku ? $product->sku . '-COPY' : null;
+        if ($baseSku) {
+            $candidateSku = $baseSku;
+            $counter = 1;
+            while (Product::where('sku', $candidateSku)->exists()) {
+                $candidateSku = $baseSku . '-' . $counter++;
+            }
+            $newProduct->sku = $candidateSku;
+        } else {
+            $newProduct->sku = null;
+        }
+
         $newProduct->is_active = false;
         $newProduct->save();
 
@@ -94,7 +106,16 @@ class ProductController extends Controller
         foreach ($product->variants as $variant) {
             $newVariant = $variant->replicate();
             $newVariant->product_id = $newProduct->id;
-            $newVariant->sku = $variant->sku ? $variant->sku . '-COPY' : null;
+            if ($variant->sku) {
+                $candidateVariantSku = $variant->sku . '-COPY';
+                $counter = 1;
+                while (\App\Models\ProductVariant::where('sku', $candidateVariantSku)->exists()) {
+                    $candidateVariantSku = $variant->sku . '-COPY-' . $counter++;
+                }
+                $newVariant->sku = $candidateVariantSku;
+            } else {
+                $newVariant->sku = null;
+            }
             $newVariant->save();
         }
 

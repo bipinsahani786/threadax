@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -38,26 +39,58 @@ class ProductVariantController extends Controller
         $incomingVariants = $request->input('variants', []);
         $incomingVariantIds = collect($incomingVariants)->pluck('id')->filter()->toArray();
 
-        // Delete variants that are no longer in the request
-        $product->variants()->whereNotIn('id', $incomingVariantIds)->delete();
+        DB::transaction(function () use ($incomingVariants, $incomingVariantIds, $product) {
+            // Delete variants that are no longer in the request
+            $product->variants()->whereNotIn('id', $incomingVariantIds)->delete();
 
-        // Update or Create variants
-        foreach ($incomingVariants as $variantData) {
-            $data = [
-                'size' => $variantData['size'] ?? null,
-                'color' => $variantData['color'] ?? null,
-                'sku' => $variantData['sku'] ?? null,
-                'price' => $variantData['price'] ?? null,
-                'stock' => $variantData['stock'] ?? 0,
-                'is_active' => isset($variantData['is_active']) ? (bool) $variantData['is_active'] : false,
-            ];
+            $baseSku = $product->effective_sku;
+            $usedSkusInBatch = [];
 
-            if (!empty($variantData['id'])) {
-                $product->variants()->where('id', $variantData['id'])->update($data);
-            } else {
-                $product->variants()->create($data);
+            // Update or Create variants
+            foreach ($incomingVariants as $index => $variantData) {
+                $rawSku = isset($variantData['sku']) ? trim((string) $variantData['sku']) : '';
+                $variantId = !empty($variantData['id']) ? $variantData['id'] : null;
+                $sizeCode = !empty($variantData['size'])
+                    ? strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $variantData['size']))
+                    : ('V' . ($index + 1));
+
+                // Determine or generate SKU
+                if ($rawSku === '' || $rawSku === 'TX' || $rawSku === 'TX-GEN' || $rawSku === ('TX-' . $sizeCode)) {
+                    $candidateSku = $baseSku . '-' . $sizeCode;
+                } else {
+                    $candidateSku = $rawSku;
+                }
+
+                // Ensure SKU is globally unique (not used by other variants and not duplicated in this request)
+                $uniqueSku = $candidateSku;
+                $counter = 1;
+                while (
+                    in_array(strtoupper($uniqueSku), array_map('strtoupper', $usedSkusInBatch)) ||
+                    ProductVariant::where('sku', $uniqueSku)
+                        ->when($variantId, fn($q) => $q->where('id', '!=', $variantId))
+                        ->exists()
+                ) {
+                    $uniqueSku = $candidateSku . '-' . $counter++;
+                }
+
+                $usedSkusInBatch[] = $uniqueSku;
+
+                $data = [
+                    'size' => !empty($variantData['size']) ? trim($variantData['size']) : null,
+                    'color' => !empty($variantData['color']) ? trim($variantData['color']) : null,
+                    'sku' => $uniqueSku,
+                    'price' => isset($variantData['price']) && $variantData['price'] !== '' ? $variantData['price'] : null,
+                    'stock' => isset($variantData['stock']) ? (int) $variantData['stock'] : 0,
+                    'is_active' => isset($variantData['is_active']) ? (bool) $variantData['is_active'] : false,
+                ];
+
+                if ($variantId) {
+                    $product->variants()->where('id', $variantId)->update($data);
+                } else {
+                    $product->variants()->create($data);
+                }
             }
-        }
+        });
 
         return back()->with('success', 'Product variants updated successfully.');
     }

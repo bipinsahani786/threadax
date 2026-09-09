@@ -48,6 +48,25 @@ class Product extends Model
         'created_at', 'name', 'price', 'updated_at',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function ($product) {
+            if (empty($product->sku)) {
+                $rawSlug = $product->slug ?: ($product->name ?: 'PRD');
+                $slugClean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $rawSlug));
+                $shortCode = substr($slugClean, 0, 8) ?: 'PRD';
+                $candidate = 'TX-' . $shortCode;
+
+                $counter = 1;
+                $finalSku = $candidate;
+                while (static::where('sku', $finalSku)->exists()) {
+                    $finalSku = $candidate . '-' . $counter++;
+                }
+                $product->sku = $finalSku;
+            }
+        });
+    }
+
     // ─── Relationships ────────────────────────────────────────
 
     public function category(): BelongsTo
@@ -85,6 +104,22 @@ class Product extends Model
     }
 
     // ─── Accessors ────────────────────────────────────────────
+
+    /**
+     * Get the effective master SKU.
+     */
+    public function getEffectiveSkuAttribute(): string
+    {
+        if (!empty($this->sku)) {
+            return $this->sku;
+        }
+
+        $rawSlug = $this->slug ?: ($this->name ?: 'PRD');
+        $slugClean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $rawSlug));
+        $shortCode = substr($slugClean, 0, 8) ?: 'PRD';
+
+        return 'TX-' . $shortCode . ($this->id ? '-' . $this->id : '');
+    }
 
     /**
      * Get the primary product image.

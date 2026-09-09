@@ -19,14 +19,14 @@
                     </span>
                 @endif
             </div>
-            <p class="text-xs text-slate-400">Master SKU: {{ $product->sku ?? 'TX-GEN' }} • Base Price: ₹{{ number_format($product->price) }}</p>
+            <p class="text-xs text-slate-400">Master SKU: {{ $product->effective_sku }} • Base Price: ₹{{ number_format($product->price) }}</p>
         </div>
     </div>
 @endsection
 
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6 sm:space-y-8" 
-     x-data="variantsManager({{ Js::from($product->variants) }}, '{{ $product->sku ?? 'TX' }}', {{ $product->price }})">
+     x-data="variantsManager({{ Js::from($product->variants) }}, '{{ $product->effective_sku }}', {{ $product->price }})">
     
     {{-- Executive Header & Studio Bar --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
@@ -50,7 +50,7 @@
                         ₹{{ number_format($product->price) }}
                     </span>
                     <span>•</span>
-                    <span class="font-mono text-slate-400">{{ $product->sku ?? 'TX-GEN' }}</span>
+                    <span class="font-mono text-slate-400">{{ $product->effective_sku }}</span>
                     <span>•</span>
                     <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                         📁 {{ $product->category->name ?? 'Streetwear' }}
@@ -344,7 +344,7 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('variantsManager', (initialVariants, baseSku, basePrice) => ({
             variants: initialVariants.map(v => ({...v, temp_id: null})),
-            baseSku: baseSku || 'TX',
+            baseSku: (baseSku && baseSku !== 'TX' && baseSku !== 'TX-GEN') ? baseSku : 'TX-VAR',
             basePrice: basePrice || 0,
             bulkStock: 50,
 
