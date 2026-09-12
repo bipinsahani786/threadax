@@ -96,6 +96,7 @@
     @endif
 
     @stack('head')
+    @stack('styles')
 </head>
 
 <body class="antialiased min-h-screen flex flex-col" x-data="globalApp">

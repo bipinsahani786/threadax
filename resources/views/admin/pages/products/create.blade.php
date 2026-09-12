@@ -402,3 +402,78 @@
 
 </div>
 @endsection
+
+@push('styles')
+<style>
+    /* CKEditor 5 Modern Admin Theme */
+    .ck.ck-editor {
+        width: 100% !important;
+    }
+    .ck-editor__editable_inline {
+        min-height: 220px !important;
+        max-height: 460px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13.5px !important;
+        line-height: 1.6 !important;
+        border-bottom-left-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
+        padding: 14px 18px !important;
+        color: #0F172A !important;
+        background-color: #F8FAFC !important;
+    }
+    .ck.ck-toolbar {
+        border-top-left-radius: 12px !important;
+        border-top-right-radius: 12px !important;
+        background-color: #F1F5F9 !important;
+        border-color: #E2E8F0 !important;
+    }
+    .ck.ck-editor__main>.ck-editor__editable {
+        border-color: #E2E8F0 !important;
+    }
+    .ck.ck-editor__main>.ck-editor__editable:focus {
+        border-color: #94A3B8 !important;
+        box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15) !important;
+        background-color: #FFFFFF !important;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const descEl = document.querySelector('#description');
+    if (descEl) {
+        ClassicEditor
+            .create(descEl, {
+                toolbar: [
+                    'heading', '|', 
+                    'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 
+                    'undo', 'redo'
+                ],
+                heading: {
+                    options: [
+                        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                    ]
+                }
+            })
+            .then(editor => {
+                editor.model.document.on('change:data', () => {
+                    descEl.value = editor.getData();
+                });
+                const form = descEl.closest('form');
+                if (form) {
+                    form.addEventListener('submit', () => {
+                        descEl.value = editor.getData();
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('CKEditor Init Error on Product Create:', error);
+            });
+    }
+});
+</script>
+@endpush

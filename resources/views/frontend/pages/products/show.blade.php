@@ -90,6 +90,80 @@
     </script>
 @endpush
 
+@push('styles')
+<style>
+    /* Premium Product Details Rich Typography */
+    .product-details-content {
+        color: #475569;
+        font-size: 0.875rem;
+        line-height: 1.75;
+    }
+    .product-details-content p {
+        margin-bottom: 0.85rem;
+    }
+    .product-details-content p:last-child {
+        margin-bottom: 0;
+    }
+    .product-details-content h2,
+    .product-details-content h3,
+    .product-details-content h4 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 800;
+        color: #0F172A;
+        margin-top: 1.25rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.85rem;
+    }
+    .product-details-content h2:first-child,
+    .product-details-content h3:first-child,
+    .product-details-content h4:first-child {
+        margin-top: 0;
+    }
+    .product-details-content ul {
+        list-style-type: disc !important;
+        padding-left: 1.25rem !important;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .product-details-content ol {
+        list-style-type: decimal !important;
+        padding-left: 1.25rem !important;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .product-details-content li {
+        margin-bottom: 0.35rem;
+        line-height: 1.6;
+        color: #334155;
+    }
+    .product-details-content strong,
+    .product-details-content b {
+        font-weight: 700;
+        color: #0F172A;
+    }
+    .product-details-content blockquote {
+        border-left: 3px solid #0F172A;
+        background-color: #F8FAFC;
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        border-radius: 0 10px 10px 0;
+        font-style: italic;
+        color: #334155;
+    }
+    .product-details-content a {
+        color: #0F172A;
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    .product-details-content a:hover {
+        color: #64748B;
+    }
+</style>
+@endpush
+
 @section('content')
     <div class="max-w-[1440px] mx-auto px-4 lg:px-8 py-10" x-data="productDetails({{ Js::from($product->variants) }}, {{ $product->price }})">
         
@@ -205,6 +279,11 @@
             <div class="w-full lg:w-[45%] flex flex-col pt-4">
                 
                 <h1 class="text-3xl md:text-4xl font-heading font-extrabold text-brand-dark mb-2">{{ $product->name }}</h1>
+                @if($product->short_description)
+                    <p class="text-xs sm:text-sm font-medium text-slate-500 mb-2.5 leading-relaxed tracking-wide">
+                        {{ $product->short_description }}
+                    </p>
+                @endif
                 <p class="text-sm text-brand-muted mb-6">SKU: <span x-text="currentSku || '{{ $product->sku ?? 'N/A' }}'"></span></p>
                 
                 <div class="flex items-end gap-4 mb-8">
@@ -338,13 +417,17 @@
                 <div class="border-t border-brand-border divide-y divide-brand-border" x-data="{ activeTab: 1 }">
                     {{-- Description --}}
                     <div>
-                        <button @click="activeTab = activeTab === 1 ? null : 1" class="w-full py-6 flex items-center justify-between text-left focus:outline-none group">
-                            <span class="text-sm font-bold uppercase tracking-widest text-brand-text">Description</span>
+                        <button @click="activeTab = activeTab === 1 ? null : 1" class="w-full py-6 flex items-center justify-between text-left focus:outline-none group cursor-pointer">
+                            <span class="text-sm font-bold uppercase tracking-widest text-brand-text">Description & Fit Details</span>
                             <svg class="w-5 h-5 text-brand-muted group-hover:text-brand-text transition-transform duration-300" :class="activeTab === 1 ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div x-show="activeTab === 1" x-collapse>
-                            <div class="pb-6 text-sm text-brand-muted prose prose-sm max-w-none">
-                                {!! nl2br(e($product->description)) !!}
+                            <div class="pb-6 text-sm text-brand-muted product-details-content leading-relaxed">
+                                @if(strip_tags($product->description) === $product->description)
+                                    {!! nl2br(e($product->description)) !!}
+                                @else
+                                    {!! $product->description !!}
+                                @endif
                             </div>
                         </div>
                     </div>
