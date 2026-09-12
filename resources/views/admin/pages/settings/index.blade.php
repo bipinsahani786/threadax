@@ -383,6 +383,79 @@
                 </div>
             </div>
 
+            {{-- 4. Google Gemini AI & Model Photoshoot Configuration --}}
+            <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-base">
+                            ✨
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-heading font-extrabold text-slate-900">Google Gemini AI &amp; Model Shoot Integration</h3>
+                            <p class="text-xs text-slate-400">Power automated product descriptions, SEO tags &amp; AI model photoshoots</p>
+                        </div>
+                    </div>
+                    @if(!empty($settings['gemini_api_key']))
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Connected</span>
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>Key Required</span>
+                        </span>
+                    @endif
+                </div>
+
+                <div class="space-y-5">
+                    {{-- Gemini API Key --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="gemini_api_key" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Google Gemini API Key <span class="text-rose-500">*</span>
+                            </label>
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-purple-600 hover:text-purple-700 hover:underline inline-flex items-center gap-1">
+                                <span>Get Free API Key from Google AI Studio</span>
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            </a>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">🔑</span>
+                            <input type="password" 
+                                   name="gemini_api_key" 
+                                   id="gemini_api_key" 
+                                   value="{{ $settings['gemini_api_key'] ?? env('GEMINI_API_KEY', '') }}" 
+                                   placeholder="AIzaSy..." 
+                                   class="w-full pl-10 pr-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-purple-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all font-mono">
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1.5">
+                            Yeh 100% free hai! Google AI Studio par login karke <strong>Create API Key</strong> par click karein aur yaha paste karein.
+                        </p>
+                    </div>
+
+                    {{-- Gemini Model Preference --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="gemini_model" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                AI Copywriting Model
+                            </label>
+                            <select name="gemini_model" id="gemini_model" class="w-full px-3 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-purple-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all cursor-pointer">
+                                <option value="gemini-1.5-flash" {{ ($settings['gemini_model'] ?? 'gemini-1.5-flash') === 'gemini-1.5-flash' ? 'selected' : '' }}>Gemini 1.5 Flash (Recommended - Fastest &amp; Free)</option>
+                                <option value="gemini-2.0-flash" {{ ($settings['gemini_model'] ?? '') === 'gemini-2.0-flash' ? 'selected' : '' }}>Gemini 2.0 Flash (Latest)</option>
+                                <option value="gemini-1.5-pro" {{ ($settings['gemini_model'] ?? '') === 'gemini-1.5-pro' ? 'selected' : '' }}>Gemini 1.5 Pro (Deep Reasoning)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Image Photoshoot Engine
+                            </label>
+                            <input type="text" readonly value="Google Imagen 3 (imagen-3.0-generate-002)" class="w-full px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium text-slate-600 outline-none cursor-not-allowed">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         {{-- RIGHT COLUMN (1/3 width): Logistics, Social Media & Banner Image --}}

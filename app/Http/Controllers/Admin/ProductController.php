@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
+use App\Models\Setting;
 use App\Repositories\Contracts\ProductRepositoryInterface;
+use App\Services\GeminiService;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -210,5 +213,128 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Generate rich product copy & SEO with Gemini 1.5 Flash
+     */
+    public function generateAiContent(Request $request, GeminiService $geminiService)
+    {
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'rough_notes' => 'nullable|string|max:2000',
+            'category_id' => 'nullable',
+            'tone'        => 'nullable|string',
+        ]);
+
+        if (!$geminiService->hasApiKey()) {
+            return response()->json([
+                'success'      => false,
+                'requires_key' => true,
+                'message'      => 'Google Gemini API key is missing. Please enter your free API key to continue.',
+            ], 422);
+        }
+
+        $categoryName = null;
+        if ($request->filled('category_id')) {
+            $cat = Category::find($request->category_id);
+            if ($cat) {
+                $categoryName = $cat->name;
+            }
+        }
+
+        try {
+            $generated = $geminiService->generateProductContent(
+                name: $request->name,
+                roughNotes: $request->rough_notes,
+                category: $categoryName,
+                tone: $request->tone ?? 'streetwear_bold'
+            );
+
+            return response()->json([
+                'success' => true,
+                'data'    => $generated,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate an on-model photoshoot using Google Imagen 3 and Gemini Multimodal
+     */
+    public function generateAiImage(Request $request, GeminiService $geminiService)
+    {
+        $request->validate([
+            'product_name'    => 'required|string|max:255',
+            'rough_notes'     => 'nullable|string|max:1000',
+            'reference_image' => 'nullable|string', // base64
+            'model_style'     => 'nullable|string',
+            'product_id'      => 'nullable|exists:products,id',
+        ]);
+
+        if (!$geminiService->hasApiKey()) {
+            return response()->json([
+                'success'      => false,
+                'requires_key' => true,
+                'message'      => 'Google Gemini API key is missing. Please enter your free API key in Store Settings.',
+            ], 422);
+        }
+
+        try {
+            $result = $geminiService->generateModelPhotoshoot(
+                productName: $request->product_name,
+                roughNotes: $request->rough_notes,
+                referenceImageBase64: $request->reference_image,
+                modelStyle: $request->model_style ?? 'male_streetwear'
+            );
+
+            // If product_id is provided, automatically attach as ProductImage
+            if ($request->filled('product_id')) {
+                $product = Product::findOrFail($request->product_id);
+                $isPrimary = $product->images()->count() === 0;
+
+                $productImage = $product->images()->create([
+                    'url'        => $result['relative_path'],
+                    'is_primary' => $isPrimary,
+                    'sort_order' => $product->images()->count(),
+                ]);
+
+                $result['product_image_id'] = $productImage->id;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data'    => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Quick save Gemini API Key directly from AI modal
+     */
+    public function saveGeminiKey(Request $request)
+    {
+        $request->validate([
+            'api_key' => 'required|string|min:15',
+        ]);
+
+        Setting::updateOrCreate(
+            ['key' => 'gemini_api_key'],
+            ['value' => trim($request->api_key)]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Gemini API Key saved successfully!',
+        ]);
     }
 }

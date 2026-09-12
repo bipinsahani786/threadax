@@ -262,7 +262,7 @@
         <div class="space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
                 
-                <div class="flex items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div class="flex items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-100 flex-wrap">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
                             📷
@@ -272,6 +272,14 @@
                             <p class="text-[11px] text-slate-400">{{ $product->images->count() }} photos uploaded</p>
                         </div>
                     </div>
+
+                    {{-- ✨ AI Model Shoot Action --}}
+                    <button type="button" 
+                            @click="openAiModal('photoshoot')" 
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-[11px] font-bold shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer">
+                        <span class="animate-pulse text-amber-300">✨</span>
+                        <span>AI Model Shoot</span>
+                    </button>
                 </div>
                 
                 {{-- Upload Dropzone --}}
@@ -336,6 +344,9 @@
         </div>
 
     </div>
+    {{-- ✨ AI Assistant Modal (Gemini Copy & Photoshoot) --}}
+    @include('admin.pages.products.partials.ai_modal')
+
 </div>
 @endsection
 
@@ -343,10 +354,12 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('variantsManager', (initialVariants, baseSku, basePrice) => ({
+            name: '{{ addslashes($product->name) }}',
             variants: initialVariants.map(v => ({...v, temp_id: null})),
             baseSku: (baseSku && baseSku !== 'TX' && baseSku !== 'TX-GEN') ? baseSku : 'TX-VAR',
             basePrice: basePrice || 0,
             bulkStock: 50,
+            ...productAiHelper(),
 
             addVariant() {
                 const nextNum = this.variants.length + 1;

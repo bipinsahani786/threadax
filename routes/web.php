@@ -195,6 +195,11 @@ Route::prefix('/admin')->name('admin.')->group(function () {
 
         // Categories & Products
         Route::resource('/categories', CategoryController::class)->except(['show']);
+        // AI Content & Photoshoot Generator (Gemini)
+        Route::post('/products/ai-generate-content', [AdminProductController::class, 'generateAiContent'])->name('products.ai.generate-content');
+        Route::post('/products/ai-generate-image', [AdminProductController::class, 'generateAiImage'])->name('products.ai.generate-image');
+        Route::post('/products/save-gemini-key', [AdminProductController::class, 'saveGeminiKey'])->name('products.ai.save-key');
+
         Route::post('/products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->name('products.duplicate');
         Route::resource('/products', AdminProductController::class)->except(['show']);
 

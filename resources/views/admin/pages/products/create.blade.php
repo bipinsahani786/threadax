@@ -35,7 +35,8 @@
                  return (this.comparePrice - this.price).toFixed(2);
              }
              return 0;
-         }
+         },
+         ...productAiHelper()
      }">
 
     {{-- Main Form --}}
@@ -49,14 +50,24 @@
                 
                 {{-- 1. Basic Information Card --}}
                 <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs">
-                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
-                            👕
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
+                                👕
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-heading font-extrabold text-slate-900">General Information</h3>
+                                <p class="text-xs text-slate-400">Title, product story and detailed descriptions</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-sm font-heading font-extrabold text-slate-900">General Information</h3>
-                            <p class="text-xs text-slate-400">Title, product story and detailed descriptions</p>
-                        </div>
+
+                        {{-- ✨ Gemini AI Auto-Fill Action --}}
+                        <button type="button" 
+                                @click="openAiModal('copy')" 
+                                class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer">
+                            <span class="animate-pulse text-amber-300">✨</span>
+                            <span>AI Auto-Generate (Gemini)</span>
+                        </button>
                     </div>
                     
                     <div class="space-y-5">
@@ -400,6 +411,9 @@
         </div>
     </form>
 
+    {{-- ✨ AI Assistant Modal (Gemini Copy & Photoshoot) --}}
+    @include('admin.pages.products.partials.ai_modal')
+
 </div>
 @endsection
 
@@ -460,6 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .then(editor => {
+                window.productCkEditor = editor;
                 editor.model.document.on('change:data', () => {
                     descEl.value = editor.getData();
                 });
