@@ -25,7 +25,16 @@
             @foreach($wishlists as $wishlist)
                 @php
                     $product = $wishlist->product;
-                    $defaultVariant = $product->variants->where('stock', '>', 0)->first() ?? $product->variants->first();
+                    if (!$product) {
+                        continue;
+                    }
+                    $variants = $product->variants ?? collect();
+                    $defaultVariant = $variants->where('stock', '>', 0)->first() ?? $variants->first();
+                    $primaryImg = $product->primaryImage ?? $product->images->first();
+                    $productPrice = (float) ($product->price ?? 0);
+                    $comparePrice = (float) ($product->compare_price ?? 0);
+                    $discountPercent = (int) ($product->discount_percent ?? 0);
+                    $sizeVariants = $variants->whereNotNull('size');
                 @endphp
                 <div class="group relative bg-white border border-brand-border/80 rounded-2xl overflow-hidden hover:border-brand-dark hover:shadow-md transition-all duration-200 flex flex-col justify-between"
                      x-data="{
@@ -76,17 +85,17 @@
                     {{-- Product Image & Floating Badges --}}
                     <div class="aspect-[4/5] w-full overflow-hidden bg-brand-off-white relative">
                         <a href="{{ route('frontend.products.show', $product->slug) }}" class="block w-full h-full">
-                            @if($product && $product->primaryImage)
-                                <img src="{{ $product->primaryImage->url }}" alt="{{ $product->name }}" class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                            @if($primaryImg)
+                                <img src="{{ $primaryImg->url }}" alt="{{ $product->name }}" class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
                             @else
                                 <div class="h-full w-full flex items-center justify-center text-xs text-brand-muted">No Image</div>
                             @endif
                         </a>
 
                         {{-- Floating Discount Pill --}}
-                        @if($product->discount_percent > 0)
+                        @if($discountPercent > 0)
                             <span class="absolute top-2.5 left-2.5 bg-brand-dark text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider">
-                                {{ $product->discount_percent }}% OFF
+                                {{ $discountPercent }}% OFF
                             </span>
                         @endif
 
@@ -112,23 +121,23 @@
                             
                             {{-- Price & Savings --}}
                             <div class="flex items-baseline gap-2 mt-1.5">
-                                <span class="text-sm sm:text-base font-extrabold font-heading text-brand-dark">₹{{ number_format($product->price) }}</span>
-                                @if($product->compare_price > $product->price)
-                                    <span class="text-xs text-brand-muted line-through">₹{{ number_format($product->compare_price) }}</span>
+                                <span class="text-sm sm:text-base font-extrabold font-heading text-brand-dark">₹{{ number_format($productPrice) }}</span>
+                                @if($comparePrice > $productPrice)
+                                    <span class="text-xs text-brand-muted line-through">₹{{ number_format($comparePrice) }}</span>
                                     <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                        Save ₹{{ number_format($product->compare_price - $product->price) }}
+                                        Save ₹{{ number_format($comparePrice - $productPrice) }}
                                     </span>
                                 @endif
                             </div>
 
                             {{-- Size Selector (if multiple sizes exist) --}}
-                            @if($product->variants->whereNotNull('size')->count() > 1)
+                            @if($sizeVariants->count() > 1)
                                 <div class="mt-3 pt-2.5 border-t border-brand-border/60">
                                     <div class="flex items-center justify-between mb-1.5">
                                         <span class="text-[10px] font-bold text-brand-muted uppercase tracking-wider">Select Size</span>
                                     </div>
                                     <div class="flex flex-wrap gap-1.5">
-                                        @foreach($product->variants->whereNotNull('size') as $v)
+                                        @foreach($sizeVariants as $v)
                                             <button type="button" 
                                                     @click="selectedVariantId = '{{ $v->id }}'"
                                                     class="text-[11px] font-bold min-w-[30px] sm:min-w-[34px] h-7 sm:h-7.5 px-2 rounded-lg border transition-all flex items-center justify-center cursor-pointer active:scale-95"

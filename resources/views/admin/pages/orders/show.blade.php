@@ -73,12 +73,18 @@
 
             {{-- Shiprocket 1-Click Push / Sync --}}
             @if(!$order->shiprocket_order_id)
-                <form action="{{ route('admin.orders.shiprocket.push', $order->id) }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer" title="Push order and manifest shipment in Shiprocket">
-                        <span>🚀 Ship via Shiprocket</span>
-                    </button>
-                </form>
+                @if($shiprocketConfigured)
+                    <form action="{{ route('admin.orders.shiprocket.push', $order->id) }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer" title="Push order and manifest shipment in Shiprocket">
+                            <span>🚀 Ship via Shiprocket</span>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('admin.settings.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 shadow-xs active:scale-95 transition-all cursor-pointer" title="Configure Shiprocket API credentials in Settings > Logistics">
+                        <span>⚙️ Setup Shiprocket</span>
+                    </a>
+                @endif
             @else
                 <form action="{{ route('admin.orders.shiprocket.sync', $order->id) }}" method="POST" class="inline">
                     @csrf

@@ -54,7 +54,7 @@ class SitemapController extends Controller
                     'lastmod'    => $cat->updated_at ? $cat->updated_at->toAtomString() : now()->toAtomString(),
                     'changefreq' => 'weekly',
                     'priority'   => '0.8',
-                    'image'      => $cat->image ? asset($cat->image) : null,
+                    'image'      => $cat->image ? (str_starts_with($cat->image, 'http') ? $cat->image : asset('storage/' . ltrim($cat->image, '/'))) : null,
                     'title'      => $cat->name,
                 ];
             });
@@ -71,7 +71,7 @@ class SitemapController extends Controller
                     'lastmod'    => $prod->updated_at ? $prod->updated_at->toAtomString() : now()->toAtomString(),
                     'changefreq' => 'daily',
                     'priority'   => '0.8',
-                    'image'      => $primaryImg ? asset($primaryImg->image_path) : null,
+                    'image'      => $primaryImg?->url,
                     'title'      => $prod->name,
                 ];
             });
@@ -115,7 +115,6 @@ class SitemapController extends Controller
 
         return response($xml, 200, [
             'Content-Type' => 'application/xml; charset=utf-8',
-            'X-Robots-Tag' => 'noindex',
         ]);
     }
 }

@@ -31,5 +31,4 @@ Disallow: /impersonate/
 Disallow: /push-tokens/
 
 # Sitemap Location for Search Engine Crawlers (Google, Bing, Yahoo, Yandex)
-Sitemap: http://127.0.0.1:8000/sitemap.xml
 Sitemap: https://threadax.co.in/sitemap.xml

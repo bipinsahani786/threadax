@@ -318,6 +318,12 @@ class OrderController extends Controller
     public function pushToShiprocket($id)
     {
         $order = Order::findOrFail($id);
+
+        if (!$this->shiprocketService->isConfigured()) {
+            return redirect()->route('admin.settings.index')
+                ->with('error', 'Shiprocket is not configured. Please enter your Shiprocket API Email & Password in Settings > Logistics.');
+        }
+
         $result = $this->shiprocketService->createOrder($order);
 
         if ($result['success']) {
@@ -335,6 +341,12 @@ class OrderController extends Controller
     public function generateShiprocketAwb($id)
     {
         $order = Order::findOrFail($id);
+
+        if (!$this->shiprocketService->isConfigured()) {
+            return redirect()->route('admin.settings.index')
+                ->with('error', 'Shiprocket is not configured. Please enter your Shiprocket API Email & Password in Settings > Logistics.');
+        }
+
         $result = $this->shiprocketService->generateAwb($order);
 
         if ($result['success']) {
@@ -356,6 +368,12 @@ class OrderController extends Controller
     public function syncShiprocketTracking($id)
     {
         $order = Order::findOrFail($id);
+
+        if (!$this->shiprocketService->isConfigured()) {
+            return redirect()->route('admin.settings.index')
+                ->with('error', 'Shiprocket is not configured. Please enter your Shiprocket API Email & Password in Settings > Logistics.');
+        }
+
         $oldStatus = $order->status;
         $result = $this->shiprocketService->trackOrder($order);
 

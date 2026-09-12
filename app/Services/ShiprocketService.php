@@ -15,36 +15,41 @@ class ShiprocketService
     private string $baseUrl = 'https://apiv2.shiprocket.in/v1/external';
 
     /**
-     * Get Shiprocket API Token (caches for 9 days)
+     * Get Shiprocket API Token (caches valid token for 9 days)
      */
     public function getToken(): ?string
     {
-        return Cache::remember('shiprocket_auth_token', 60 * 60 * 24 * 9, function () {
-            $email = Setting::where('key', 'shiprocket_email')->value('value') ?: config('services.shiprocket.email', env('SHIPROCKET_EMAIL'));
-            $password = Setting::where('key', 'shiprocket_password')->value('value') ?: config('services.shiprocket.password', env('SHIPROCKET_PASSWORD'));
+        $cachedToken = Cache::get('shiprocket_auth_token');
+        if (!empty($cachedToken)) {
+            return $cachedToken;
+        }
 
-            if (empty($email) || empty($password)) {
-                Log::info('Shiprocket credentials not configured.');
-                return null;
-            }
+        $email = Setting::where('key', 'shiprocket_email')->value('value') ?: config('services.shiprocket.email');
+        $password = Setting::where('key', 'shiprocket_password')->value('value') ?: config('services.shiprocket.password');
 
-            try {
-                $response = Http::post("{$this->baseUrl}/auth/login", [
-                    'email'    => $email,
-                    'password' => $password,
-                ]);
-
-                if ($response->successful() && isset($response->json()['token'])) {
-                    return $response->json()['token'];
-                }
-
-                Log::error('Shiprocket login failed', ['response' => $response->body()]);
-            } catch (\Exception $e) {
-                Log::error('Shiprocket auth exception: ' . $e->getMessage());
-            }
-
+        if (empty($email) || empty($password)) {
+            Log::info('Shiprocket credentials not configured.');
             return null;
-        });
+        }
+
+        try {
+            $response = Http::post("{$this->baseUrl}/auth/login", [
+                'email'    => $email,
+                'password' => $password,
+            ]);
+
+            if ($response->successful() && isset($response->json()['token'])) {
+                $token = $response->json()['token'];
+                Cache::put('shiprocket_auth_token', $token, 60 * 60 * 24 * 9);
+                return $token;
+            }
+
+            Log::error('Shiprocket login failed', ['response' => $response->body()]);
+        } catch (\Exception $e) {
+            Log::error('Shiprocket auth exception: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     /**
@@ -52,8 +57,8 @@ class ShiprocketService
      */
     public function isConfigured(): bool
     {
-        $email = Setting::where('key', 'shiprocket_email')->value('value') ?: env('SHIPROCKET_EMAIL');
-        $password = Setting::where('key', 'shiprocket_password')->value('value') ?: env('SHIPROCKET_PASSWORD');
+        $email = Setting::where('key', 'shiprocket_email')->value('value') ?: config('services.shiprocket.email');
+        $password = Setting::where('key', 'shiprocket_password')->value('value') ?: config('services.shiprocket.password');
         return !empty($email) && !empty($password);
     }
 

@@ -65,4 +65,10 @@ return [
         'google_site_verification' => env('GOOGLE_SITE_VERIFICATION'),
     ],
 
+    'shiprocket' => [
+        'email'           => env('SHIPROCKET_EMAIL'),
+        'password'        => env('SHIPROCKET_PASSWORD'),
+        'pickup_location' => env('SHIPROCKET_PICKUP_LOCATION', 'Primary'),
+    ],
+
 ];

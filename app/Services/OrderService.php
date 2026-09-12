@@ -44,17 +44,19 @@ class OrderService
 
             // Create Order Items and Deduct Stock
             foreach ($cart->items as $item) {
+                $unitPrice = $item->variant?->effective_price ?? $item->price_at_time ?? 0;
                 $order->items()->create([
                     'product_variant_id' => $item->product_variant_id,
                     'quantity'           => $item->quantity,
-                    'price'              => $item->variant->price ?? $item->price_at_time,
-                    'total'              => $item->quantity * ($item->variant->price ?? $item->price_at_time),
+                    'price'              => $unitPrice,
+                    'total'              => $item->quantity * $unitPrice,
                 ]);
 
                 // Deduct stock
                 if ($item->variant) {
                     if ($item->variant->stock < $item->quantity) {
-                        throw new \Exception("Not enough stock for {$item->variant->product->name}");
+                        $prodName = $item->variant->product?->name ?? 'the selected item';
+                        throw new \Exception("Not enough stock for {$prodName}");
                     }
                     $item->variant->decrement('stock', $item->quantity);
                 }

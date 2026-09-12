@@ -82,12 +82,15 @@ class CartService
             // Find all unassigned guest carts matching candidate session IDs
             $guestCarts = Cart::whereIn('session_id', $sessionCandidates)
                 ->whereNull('user_id')
-                ->with('items.variant')
+                ->with(['items.variant.product'])
                 ->get();
 
             foreach ($guestCarts as $guestCart) {
                 foreach ($guestCart->items as $guestItem) {
-                    if (!$guestItem->variant) {
+                    if (!$guestItem->variant || !$guestItem->variant->product) {
+                        try {
+                            $guestItem->delete();
+                        } catch (\Exception $e) {}
                         continue;
                     }
 
@@ -95,20 +98,22 @@ class CartService
                         ->where('product_variant_id', $guestItem->product_variant_id)
                         ->first();
 
+                    $maxStock = (int) ($guestItem->variant->stock ?? 0);
+                    $effectivePrice = $guestItem->variant->effective_price ?? $guestItem->price_at_time ?? 0;
+
                     if ($existingItem) {
                         // Merge quantity, capped at available variant stock
-                        $maxStock = $guestItem->variant->stock;
                         $mergedQty = min($existingItem->quantity + $guestItem->quantity, max(1, $maxStock));
                         $existingItem->update([
                             'quantity'      => $mergedQty,
-                            'price_at_time' => $guestItem->variant->effective_price ?? $existingItem->price_at_time,
+                            'price_at_time' => $effectivePrice,
                         ]);
                     } else {
                         // Reassign item or create in user cart
                         $userCart->items()->create([
                             'product_variant_id' => $guestItem->product_variant_id,
-                            'quantity'           => min($guestItem->quantity, max(1, $guestItem->variant->stock)),
-                            'price_at_time'      => $guestItem->variant->effective_price ?? $guestItem->price_at_time,
+                            'quantity'           => min($guestItem->quantity, max(1, $maxStock)),
+                            'price_at_time'      => $effectivePrice,
                         ]);
                     }
                 }
@@ -141,9 +146,10 @@ class CartService
 
     private function addItemToCart(Cart $cart, $variantId, $quantity)
     {
-        $variant = ProductVariant::findOrFail($variantId);
+        $variant = ProductVariant::with('product')->findOrFail($variantId);
         
         $item = $cart->items()->where('product_variant_id', $variantId)->first();
+        $effectivePrice = $variant->effective_price ?? $variant->price ?? 0;
 
         if ($item) {
             $newQuantity = $item->quantity + $quantity;
@@ -153,7 +159,7 @@ class CartService
             }
             $item->update([
                 'quantity'      => $newQuantity,
-                'price_at_time' => $variant->effective_price // update price to latest
+                'price_at_time' => $effectivePrice // update price to latest
             ]);
         } else {
             if ($quantity > $variant->stock) {
@@ -162,7 +168,7 @@ class CartService
             $cart->items()->create([
                 'product_variant_id' => $variantId,
                 'quantity'           => $quantity,
-                'price_at_time'      => $variant->effective_price
+                'price_at_time'      => $effectivePrice
             ]);
         }
 
@@ -180,8 +186,9 @@ class CartService
         if ($quantity <= 0) {
             $item->delete();
         } else {
-            if ($quantity > $item->variant->stock) {
-                throw new \Exception("Only {$item->variant->stock} items available in stock.");
+            $variantStock = $item->variant?->stock ?? 0;
+            if ($variantStock > 0 && $quantity > $variantStock) {
+                throw new \Exception("Only {$variantStock} items available in stock.");
             }
             $item->update(['quantity' => $quantity]);
         }
@@ -209,7 +216,8 @@ class CartService
 
         $subtotal = 0;
         foreach ($cart->items as $item) {
-            $subtotal += $item->quantity * ($item->variant->effective_price ?? $item->price_at_time);
+            $unitPrice = $item->variant?->effective_price ?? $item->price_at_time ?? 0;
+            $subtotal += $item->quantity * $unitPrice;
         }
 
         // Free shipping on orders above ₹999

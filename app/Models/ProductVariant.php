@@ -56,7 +56,7 @@ class ProductVariant extends Model
      */
     public function getEffectivePriceAttribute(): float
     {
-        return $this->price ?? $this->product->price;
+        return (float) ($this->price ?? $this->product?->price ?? 0);
     }
 
     // ─── Scopes ───────────────────────────────────────────────

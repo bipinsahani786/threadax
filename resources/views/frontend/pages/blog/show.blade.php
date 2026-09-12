@@ -1,6 +1,41 @@
 @extends('frontend.layouts.app')
 @section('title', ($blog->meta_title ?? $blog->title) . ' — ThreadAX Blog')
 @section('meta_description', $blog->meta_description ?? $blog->excerpt ?? Str::limit(strip_tags($blog->body), 155))
+@section('meta_image', $blog->featured_image_url ?? asset('images/about/hero.png'))
+
+@push('head')
+    {{-- Schema.org BlogPosting Structured Data --}}
+    @php
+        $articleSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BlogPosting',
+            'headline' => $blog->title,
+            'image' => $blog->featured_image_url ?? asset('images/about/hero.png'),
+            'datePublished' => $blog->published_at ? $blog->published_at->toIso8601String() : $blog->created_at->toIso8601String(),
+            'dateModified' => $blog->updated_at->toIso8601String(),
+            'author' => [
+                '@type' => 'Person',
+                'name' => $blog->author_name ?? 'ThreadAX Team',
+            ],
+            'publisher' => [
+                '@type' => 'Organization',
+                'name' => 'ThreadAX',
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => asset('images/logo.png'),
+                ],
+            ],
+            'description' => $blog->excerpt ?? Str::limit(strip_tags($blog->body), 155),
+            'mainEntityOfPage' => [
+                '@type' => 'WebPage',
+                '@id' => route('frontend.blog.show', $blog->slug),
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">
+    {!! json_encode($articleSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
+@endpush
 
 @section('content')
 {{-- Hero Image --}}

@@ -4,6 +4,92 @@
 @section('meta_description', Str::limit(strip_tags($product->description), 150))
 @section('meta_image', $product->primaryImage ? $product->primaryImage->url : asset('images/banner-men.png'))
 
+@push('head')
+    {{-- Schema.org Product Structured Data for Google Rich Snippets --}}
+    @php
+        $primaryImg = $product->primaryImage ?? $product->images->first();
+        $imagesList = $product->images->map(fn($img) => $img->url)->filter()->values()->all();
+        if (empty($imagesList) && $primaryImg?->url) {
+            $imagesList = [$primaryImg->url];
+        }
+        $inStock = $product->variants->sum('stock') > 0;
+        $minPrice = (float) ($product->price ?? 0);
+        
+        $productSchema = [
+            '@context' => 'https://schema.org/',
+            '@type' => 'Product',
+            'name' => $product->name,
+            'image' => !empty($imagesList) ? $imagesList : [asset('images/hero-full.png')],
+            'description' => Str::limit(strip_tags($product->description ?? ''), 200),
+            'sku' => $product->effective_sku,
+            'brand' => [
+                '@type' => 'Brand',
+                'name' => 'ThreadAX',
+            ],
+            'offers' => [
+                '@type' => 'Offer',
+                'url' => route('frontend.products.show', $product->slug),
+                'priceCurrency' => 'INR',
+                'price' => number_format($minPrice, 2, '.', ''),
+                'priceValidUntil' => now()->addMonths(6)->toDateString(),
+                'itemCondition' => 'https://schema.org/NewCondition',
+                'availability' => $inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                'seller' => [
+                    '@type' => 'Organization',
+                    'name' => 'ThreadAX',
+                ],
+            ],
+        ];
+
+        $breadcrumbSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Home',
+                    'item' => route('frontend.home'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Shop',
+                    'item' => route('frontend.products.index'),
+                ],
+            ],
+        ];
+
+        if ($product->category) {
+            $breadcrumbSchema['itemListElement'][] = [
+                '@type' => 'ListItem',
+                'position' => 3,
+                'name' => $product->category->name,
+                'item' => route('frontend.products.index', ['category' => $product->category->slug]),
+            ];
+            $breadcrumbSchema['itemListElement'][] = [
+                '@type' => 'ListItem',
+                'position' => 4,
+                'name' => $product->name,
+                'item' => route('frontend.products.show', $product->slug),
+            ];
+        } else {
+            $breadcrumbSchema['itemListElement'][] = [
+                '@type' => 'ListItem',
+                'position' => 3,
+                'name' => $product->name,
+                'item' => route('frontend.products.show', $product->slug),
+            ];
+        }
+    @endphp
+    <script type="application/ld+json">
+    {!! json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
+    <script type="application/ld+json">
+    {!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
+@endpush
+
 @section('content')
     <div class="max-w-[1440px] mx-auto px-4 lg:px-8 py-10" x-data="productDetails({{ Js::from($product->variants) }}, {{ $product->price }})">
         

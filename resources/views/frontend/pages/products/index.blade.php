@@ -1,6 +1,7 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'Shop - ThreadAx')
+@section('title', 'Shop Streetwear Drops — ThreadAx')
+@section('meta_description', 'Browse the latest oversized tees, heavyweight hoodies, cargos, and streetwear collections from ThreadAX. Premium quality, modern oversized fits, and fast shipping in India.')
 
 @section('content')
     @php

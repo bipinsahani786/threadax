@@ -17,19 +17,26 @@ class CartController extends Controller
             $summary = $this->cartService->getSummary();
             
             // Format data for AlpineJS
-            $items = $cart->items->map(function($item) {
-                return [
-                    'id' => $item->id,
-                    'variant_id' => $item->product_variant_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->variant->effective_price ?? $item->price_at_time,
-                    'product_name' => $item->variant->product->name,
-                    'product_slug' => $item->variant->product->slug,
-                    'size' => $item->variant->size,
-                    'color' => $item->variant->color,
-                    'image' => $item->variant->product->primary_image->url ?? null
-                ];
-            });
+            $items = $cart->items
+                ->filter(fn($item) => $item->variant && $item->variant->product)
+                ->values()
+                ->map(function($item) {
+                    $variant = $item->variant;
+                    $product = $variant->product;
+                    $img = $product->primaryImage ?? $product->images->first();
+
+                    return [
+                        'id'           => $item->id,
+                        'variant_id'   => $item->product_variant_id,
+                        'quantity'     => $item->quantity,
+                        'price'        => $variant->effective_price ?? $item->price_at_time ?? 0,
+                        'product_name' => $product->name,
+                        'product_slug' => $product->slug,
+                        'size'         => $variant->size,
+                        'color'        => $variant->color,
+                        'image'        => $img?->url ?? null,
+                    ];
+                });
 
             return response()->json([
                 'success' => true,
@@ -125,6 +132,14 @@ class CartController extends Controller
 
         $wishlistItem = \Illuminate\Support\Facades\Auth::user()->wishlists()->findOrFail($id);
         $product = $wishlistItem->product;
+
+        if (!$product) {
+            $wishlistItem->delete();
+            if ($request->expectsJson() || $request->isJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'This product is no longer available.'], 404);
+            }
+            return back()->with('error', 'This product is no longer available.');
+        }
         
         // Check if a specific variant was selected, otherwise pick first in-stock or default variant
         $variantId = $request->input('variant_id');
@@ -133,7 +148,7 @@ class CartController extends Controller
             $variant = $product->variants()->where('id', $variantId)->first();
         }
         if (!$variant) {
-            $variant = $product->variants()->where('stock', '>', 0)->first() ?? $product->variants->first();
+            $variant = $product->variants()->where('stock', '>', 0)->first() ?? $product->variants()->first();
         }
 
         if ($variant) {

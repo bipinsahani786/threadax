@@ -326,16 +326,21 @@
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             @foreach($wishlistItems as $wItem)
+                                @php
+                                    $wProd = $wItem->product;
+                                    if (!$wProd) continue;
+                                    $wImg = $wProd->primaryImage ?? $wProd->images->first();
+                                @endphp
                                 <div class="border border-brand-border rounded-xl p-2.5 flex items-center justify-between gap-2 bg-brand-off-white/40">
                                     <div class="flex items-center gap-2.5 min-w-0">
                                         <div class="w-10 h-12 bg-white border border-brand-border rounded-lg overflow-hidden shrink-0">
-                                            @if($wItem->product->primaryImage)
-                                                <img src="{{ $wItem->product->primaryImage->url }}" class="w-full h-full object-cover">
+                                            @if($wImg)
+                                                <img src="{{ $wImg->url }}" class="w-full h-full object-cover">
                                             @endif
                                         </div>
                                         <div class="min-w-0 text-xs">
-                                            <h4 class="font-bold text-brand-dark truncate">{{ $wItem->product->name }}</h4>
-                                            <p class="font-extrabold text-brand-dark">₹{{ number_format($wItem->product->price) }}</p>
+                                            <h4 class="font-bold text-brand-dark truncate">{{ $wProd->name }}</h4>
+                                            <p class="font-extrabold text-brand-dark">₹{{ number_format((float) ($wProd->price ?? 0)) }}</p>
                                         </div>
                                     </div>
                                     <form action="{{ route('frontend.cart.moveFromWishlist', $wItem->id) }}" method="POST" class="shrink-0">
@@ -513,16 +518,21 @@
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     @foreach($wishlistItems as $wItem)
+                        @php
+                            $wProd = $wItem->product;
+                            if (!$wProd) continue;
+                            $wImg = $wProd->primaryImage ?? $wProd->images->first();
+                        @endphp
                         <div class="border border-brand-border rounded-xl p-3 flex items-center justify-between gap-3 bg-brand-off-white/40 hover:bg-white transition-all">
                             <div class="flex items-center gap-3 min-w-0">
                                 <div class="w-12 h-14 bg-white border border-brand-border rounded-lg overflow-hidden shrink-0 shadow-2xs">
-                                    @if($wItem->product->primaryImage)
-                                        <img src="{{ $wItem->product->primaryImage->url }}" class="w-full h-full object-cover">
+                                    @if($wImg)
+                                        <img src="{{ $wImg->url }}" class="w-full h-full object-cover">
                                     @endif
                                 </div>
                                 <div class="min-w-0 text-xs">
-                                    <h4 class="font-bold text-brand-dark truncate">{{ $wItem->product->name }}</h4>
-                                    <p class="font-extrabold text-brand-dark mt-0.5">₹{{ number_format($wItem->product->price) }}</p>
+                                    <h4 class="font-bold text-brand-dark truncate">{{ $wProd->name }}</h4>
+                                    <p class="font-extrabold text-brand-dark mt-0.5">₹{{ number_format((float) ($wProd->price ?? 0)) }}</p>
                                 </div>
                             </div>
                             <form action="{{ route('frontend.cart.moveFromWishlist', $wItem->id) }}" method="POST" class="shrink-0">

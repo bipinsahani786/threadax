@@ -12,7 +12,17 @@ class WishlistController extends Controller
 {
     public function index()
     {
-        $wishlists = Auth::user()->wishlists()->with(['product.images', 'product.variants'])->latest()->paginate(12);
+        $user = Auth::user();
+
+        // Automatically clean up orphaned wishlist items for products that no longer exist
+        $user->wishlists()->whereDoesntHave('product')->delete();
+
+        $wishlists = $user->wishlists()
+            ->whereHas('product')
+            ->with(['product.images', 'product.variants'])
+            ->latest()
+            ->paginate(12);
+
         return view('frontend.pages.account.wishlist', compact('wishlists'));
     }
 

@@ -73,7 +73,7 @@ class CheckoutController extends Controller
             });
 
         // Wishlist Items
-        $wishlistItems = Auth::check() ? Auth::user()->wishlists()->with('product.variants', 'product.images')->get() : collect();
+        $wishlistItems = Auth::check() ? Auth::user()->wishlists()->whereHas('product')->with('product.variants', 'product.images')->get() : collect();
 
         return view('frontend.pages.checkout.index', compact(
             'cart', 'summary', 'addresses', 'coupon', 'discount', 'razorpayKeyId', 'recommendedProducts', 'availableCoupons', 'wishlistItems'

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SettingController extends Controller
 {
@@ -27,6 +28,9 @@ class SettingController extends Controller
         foreach ($data as $key => $value) {
             Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
+
+        // Invalidate Shiprocket auth token cache in case credentials were changed
+        Cache::forget('shiprocket_auth_token');
 
         return redirect()->route('admin.settings.index')->with('success', 'Settings updated successfully.');
     }
