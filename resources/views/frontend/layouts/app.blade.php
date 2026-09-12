@@ -580,10 +580,17 @@
             {{-- Bottom Bar --}}
             <div
                 class="mt-10 pt-6 border-t border-brand-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-brand-muted">
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-1 flex-wrap justify-center md:justify-start">
                     <span class="font-heading font-extrabold text-sm text-brand-text">THREAD</span><span
                         class="threadax-logo-box text-[10px] text-white">AX</span>
                     <span class="ml-2">&copy; {{ date('Y') }} All rights reserved.</span>
+                </div>
+                <div class="text-center">
+                    <span>Designed &amp; Developed by </span>
+                    <a href="https://zytrixontech.com/" target="_blank" rel="noopener noreferrer"
+                        class="font-semibold text-brand-text hover:text-brand-dark hover:underline underline-offset-4 transition-all">
+                        ZytrixonTech
+                    </a>
                 </div>
                 <div class="flex gap-4 flex-wrap justify-center">
                     <a href="{{ route('frontend.page.show', 'privacy-policy') }}"
