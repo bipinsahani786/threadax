@@ -70,6 +70,8 @@
                 </span>
             </div>
             <p class="text-[11px] text-slate-400 mt-2 font-medium">High lifetime-value customers</p>
+        </div>
+
         {{-- Push Devices (Firebase FCM) --}}
         <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-xs">
             <div class="flex items-center justify-between mb-3">
