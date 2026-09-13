@@ -1185,17 +1185,42 @@
             showPrompt: false,
             loading: false,
             init() {
-                // Check if browser supports notifications & service workers
-                if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+                // Remove obsolete permanent block so users can see the prompt again
+                if (localStorage.getItem('threadax_push_dismissed') === '1') {
+                    localStorage.removeItem('threadax_push_dismissed');
+                }
+
+                // Global helper to force show or reset from console or URL ?push_preview=1
+                window.showPushPrompt = () => { this.showPrompt = true; };
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('push_preview') || urlParams.has('push_test')) {
+                    setTimeout(() => { this.showPrompt = true; }, 500);
+                    return;
+                }
+
+                // Check browser support
+                if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                    console.debug('[Push] Notifications not supported in this browser');
+                    return;
+                }
                 
+                // If already granted, ensure token is registered/synced with server
                 if (Notification.permission === 'granted') {
-                    // Automatically register/refresh device token
                     this.registerDeviceToken();
                     return;
                 }
                 
-                if (Notification.permission === 'default' && !localStorage.getItem('threadax_push_dismissed')) {
-                    setTimeout(() => { this.showPrompt = true; }, 3500);
+                // If permission is default (neither granted nor blocked by browser)
+                if (Notification.permission === 'default') {
+                    const dismissedAt = localStorage.getItem('threadax_push_dismissed_time');
+                    const twoHours = 2 * 60 * 60 * 1000;
+                    
+                    // Show prompt if never dismissed or dismissed more than 2 hours ago
+                    if (!dismissedAt || (Date.now() - parseInt(dismissedAt, 10)) > twoHours) {
+                        setTimeout(() => { 
+                            this.showPrompt = true; 
+                        }, 1200);
+                    }
                 }
             },
             async subscribePush() {
@@ -1210,7 +1235,7 @@
                         }));
                     } else {
                         this.showPrompt = false;
-                        localStorage.setItem('threadax_push_dismissed', '1');
+                        localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
                     }
                 } catch (e) {
                     console.error('Push subscription failed:', e);
@@ -1220,7 +1245,7 @@
             },
             dismiss() {
                 this.showPrompt = false;
-                localStorage.setItem('threadax_push_dismissed', '1');
+                localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
             },
             async registerDeviceToken() {
                 if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
@@ -1260,6 +1285,7 @@
                 }
             }
          }"
+         x-cloak
          x-show="showPrompt"
          x-transition:enter="transition ease-out duration-300 transform"
          x-transition:enter-start="translate-y-8 opacity-0"
@@ -1268,7 +1294,6 @@
          x-transition:leave-start="translate-y-0 opacity-100"
          x-transition:leave-end="translate-y-8 opacity-0"
          class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[140]"
-         style="display: none;"
     >
         <div class="bg-slate-950 text-white rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/15 backdrop-blur-xl">
             <div class="flex items-start gap-3.5">
