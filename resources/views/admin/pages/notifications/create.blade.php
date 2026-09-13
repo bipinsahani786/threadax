@@ -70,8 +70,6 @@
                 </span>
             </div>
             <p class="text-[11px] text-slate-400 mt-2 font-medium">High lifetime-value customers</p>
-        </div>
-
         {{-- Push Devices (Firebase FCM) --}}
         <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-xs">
             <div class="flex items-center justify-between mb-3">
@@ -92,7 +90,11 @@
                     </span>
                 @endif
             </div>
-            <p class="text-[11px] text-slate-400 mt-2 font-medium">Subscribed mobile/PC devices</p>
+            <div class="flex items-center gap-2 mt-2 text-[11px] text-slate-500 font-medium">
+                <span class="font-bold text-slate-700">📱 {{ $stats['mobile_devices'] ?? 0 }} Phones</span>
+                <span>•</span>
+                <span>💻 {{ $stats['desktop_devices'] ?? 0 }} Desktop</span>
+            </div>
         </div>
 
     </div>
@@ -164,12 +166,12 @@
                             Broadcast Title <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" 
-                               id="title" 
-                               name="title" 
-                               x-model="title"
-                               required 
-                               placeholder="e.g. MEGA SALE: Flat 50% Off Everything!"
-                               class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-bold text-slate-900 outline-none transition-all @error('title') border-rose-500 @enderror">
+                                id="title" 
+                                name="title" 
+                                x-model="title"
+                                required 
+                                placeholder="e.g. MEGA SALE: Flat 50% Off Everything!"
+                                class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-bold text-slate-900 outline-none transition-all @error('title') border-rose-500 @enderror">
                         @error('title') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
                     </div>
 
@@ -194,11 +196,11 @@
                             Target Redirect Link (Optional)
                         </label>
                         <input type="text" 
-                               id="link" 
-                               name="link" 
-                               x-model="link"
-                               placeholder="https://threadax.co.in/shop?category=hoodies"
-                               class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-mono font-medium text-slate-900 outline-none transition-all">
+                                id="link" 
+                                name="link" 
+                                x-model="link"
+                                placeholder="https://threadax.co.in/shop?category=hoodies"
+                                class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-mono font-medium text-slate-900 outline-none transition-all">
                         <p class="text-[11px] text-slate-400 mt-1">Users clicking the notification will be taken to this landing page.</p>
                     </div>
 
@@ -322,6 +324,164 @@
 
         </div>
 
+    </div>
+
+    {{-- Subscribed Push Devices & Phones Table --}}
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-xs space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
+                    📱
+                </div>
+                <div>
+                    <h3 class="text-base font-heading font-extrabold text-slate-900">Subscribed Push Devices & Phones</h3>
+                    <p class="text-xs text-slate-500">Live list of smartphones and browsers registered to receive web push notifications</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    {{ $subscribedDevices->total() }} Devices Registered
+                </span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto -mx-5 sm:mx-0">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/75 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                        <th class="py-3 px-4 rounded-l-xl">Device & Phone Model</th>
+                        <th class="py-3 px-4">Device Type</th>
+                        <th class="py-3 px-4">Browser</th>
+                        <th class="py-3 px-4">User / Visitor</th>
+                        <th class="py-3 px-4">IP Address</th>
+                        <th class="py-3 px-4">Subscribed</th>
+                        <th class="py-3 px-4 text-right rounded-r-xl">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    @forelse($subscribedDevices as $device)
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            {{-- Phone / Device Model --}}
+                            <td class="py-3.5 px-4">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 {{ in_array($device->device_type, ['android', 'ios']) ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600' }}">
+                                        @if(str_contains(strtolower($device->device_name), 'iphone') || str_contains(strtolower($device->device_name), 'ipad') || str_contains(strtolower($device->device_name), 'mac'))
+                                            🍏
+                                        @elseif(in_array($device->device_type, ['android', 'ios']) || str_contains(strtolower($device->device_name), 'phone') || str_contains(strtolower($device->device_name), 'galaxy'))
+                                            📱
+                                        @else
+                                            💻
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <div class="font-extrabold text-slate-900 text-xs">
+                                            {{ $device->device_name }}
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 font-mono truncate max-w-[180px]" title="{{ $device->token }}">
+                                            Token: {{ substr($device->token, 0, 16) }}...
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            {{-- Device Type Badge --}}
+                            <td class="py-3.5 px-4">
+                                @if(in_array($device->device_type, ['android', 'ios']))
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        📱 Mobile Phone
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+                                        💻 Desktop / PC
+                                    </span>
+                                @endif
+                            </td>
+
+                            {{-- Browser --}}
+                            <td class="py-3.5 px-4 font-semibold text-slate-800">
+                                <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                                    {{ $device->browser_name }}
+                                </span>
+                            </td>
+
+                            {{-- User / Guest --}}
+                            <td class="py-3.5 px-4">
+                                @if($device->user)
+                                    <div>
+                                        <span class="font-bold text-slate-900 block">{{ $device->user->name }}</span>
+                                        <span class="text-[10px] text-slate-400 block">{{ $device->user->email }}</span>
+                                    </div>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        Guest Visitor
+                                    </span>
+                                @endif
+                            </td>
+
+                            {{-- IP Address --}}
+                            <td class="py-3.5 px-4 font-mono text-[11px] text-slate-500">
+                                {{ $device->ip_address ?: '—' }}
+                            </td>
+
+                            {{-- Subscribed time --}}
+                            <td class="py-3.5 px-4 text-[11px]">
+                                <span class="text-slate-700 font-medium block">{{ $device->updated_at->diffForHumans() }}</span>
+                                <span class="text-[10px] text-slate-400 block">{{ $device->created_at->format('d M Y, h:i A') }}</span>
+                            </td>
+
+                            {{-- Actions --}}
+                            <td class="py-3.5 px-4 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    {{-- Send Test Push to this device --}}
+                                    <form action="{{ route('admin.notifications.test-device', $device) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" 
+                                                title="Send test push notification specifically to this phone/device"
+                                                onclick="return confirm('Send direct test push notification to {{ addslashes($device->device_name) }}?');"
+                                                class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-colors flex items-center gap-1 cursor-pointer">
+                                            <span>🚀</span>
+                                            <span class="hidden sm:inline">Test Push</span>
+                                        </button>
+                                    </form>
+
+                                    {{-- Delete Device Token --}}
+                                    <form action="{{ route('admin.notifications.device.destroy', $device) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                title="Remove this device token"
+                                                onclick="return confirm('Remove this device from notification subscribers?');"
+                                                class="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center space-y-2">
+                                    <span class="text-3xl">📱</span>
+                                    <p class="font-bold text-slate-600">No push notification devices subscribed yet</p>
+                                    <p class="text-xs text-slate-400 max-w-sm">When visitors or customers tap "Allow" or "Enable VIP Drop Alerts" on the website, their mobile device or browser model will appear here.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($subscribedDevices->hasPages())
+            <div class="pt-4 border-t border-slate-100">
+                {{ $subscribedDevices->links() }}
+            </div>
+        @endif
     </div>
 
 </div>

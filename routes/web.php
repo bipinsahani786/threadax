@@ -277,6 +277,8 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         // Notifications
         Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('notifications.create');
         Route::post('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'store'])->name('notifications.store');
+        Route::post('/notifications/test-device/{deviceToken}', [\App\Http\Controllers\Admin\NotificationController::class, 'testDevice'])->name('notifications.test-device');
+        Route::delete('/notifications/device/{deviceToken}', [\App\Http\Controllers\Admin\NotificationController::class, 'destroyDevice'])->name('notifications.device.destroy');
 
         // Leads
         Route::resource('/leads', \App\Http\Controllers\Admin\LeadController::class)->except(['create', 'store', 'edit']);

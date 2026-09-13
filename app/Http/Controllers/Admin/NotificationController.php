@@ -22,15 +22,24 @@ class NotificationController extends Controller
         $totalCustomers = User::count();
         $buyersCount = User::has('orders')->count();
         $repeatCount = User::has('orders', '>=', 2)->count();
-        $deviceTokensCount = DeviceToken::distinct('token')->count();
+        $deviceTokensCount = DeviceToken::count();
+        $mobileCount = DeviceToken::whereIn('device_type', ['android', 'ios'])->count();
+        $desktopCount = DeviceToken::where('device_type', 'web')->count();
 
         $stats = [
             'total'          => $totalCustomers,
             'buyers'         => $buyersCount,
             'repeat'         => $repeatCount,
             'push_devices'   => $deviceTokensCount,
+            'mobile_devices' => $mobileCount,
+            'desktop_devices'=> $desktopCount,
             'fcm_configured' => $this->firebasePushService->isConfigured(),
         ];
+
+        // Fetch paginated subscribed devices
+        $subscribedDevices = DeviceToken::with('user')
+            ->latest('updated_at')
+            ->paginate(15, ['*'], 'devices_page');
 
         // Fetch recent broadcasts from database notifications
         $recentBroadcasts = DB::table('notifications')
@@ -45,7 +54,7 @@ class NotificationController extends Controller
                 return $item;
             });
 
-        return view('admin.pages.notifications.create', compact('stats', 'recentBroadcasts'));
+        return view('admin.pages.notifications.create', compact('stats', 'subscribedDevices', 'recentBroadcasts'));
     }
 
     public function store(Request $request)
@@ -95,5 +104,38 @@ class NotificationController extends Controller
         }
 
         return back()->with('success', $msg);
+    }
+
+    /**
+     * Send test push alert to a specific device/phone
+     */
+    public function testDevice(DeviceToken $deviceToken)
+    {
+        if (!$this->firebasePushService->isConfigured()) {
+            return back()->with('error', 'Firebase FCM is not configured in .env yet. Please configure FCM_SERVER_KEY or upload firebase-credentials.json.');
+        }
+
+        $sent = $this->firebasePushService->sendToToken(
+            $deviceToken->token,
+            '🔥 ThreadAX VIP Drop Alert',
+            'Push notification test successful on your ' . $deviceToken->device_name . '!',
+            url('/')
+        );
+
+        if ($sent) {
+            return back()->with('success', 'Test notification sent to ' . $deviceToken->device_name . ' (' . $deviceToken->browser_name . ')');
+        }
+
+        return back()->with('error', 'Failed to send to ' . $deviceToken->device_name . '. Token may be expired or FCM rejected the request.');
+    }
+
+    /**
+     * Remove / unsubscribe a device
+     */
+    public function destroyDevice(DeviceToken $deviceToken)
+    {
+        $name = $deviceToken->device_name;
+        $deviceToken->delete();
+        return back()->with('success', 'Device (' . $name . ') removed from notification subscriber list.');
     }
 }
