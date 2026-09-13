@@ -28,3 +28,7 @@ Thumbs.db
 
 # Project plan docs
 *plan.md
+
+# Firebase service account credentials
+firebase-credentials.json
+storage/app/firebase-credentials.json
