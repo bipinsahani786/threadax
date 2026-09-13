@@ -1178,113 +1178,115 @@
         } catch (e) {
             console.debug('Firebase config init:', e.message);
         }
+
+        // Dedicated Alpine Component for Web Push Prompt
+        window.pushNotificationPrompt = function() {
+            return {
+                showPrompt: false,
+                loading: false,
+
+                init() {
+                    // Clear old permanent blocks
+                    localStorage.removeItem('threadax_push_dismissed');
+
+                    // Global helper to force show: window.showPushPrompt() or ?push_preview=1
+                    window.showPushPrompt = () => { this.showPrompt = true; };
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('push_preview') || urlParams.has('push_test')) {
+                        setTimeout(() => { this.showPrompt = true; }, 300);
+                        return;
+                    }
+
+                    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                        return;
+                    }
+
+                    if (Notification.permission === 'granted') {
+                        this.registerDeviceToken();
+                        return;
+                    }
+
+                    if (Notification.permission === 'default') {
+                        const dismissedAt = localStorage.getItem('threadax_push_dismissed_time');
+                        const twoHours = 2 * 60 * 60 * 1000;
+                        if (!dismissedAt || (Date.now() - parseInt(dismissedAt, 10)) > twoHours) {
+                            setTimeout(() => { 
+                                this.showPrompt = true; 
+                            }, 1000);
+                        }
+                    }
+                },
+
+                async subscribePush() {
+                    this.loading = true;
+                    try {
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            this.showPrompt = false;
+                            await this.registerDeviceToken();
+                            window.dispatchEvent(new CustomEvent('notify', {
+                                detail: { message: '🎉 VIP Push Notifications enabled! You will receive drop alerts.', type: 'success' }
+                            }));
+                        } else {
+                            this.showPrompt = false;
+                            localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
+                        }
+                    } catch (e) {
+                        console.error('Push subscription failed:', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                dismiss() {
+                    this.showPrompt = false;
+                    localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
+                },
+
+                async registerDeviceToken() {
+                    if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
+                    try {
+                        const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                        await navigator.serviceWorker.ready;
+
+                        if (typeof firebase !== 'undefined' && firebase.messaging) {
+                            if (!firebase.apps.length) {
+                                firebase.initializeApp(firebaseConfig);
+                            }
+                            const messaging = firebase.messaging();
+                            const vapidKey = '{{ config('services.firebase.vapid_key') }}';
+                            const tokenOptions = { serviceWorkerRegistration: reg };
+                            if (vapidKey) {
+                                tokenOptions.vapidKey = vapidKey;
+                            }
+
+                            const token = await messaging.getToken(tokenOptions);
+                            if (token) {
+                                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                                await fetch('{{ route('push-tokens.save') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': csrfToken || ''
+                                    },
+                                    body: JSON.stringify({
+                                        token: token,
+                                        device_type: /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'android' : 'web',
+                                        browser: navigator.userAgent
+                                    })
+                                });
+                            }
+                        }
+                    } catch (err) {
+                        console.debug('FCM Token sync:', err.message);
+                    }
+                }
+            };
+        };
     </script>
 
-    {{-- Firebase Push Notification Opt-in Prompt & Client SDK --}}
-    <div x-data="{
-            showPrompt: false,
-            loading: false,
-            init() {
-                // Remove obsolete permanent block so users can see the prompt again
-                if (localStorage.getItem('threadax_push_dismissed') === '1') {
-                    localStorage.removeItem('threadax_push_dismissed');
-                }
-
-                // Global helper to force show or reset from console or URL ?push_preview=1
-                window.showPushPrompt = () => { this.showPrompt = true; };
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has('push_preview') || urlParams.has('push_test')) {
-                    setTimeout(() => { this.showPrompt = true; }, 500);
-                    return;
-                }
-
-                // Check browser support
-                if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-                    console.debug('[Push] Notifications not supported in this browser');
-                    return;
-                }
-                
-                // If already granted, ensure token is registered/synced with server
-                if (Notification.permission === 'granted') {
-                    this.registerDeviceToken();
-                    return;
-                }
-                
-                // If permission is default (neither granted nor blocked by browser)
-                if (Notification.permission === 'default') {
-                    const dismissedAt = localStorage.getItem('threadax_push_dismissed_time');
-                    const twoHours = 2 * 60 * 60 * 1000;
-                    
-                    // Show prompt if never dismissed or dismissed more than 2 hours ago
-                    if (!dismissedAt || (Date.now() - parseInt(dismissedAt, 10)) > twoHours) {
-                        setTimeout(() => { 
-                            this.showPrompt = true; 
-                        }, 1200);
-                    }
-                }
-            },
-            async subscribePush() {
-                this.loading = true;
-                try {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        this.showPrompt = false;
-                        await this.registerDeviceToken();
-                        window.dispatchEvent(new CustomEvent('notify', {
-                            detail: { message: '🎉 VIP Push Notifications enabled! You will receive drop alerts.', type: 'success' }
-                        }));
-                    } else {
-                        this.showPrompt = false;
-                        localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
-                    }
-                } catch (e) {
-                    console.error('Push subscription failed:', e);
-                } finally {
-                    this.loading = false;
-                }
-            },
-            dismiss() {
-                this.showPrompt = false;
-                localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
-            },
-            async registerDeviceToken() {
-                if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
-                try {
-                    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                    await navigator.serviceWorker.ready;
-                    
-                    if (typeof firebase !== 'undefined' && firebase.messaging) {
-                        if (!firebase.apps.length) {
-                            firebase.initializeApp(firebaseConfig);
-                        }
-                        const messaging = firebase.messaging();
-                        const vapidKey = '{{ config('services.firebase.vapid_key') }}';
-                        const tokenOptions = { serviceWorkerRegistration: reg };
-                        if (vapidKey) {
-                            tokenOptions.vapidKey = vapidKey;
-                        }
-                        
-                        const token = await messaging.getToken(tokenOptions);
-                        if (token) {
-                            await fetch('{{ route('push-tokens.save') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                                },
-                                body: JSON.stringify({
-                                    token: token,
-                                    device_type: /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'android' : 'web',
-                                    browser: navigator.userAgent
-                                })
-                            });
-                        }
-                    }
-                } catch (err) {
-                    console.debug('FCM Token sync:', err.message);
-                }
-            }
-         }"
+    {{-- Firebase Push Notification Opt-in Prompt UI --}}
+    <div x-data="pushNotificationPrompt()"
          x-cloak
          x-show="showPrompt"
          x-transition:enter="transition ease-out duration-300 transform"
