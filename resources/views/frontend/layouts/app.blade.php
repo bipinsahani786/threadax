@@ -1184,36 +1184,44 @@
             return {
                 showPrompt: false,
                 loading: false,
+                permissionStatus: ('Notification' in window) ? Notification.permission : 'default',
 
                 init() {
-                    // Clear old permanent blocks
+                    // Always clear obsolete storage blocks
                     localStorage.removeItem('threadax_push_dismissed');
+                    localStorage.removeItem('threadax_push_dismissed_time');
 
-                    // Global helper to force show: window.showPushPrompt() or ?push_preview=1
-                    window.showPushPrompt = () => { this.showPrompt = true; };
+                    if ('Notification' in window) {
+                        this.permissionStatus = Notification.permission;
+                    }
+
+                    // Global helper to force show
+                    window.showPushPrompt = () => { 
+                        this.showPrompt = true; 
+                        if ('Notification' in window) this.permissionStatus = Notification.permission;
+                    };
+
                     const urlParams = new URLSearchParams(window.location.search);
                     if (urlParams.has('push_preview') || urlParams.has('push_test')) {
                         setTimeout(() => { this.showPrompt = true; }, 300);
                         return;
                     }
 
-                    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-                        return;
-                    }
-
-                    if (Notification.permission === 'granted') {
+                    // Auto-show prompt on page load if permission not yet decided and not dismissed in session
+                    if (this.permissionStatus === 'default' && !sessionStorage.getItem('threadax_push_dismissed_session')) {
+                        setTimeout(() => { 
+                            this.showPrompt = true; 
+                        }, 1200);
+                    } else if (this.permissionStatus === 'granted') {
+                        // Keep token synced with server
                         this.registerDeviceToken();
-                        return;
                     }
+                },
 
-                    if (Notification.permission === 'default') {
-                        const dismissedAt = localStorage.getItem('threadax_push_dismissed_time');
-                        const twoHours = 2 * 60 * 60 * 1000;
-                        if (!dismissedAt || (Date.now() - parseInt(dismissedAt, 10)) > twoHours) {
-                            setTimeout(() => { 
-                                this.showPrompt = true; 
-                            }, 1000);
-                        }
+                togglePrompt() {
+                    this.showPrompt = !this.showPrompt;
+                    if ('Notification' in window) {
+                        this.permissionStatus = Notification.permission;
                     }
                 },
 
@@ -1221,6 +1229,7 @@
                     this.loading = true;
                     try {
                         const permission = await Notification.requestPermission();
+                        this.permissionStatus = permission;
                         if (permission === 'granted') {
                             this.showPrompt = false;
                             await this.registerDeviceToken();
@@ -1229,7 +1238,7 @@
                             }));
                         } else {
                             this.showPrompt = false;
-                            localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
+                            sessionStorage.setItem('threadax_push_dismissed_session', '1');
                         }
                     } catch (e) {
                         console.error('Push subscription failed:', e);
@@ -1240,7 +1249,7 @@
 
                 dismiss() {
                     this.showPrompt = false;
-                    localStorage.setItem('threadax_push_dismissed_time', Date.now().toString());
+                    sessionStorage.setItem('threadax_push_dismissed_session', '1');
                 },
 
                 async registerDeviceToken() {
@@ -1285,47 +1294,99 @@
         };
     </script>
 
-    {{-- Firebase Push Notification Opt-in Prompt UI --}}
-    <div x-data="pushNotificationPrompt()"
-         x-cloak
-         x-show="showPrompt"
-         x-transition:enter="transition ease-out duration-300 transform"
-         x-transition:enter-start="translate-y-8 opacity-0"
-         x-transition:enter-end="translate-y-0 opacity-100"
-         x-transition:leave="transition ease-in duration-200 transform"
-         x-transition:leave-start="translate-y-0 opacity-100"
-         x-transition:leave-end="translate-y-8 opacity-0"
-         class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[140]"
-    >
-        <div class="bg-slate-950 text-white rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/15 backdrop-blur-xl">
-            <div class="flex items-start gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg shrink-0 border border-amber-500/30">
-                    🔔
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h4 class="text-xs sm:text-sm font-extrabold text-white tracking-wide">Never Miss a Drop!</h4>
-                    <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                        Get instant mobile notifications for exclusive streetwear drops & live order tracking.
-                    </p>
-                    <div class="flex items-center gap-2 mt-3.5">
-                        <button type="button" 
-                                @click="subscribePush()" 
-                                :disabled="loading"
-                                class="px-3.5 py-1.5 rounded-lg bg-white text-slate-950 text-xs font-extrabold hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50">
-                            <span x-text="loading ? 'Enabling...' : 'Enable Alerts ➔'"></span>
-                        </button>
-                        <button type="button" 
-                                @click="dismiss()" 
-                                class="px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition-colors cursor-pointer">
-                            Later
-                        </button>
+    {{-- VIP Push Notification Floating Bell & Banner Widget --}}
+    <div x-data="pushNotificationPrompt()">
+        
+        {{-- Floating VIP Alerts Bell Button (Always visible on bottom-right) --}}
+        <div class="fixed bottom-5 right-5 z-[139]">
+            <button type="button" 
+                    @click="togglePrompt()" 
+                    class="relative w-12 h-12 rounded-full bg-slate-950 text-white flex items-center justify-center shadow-xl border border-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
+                    title="VIP Drop Alerts & Notifications">
+                <span class="text-lg group-hover:rotate-12 transition-transform">🔔</span>
+                <span x-show="permissionStatus === 'granted'" class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-950" title="Alerts Active"></span>
+                <span x-show="permissionStatus === 'default'" class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-slate-950 animate-pulse" title="Enable Alerts"></span>
+            </button>
+        </div>
+
+        {{-- Slide-up Banner Dialog --}}
+        <div x-cloak
+             x-show="showPrompt"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="translate-y-8 opacity-0 scale-95"
+             x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="translate-y-0 opacity-100 scale-100"
+             x-transition:leave-end="translate-y-8 opacity-0 scale-95"
+             class="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[140]"
+        >
+            <div class="bg-slate-950 text-white rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/15 backdrop-blur-xl">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg shrink-0 border border-amber-500/30">
+                        🔔
                     </div>
+                    <div class="flex-1 min-w-0">
+                        
+                        {{-- State 1: Already Granted --}}
+                        <div x-show="permissionStatus === 'granted'">
+                            <h4 class="text-xs sm:text-sm font-extrabold text-white tracking-wide flex items-center gap-1.5">
+                                <span>VIP Alerts Active</span>
+                                <span class="text-emerald-400">✓</span>
+                            </h4>
+                            <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                                Your device is subscribed to exclusive streetwear drops & live order tracking!
+                            </p>
+                            <div class="mt-3">
+                                <button type="button" @click="showPrompt = false" class="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors cursor-pointer">
+                                    Got it ➔
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- State 2: Blocked in Browser --}}
+                        <div x-show="permissionStatus === 'denied'">
+                            <h4 class="text-xs sm:text-sm font-extrabold text-rose-400 tracking-wide">
+                                Alerts Blocked in Browser
+                            </h4>
+                            <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                                Tap the 🔒 lock icon in your address bar and change <strong>Notifications</strong> to <strong>Allow</strong>.
+                            </p>
+                            <div class="mt-3">
+                                <button type="button" @click="showPrompt = false" class="px-3 py-1 rounded-lg bg-white/10 text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer">
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- State 3: Ready to Enable (Default) --}}
+                        <div x-show="permissionStatus === 'default'">
+                            <h4 class="text-xs sm:text-sm font-extrabold text-white tracking-wide">Never Miss a Drop!</h4>
+                            <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                                Get instant mobile notifications for exclusive streetwear drops & live order tracking.
+                            </p>
+                            <div class="flex items-center gap-2 mt-3.5">
+                                <button type="button" 
+                                        @click="subscribePush()" 
+                                        :disabled="loading"
+                                        class="px-3.5 py-1.5 rounded-lg bg-white text-slate-950 text-xs font-extrabold hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50">
+                                    <span x-text="loading ? 'Enabling...' : 'Enable Alerts ➔'"></span>
+                                </button>
+                                <button type="button" 
+                                        @click="dismiss()" 
+                                        class="px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition-colors cursor-pointer">
+                                    Later
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <button type="button" @click="dismiss()" class="text-slate-400 hover:text-white transition-colors p-1 cursor-pointer" aria-label="Dismiss">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
-                <button type="button" @click="dismiss()" class="text-slate-400 hover:text-white transition-colors p-1" aria-label="Dismiss">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
             </div>
         </div>
+
     </div>
 </body>
 
