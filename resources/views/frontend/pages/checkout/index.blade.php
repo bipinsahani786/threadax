@@ -197,36 +197,49 @@
 
                         <div class="divide-y divide-brand-border/60">
                             @foreach($cart->items as $item)
+                                @php
+                                    $variant = $item->variant;
+                                    $product = $variant?->product;
+                                    if (!$variant || !$product) {
+                                        continue;
+                                    }
+                                    $primaryImg = $product->primaryImage ?? $product->images->first();
+                                    $unitPrice = (float) ($variant->price ?? $product->price ?? 0);
+                                @endphp
                                 <div class="p-3.5 sm:p-5 flex gap-3.5 sm:gap-5 items-start">
                                     <div class="w-20 h-24 sm:w-22 sm:h-28 bg-brand-off-white border border-brand-border rounded-xl overflow-hidden shrink-0 shadow-2xs">
-                                        @if($item->variant->product->primaryImage)
-                                            <img src="{{ $item->variant->product->primaryImage->url }}" alt="{{ $item->variant->product->name }}" class="w-full h-full object-cover">
+                                        @if($primaryImg)
+                                            <img src="{{ $primaryImg->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center bg-brand-off-white text-brand-muted">
+                                                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            </div>
                                         @endif
                                     </div>
 
                                     <div class="flex-1 min-w-0">
-                                        <h3 class="font-bold text-xs sm:text-sm text-brand-dark line-clamp-2 leading-snug">{{ $item->variant->product->name }}</h3>
+                                        <h3 class="font-bold text-xs sm:text-sm text-brand-dark line-clamp-2 leading-snug">{{ $product->name }}</h3>
                                         
                                         {{-- Attributes --}}
                                         <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                                            @if($item->variant->size)
+                                            @if($variant->size)
                                                 <span class="inline-flex items-center gap-1 bg-brand-off-white border border-brand-border px-2 py-0.5 rounded-md text-[10px] font-semibold text-brand-dark">
-                                                    Size: <strong>{{ $item->variant->size }}</strong>
+                                                    Size: <strong>{{ $variant->size }}</strong>
                                                 </span>
                                             @endif
-                                            @if($item->variant->color)
+                                            @if($variant->color)
                                                 <span class="inline-flex items-center gap-1 bg-brand-off-white border border-brand-border px-2 py-0.5 rounded-md text-[10px] font-semibold text-brand-dark">
-                                                    Color: <strong>{{ $item->variant->color }}</strong>
+                                                    Color: <strong>{{ $variant->color }}</strong>
                                                 </span>
                                             @endif
                                         </div>
                                         
                                         {{-- Price --}}
                                         <div class="flex items-center gap-2.5 mt-2">
-                                            <span class="text-xs sm:text-sm font-extrabold text-brand-dark">₹{{ number_format(($item->variant->price ?? $item->variant->product->price) * $item->quantity) }}</span>
-                                            @if($item->variant->product->compare_price > $item->variant->product->price)
-                                                <span class="text-[11px] text-brand-muted line-through">₹{{ number_format($item->variant->product->compare_price * $item->quantity) }}</span>
-                                                <span class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{{ $item->variant->product->discount_percent }}% OFF</span>
+                                            <span class="text-xs sm:text-sm font-extrabold text-brand-dark">₹{{ number_format($unitPrice * $item->quantity) }}</span>
+                                            @if(($product->compare_price ?? 0) > $unitPrice)
+                                                <span class="text-[11px] text-brand-muted line-through">₹{{ number_format($product->compare_price * $item->quantity) }}</span>
+                                                <span class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{{ $product->discount_percent }}% OFF</span>
                                             @endif
                                         </div>
 
@@ -253,14 +266,14 @@
                                                     <input type="hidden" name="quantity" value="{{ $item->quantity + 1 }}">
                                                     <button type="submit" 
                                                             class="w-6 sm:w-7 h-full flex items-center justify-center text-brand-dark hover:bg-white active:scale-95 disabled:opacity-40 transition-all font-bold text-sm cursor-pointer"
-                                                            {{ $item->quantity >= ($item->variant->stock ?? 99) ? 'disabled' : '' }} aria-label="Increase quantity">
+                                                            {{ $item->quantity >= ($variant->stock ?? 99) ? 'disabled' : '' }} aria-label="Increase quantity">
                                                         &plus;
                                                     </button>
                                                 </form>
                                             </div>
 
-                                            @if(($item->variant->stock ?? 99) <= 5)
-                                                <span class="text-[10px] font-bold text-amber-600">Only {{ $item->variant->stock }} left!</span>
+                                            @if(($variant->stock ?? 99) <= 5)
+                                                <span class="text-[10px] font-bold text-amber-600">Only {{ $variant->stock }} left!</span>
                                             @endif
 
                                             <form action="{{ route('frontend.cart.moveToWishlist', $item->id) }}" method="POST" class="ml-auto">
@@ -606,12 +619,14 @@
                         value: this.baseTotal,
                         items: [
                             @foreach($cart->items as $item)
+                            @if($item->variant && $item->variant->product)
                             {
                                 item_id: '{{ $item->variant->sku ?? $item->variant_id }}',
-                                item_name: '{{ $item->variant->product->name }}',
-                                price: {{ $item->variant->price ?? $item->variant->product->price }},
+                                item_name: '{{ addslashes($item->variant->product->name) }}',
+                                price: {{ $item->variant->price ?? $item->variant->product->price ?? 0 }},
                                 quantity: {{ $item->quantity }}
                             },
+                            @endif
                             @endforeach
                         ]
                     });
@@ -737,6 +752,11 @@
                     "theme": {
                         "color": "#000000"
                     },
+                    "modal": {
+                        "ondismiss": (function () {
+                            this.cancelPayment(data.order_id_db, 'Payment was cancelled. Your items are still in your cart.');
+                        }).bind(this)
+                    },
                     "handler": function (response){
                         let form = document.createElement('form');
                         form.method = 'POST';
@@ -798,10 +818,33 @@
                 var rzp = new Razorpay(options);
                 rzp.on('payment.failed', (function (resp){
                     console.error('Payment failed:', resp.error);
-                    if (window.showToast) window.showToast(resp.error?.description || 'Payment was cancelled or failed.', 'error');
-                    this.loading = false;
+                    this.cancelPayment(data.order_id_db, resp.error?.description || 'Payment was cancelled or failed.');
                 }).bind(this));
                 rzp.open();
+            },
+
+            async cancelPayment(orderIdDb, message) {
+                this.loading = false;
+                if (window.showToast) {
+                    window.showToast(message || 'Payment was cancelled. Your items are still in your cart.', 'info');
+                }
+
+                if (orderIdDb) {
+                    try {
+                        await fetch('{{ route("frontend.checkout.cancel") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ order_id_db: orderIdDb })
+                        });
+                    } catch (e) {
+                        console.error('Error cancelling order:', e);
+                    }
+                }
             },
 
             async applyCoupon() {

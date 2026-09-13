@@ -66,6 +66,17 @@ class Order extends Model
         return $this->status === 'delivered';
     }
 
+    /**
+     * Scope to only include confirmed/placed orders (excludes abandoned/incomplete online checkouts).
+     */
+    public function scopePlaced($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('payment_status', 'paid')
+              ->orWhere('payment_method', 'cod');
+        });
+    }
+
     public function getEffectiveCourierAttribute(): ?string
     {
         return $this->shiprocket_courier_name ?: $this->courier_name;

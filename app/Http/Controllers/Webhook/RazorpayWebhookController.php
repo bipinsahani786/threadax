@@ -12,11 +12,15 @@ use App\Notifications\OrderStatusNotification;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\OrderService;
 use Illuminate\Support\Facades\Mail;
 
 class RazorpayWebhookController extends Controller
 {
-    public function __construct(private PaymentService $paymentService) {}
+    public function __construct(
+        private PaymentService $paymentService,
+        private OrderService $orderService
+    ) {}
 
     /**
      * Handle incoming Razorpay webhook events.
@@ -100,10 +104,7 @@ class RazorpayWebhookController extends Controller
 
         $order = $payment->order;
         if ($order) {
-            $order->update([
-                'payment_status' => 'paid',
-                'status'         => 'processing',
-            ]);
+            $this->orderService->confirmOrder($order);
 
             // Audit Log: Webhook payment captured
             PaymentTransaction::log([
@@ -146,10 +147,7 @@ class RazorpayWebhookController extends Controller
 
         $payment->update(['status' => 'failed']);
         if ($payment->order && $payment->order->status === 'pending') {
-            $payment->order->update([
-                'payment_status' => 'failed',
-                'status'         => 'cancelled',
-            ]);
+            $this->orderService->cancelOrder($payment->order, 'Razorpay webhook payment.failed');
         }
 
         // Audit Log: Webhook payment failed

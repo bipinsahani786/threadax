@@ -117,6 +117,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('index');
         Route::post('/process', [CheckoutController::class, 'process'])->name('process');
         Route::post('/callback', [CheckoutController::class, 'callback'])->name('callback');
+        Route::post('/cancel', [CheckoutController::class, 'cancel'])->name('cancel');
         Route::get('/success/{orderId}', [CheckoutController::class, 'success'])->name('success');
 
         // Coupon (correctly inside checkout prefix)

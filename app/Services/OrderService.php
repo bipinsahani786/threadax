@@ -42,8 +42,17 @@ class OrderService
                 'payment_status' => 'pending',
             ]);
 
-            // Create Order Items and Deduct Stock
+            // Create Order Items and Check Stock
             foreach ($cart->items as $item) {
+                if (!$item->variant || !$item->variant->product) {
+                    continue;
+                }
+
+                if ($item->variant->stock < $item->quantity) {
+                    $prodName = $item->variant->product?->name ?? 'the selected item';
+                    throw new \Exception("Not enough stock for {$prodName}");
+                }
+
                 $unitPrice = $item->variant?->effective_price ?? $item->price_at_time ?? 0;
                 $order->items()->create([
                     'product_variant_id' => $item->product_variant_id,
@@ -52,21 +61,79 @@ class OrderService
                     'total'              => $item->quantity * $unitPrice,
                 ]);
 
-                // Deduct stock
-                if ($item->variant) {
-                    if ($item->variant->stock < $item->quantity) {
-                        $prodName = $item->variant->product?->name ?? 'the selected item';
-                        throw new \Exception("Not enough stock for {$prodName}");
-                    }
+                // For COD, deduct stock immediately
+                if ($paymentMethod === 'cod') {
                     $item->variant->decrement('stock', $item->quantity);
                 }
             }
 
-            // Clear Cart
-            $cart->items()->delete();
-            $cart->delete();
+            // For COD: Order is placed immediately, clear the cart
+            // For Online Payment (Razorpay): Keep cart intact until payment is verified successfully
+            if ($paymentMethod === 'cod') {
+                $order->update([
+                    'status'         => 'processing',
+                    'payment_status' => 'pending',
+                ]);
+
+                $cart->items()->delete();
+                $cart->delete();
+            }
 
             return $order;
+        });
+    }
+
+    /**
+     * Confirm an online payment order: deduct stock, clear cart, update status to paid/processing.
+     */
+    public function confirmOrder(Order $order): void
+    {
+        if ($order->payment_status === 'paid') {
+            return; // Idempotent check
+        }
+
+        DB::transaction(function () use ($order) {
+            // Deduct stock for order items
+            foreach ($order->items as $orderItem) {
+                if ($orderItem->variant) {
+                    $orderItem->variant->decrement('stock', $orderItem->quantity);
+                }
+            }
+
+            // Update order status
+            $order->update([
+                'payment_status' => 'paid',
+                'status'         => 'processing',
+            ]);
+
+            // Clear the user's cart now that payment is confirmed
+            $this->cartService->clearCart($order->user_id);
+        });
+    }
+
+    /**
+     * Cancel an uncompleted/failed pending order.
+     */
+    public function cancelOrder(Order $order, string $reason = 'Payment cancelled'): void
+    {
+        if ($order->payment_status === 'paid' || $order->status === 'delivered') {
+            return;
+        }
+
+        DB::transaction(function () use ($order) {
+            // If stock was already deducted (e.g. COD cancelled), restore stock
+            if ($order->payment_method === 'cod' || $order->status === 'processing') {
+                foreach ($order->items as $orderItem) {
+                    if ($orderItem->variant) {
+                        $orderItem->variant->increment('stock', $orderItem->quantity);
+                    }
+                }
+            }
+
+            $order->update([
+                'status'         => 'cancelled',
+                'payment_status' => 'failed',
+            ]);
         });
     }
 

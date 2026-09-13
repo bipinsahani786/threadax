@@ -175,16 +175,17 @@ class CheckoutController extends Controller
                 }
             }
 
-            // Create Order
-            $order = $this->orderService->createOrder($user->id, $addressId, $request->payment_method, $coupon, $discount);
-
-            // Record coupon usage
-            if ($coupon) {
-                $this->couponService->recordUsage($coupon, $order->id, $discount);
-                session()->forget(['coupon_code', 'coupon_discount']);
-            }
-
             if ($request->payment_method === 'razorpay') {
+                // Cancel any previous uncompleted pending razorpay attempts for this user
+                Order::where('user_id', $user->id)
+                    ->where('payment_method', 'razorpay')
+                    ->where('payment_status', 'pending')
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled', 'payment_status' => 'failed']);
+
+                // Create Order (Cart will be preserved until payment is verified)
+                $order = $this->orderService->createOrder($user->id, $addressId, 'razorpay', $coupon, $discount);
+
                 $razorpayOrderId = $this->paymentService->initializeRazorpayPayment($order);
 
                 $payment = Payment::create([
@@ -231,8 +232,14 @@ class CheckoutController extends Controller
                 ], $razorpayData));
             }
 
-            // COD flow
-            $order->update(['payment_status' => 'pending', 'status' => 'processing']);
+            // COD flow - Order is placed immediately
+            $order = $this->orderService->createOrder($user->id, $addressId, 'cod', $coupon, $discount);
+
+            // Record coupon usage for COD
+            if ($coupon) {
+                $this->couponService->recordUsage($coupon, $order->id, $discount);
+                session()->forget(['coupon_code', 'coupon_discount']);
+            }
 
             // Audit Log: COD order
             PaymentTransaction::log([
@@ -304,10 +311,18 @@ class CheckoutController extends Controller
                 ]);
 
                 $confirmedOrder = $payment->order;
-                $confirmedOrder->update([
-                    'payment_status' => 'paid',
-                    'status'         => 'processing',
-                ]);
+
+                // Confirm order: deduct stock and clear user's cart now that payment is verified
+                $this->orderService->confirmOrder($confirmedOrder);
+
+                // Record coupon usage if applied
+                if ($confirmedOrder->coupon_id) {
+                    $coupon = Coupon::find($confirmedOrder->coupon_id);
+                    if ($coupon) {
+                        $this->couponService->recordUsage($coupon, $confirmedOrder->id, (float) $confirmedOrder->discount);
+                    }
+                    session()->forget(['coupon_code', 'coupon_discount']);
+                }
 
                 // Dispatch customer order confirmation notification & email
                 try {
@@ -339,6 +354,14 @@ class CheckoutController extends Controller
             }
         }
 
+        // Cancel order on verification failure
+        if (!empty($request->order_id_db)) {
+            $failedOrder = Order::find($request->order_id_db);
+            if ($failedOrder && $failedOrder->status === 'pending') {
+                $this->orderService->cancelOrder($failedOrder, 'Payment verification failed');
+            }
+        }
+
         // Audit Log: Payment verification failure
         PaymentTransaction::log([
             'transaction_id'    => $request->razorpay_payment_id ?? $request->razorpay_order_id,
@@ -356,7 +379,31 @@ class CheckoutController extends Controller
         ]);
 
         return redirect()->route('frontend.checkout.index')
-                         ->with('error', 'Payment verification failed. Please contact support if money was deducted.');
+                         ->with('error', 'Payment verification failed. Your items are still in your cart.');
+    }
+
+    /**
+     * AJAX: Cancel a pending payment session when user dismisses or cancels gateway.
+     */
+    public function cancel(Request $request)
+    {
+        $orderId = $request->input('order_id_db');
+        if ($orderId) {
+            $order = Order::where('id', $orderId)
+                ->where('user_id', Auth::id())
+                ->where('status', 'pending')
+                ->where('payment_status', 'pending')
+                ->first();
+
+            if ($order) {
+                $this->orderService->cancelOrder($order, 'Payment cancelled by customer');
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment was cancelled. Your items are still in your cart.',
+        ]);
     }
 
     /**

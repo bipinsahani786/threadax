@@ -85,17 +85,26 @@
 
                     <div class="space-y-4 max-h-[280px] overflow-y-auto pr-1">
                         @foreach($order->items as $item)
+                            @php
+                                $variant = $item->variant;
+                                $product = $variant?->product;
+                                $primaryImg = $product?->primaryImage ?? $product?->images?->first();
+                            @endphp
                             <div class="flex items-center gap-3.5 pb-3 border-b border-gray-100 last:border-0 last:pb-0">
                                 <div class="w-14 h-16 bg-gray-50 rounded border border-gray-200 overflow-hidden shrink-0">
-                                    @if($item->variant->product->primaryImage)
-                                        <img src="{{ $item->variant->product->primaryImage->url }}" alt="{{ $item->variant->product->name }}" class="w-full h-full object-cover">
+                                    @if($primaryImg)
+                                        <img src="{{ $primaryImg->url }}" alt="{{ $product?->name ?? 'Product' }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        </div>
                                     @endif
                                 </div>
                                 <div class="flex-1 min-w-0 text-xs">
-                                    <h4 class="font-bold text-black truncate">{{ $item->variant->product->name }}</h4>
+                                    <h4 class="font-bold text-black truncate">{{ $product?->name ?? 'Product' }}</h4>
                                     <p class="text-gray-500 mt-0.5">
-                                        @if($item->variant->size) Size: <span class="font-semibold text-black">{{ $item->variant->size }}</span> @endif
-                                        @if($item->variant->color) | Color: <span class="font-semibold text-black">{{ $item->variant->color }}</span> @endif
+                                        @if($variant?->size) Size: <span class="font-semibold text-black">{{ $variant->size }}</span> @endif
+                                        @if($variant?->color) | Color: <span class="font-semibold text-black">{{ $variant->color }}</span> @endif
                                     </p>
                                     <div class="flex items-center justify-between mt-1">
                                         <span class="text-gray-500 font-medium">Qty: {{ $item->quantity }}</span>
@@ -209,8 +218,8 @@
             items: [
                 @foreach($order->items as $item)
                 {
-                    item_id: '{{ $item->variant->sku ?? $item->variant_id }}',
-                    item_name: '{{ $item->variant->product->name }}',
+                    item_id: '{{ $item->variant?->sku ?? $item->product_variant_id ?? $item->id }}',
+                    item_name: '{{ addslashes($item->variant?->product?->name ?? 'Product') }}',
                     price: {{ $item->price }},
                     quantity: {{ $item->quantity }}
                 },
@@ -227,7 +236,7 @@
             content_type: 'product',
             content_ids: [
                 @foreach($order->items as $item)
-                '{{ $item->variant->sku ?? $item->variant_id }}',
+                '{{ $item->variant?->sku ?? $item->product_variant_id ?? $item->id }}',
                 @endforeach
             ]
         });

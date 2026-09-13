@@ -13,11 +13,11 @@ class AccountController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $recentOrder = $user->orders()->latest()->first();
-        $orderCount = $user->orders()->count();
+        $recentOrder = $user->orders()->placed()->latest()->first();
+        $orderCount = $user->orders()->placed()->count();
         $wishlistCount = $user->wishlists()->count();
         $totalSpent = $user->orders()->where('payment_status', 'paid')->sum('total');
-        $recentOrders = $user->orders()->with('items.variant.product.images')->latest()->take(3)->get();
+        $recentOrders = $user->orders()->placed()->with('items.variant.product.images')->latest()->take(3)->get();
 
         // Profile completion checklist
         $profileChecks = [
@@ -44,13 +44,13 @@ class AccountController extends Controller
 
     public function orders()
     {
-        $orders = Auth::user()->orders()->with(['items.variant.product.images', 'address', 'payment'])->latest()->paginate(10);
+        $orders = Auth::user()->orders()->placed()->with(['items.variant.product.images', 'address', 'payment'])->latest()->paginate(10);
         return view('frontend.pages.account.orders', compact('orders'));
     }
 
     public function showOrder($id)
     {
-        $order = Auth::user()->orders()->with(['items.variant.product.images', 'address', 'payment'])->findOrFail($id);
+        $order = Auth::user()->orders()->placed()->with(['items.variant.product.images', 'address', 'payment'])->findOrFail($id);
         return view('frontend.pages.account.order-detail', compact('order'));
     }
 

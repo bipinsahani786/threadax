@@ -25,7 +25,8 @@ class CartService
 
         if ($userId) {
             // Merge any guest cart that was created before login
-            return $this->mergeGuestCart($userId, $sessionId, $cookieToken);
+            $cart = $this->mergeGuestCart($userId, $sessionId, $cookieToken);
+            return $this->cleanOrphanedItems($cart);
         }
 
         // ── GUEST CART HANDLING ──
@@ -59,7 +60,7 @@ class CartService
             Cookie::queue(self::GUEST_COOKIE_NAME, $sessionId, 60 * 24 * 30); // 30 days
         }
 
-        return $cart->fresh(['items.variant.product.images']);
+        return $this->cleanOrphanedItems($cart);
     }
 
     /**
@@ -232,5 +233,42 @@ class CartService
             'shipping'   => $shipping,
             'total'      => round($total, 2),
         ];
+    }
+
+    /**
+     * Remove any cart items whose product variant or parent product has been deleted.
+     */
+    private function cleanOrphanedItems(Cart $cart): Cart
+    {
+        $cart->loadMissing(['items.variant.product.images']);
+
+        $invalidItemIds = $cart->items->filter(function ($item) {
+            return !$item->variant || !$item->variant->product;
+        })->pluck('id');
+
+        if ($invalidItemIds->isNotEmpty()) {
+            $cart->items()->whereIn('id', $invalidItemIds)->delete();
+            return $cart->fresh(['items.variant.product.images']);
+        }
+
+        return $cart;
+    }
+
+    /**
+     * Clear all items and delete cart for given user or current session.
+     */
+    public function clearCart(?int $userId = null): void
+    {
+        $cart = null;
+        if ($userId) {
+            $cart = Cart::where('user_id', $userId)->first();
+        } else {
+            $cart = $this->getCart();
+        }
+
+        if ($cart) {
+            $cart->items()->delete();
+            $cart->delete();
+        }
     }
 }
