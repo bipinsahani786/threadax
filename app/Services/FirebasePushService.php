@@ -32,11 +32,20 @@ class FirebasePushService
     }
 
     /**
-     * Send push notification to a single device token using Google FCM HTTP v1
+     * Send push notification to a single device token
      */
     public function sendToToken(string $token, string $title, string $body, ?string $link = null, ?string $icon = null, ?string $image = null): bool
     {
-        return $this->sendV1Message($token, $title, $body, $link, $icon, $image);
+        if ($this->credentialsPath && file_exists($this->credentialsPath)) {
+            return $this->sendV1Message($token, $title, $body, $link, $icon, $image);
+        }
+
+        $serverKey = config('services.firebase.server_key') ?: env('FCM_SERVER_KEY');
+        if (!empty($serverKey)) {
+            return $this->sendLegacyMessage($token, $title, $body, $link, $icon, $image, $serverKey);
+        }
+
+        return false;
     }
 
     /**
@@ -67,18 +76,28 @@ class FirebasePushService
         }
 
         if (!$this->isConfigured()) {
-            Log::info("Firebase FCM push notification skipped (No credentials configured): '{$title}' to " . count($tokens) . " devices.");
-            return true;
+            Log::warning("Firebase FCM push notification skipped (No credentials configured): '{$title}' to " . count($tokens) . " devices.");
+            return false;
         }
+
+        $hasServiceAccount = $this->credentialsPath && file_exists($this->credentialsPath);
+        $serverKey = config('services.firebase.server_key') ?: env('FCM_SERVER_KEY');
 
         $successCount = 0;
         foreach ($tokens as $token) {
-            if ($this->sendV1Message($token, $title, $body, $link, $icon, $image)) {
+            $sent = false;
+            if ($hasServiceAccount) {
+                $sent = $this->sendV1Message($token, $title, $body, $link, $icon, $image);
+            } elseif (!empty($serverKey)) {
+                $sent = $this->sendLegacyMessage($token, $title, $body, $link, $icon, $image, $serverKey);
+            }
+
+            if ($sent) {
                 $successCount++;
             }
         }
 
-        Log::info("FCM HTTP v1 broadcast completed: {$successCount}/" . count($tokens) . " delivered successfully.");
+        Log::info("FCM push broadcast completed: {$successCount}/" . count($tokens) . " delivered successfully.");
         return $successCount > 0;
     }
 
@@ -116,7 +135,8 @@ class FirebasePushService
                         'title' => $title,
                         'body'  => $body,
                         'icon'  => $iconUrl,
-                        'badge' => asset('favicon.ico'),
+                        'badge' => asset('favicon-48x48.png'),
+                        'vibrate' => [200, 100, 200],
                     ],
                     'fcm_options' => [
                         'link' => $clickAction,
@@ -155,6 +175,65 @@ class FirebasePushService
             return false;
         } catch (\Exception $e) {
             Log::error("FCM v1 network exception: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send message via Firebase Cloud Messaging Legacy HTTP API
+     */
+    private function sendLegacyMessage(string $token, string $title, string $body, ?string $link = null, ?string $icon = null, ?string $image = null, string $serverKey = ''): bool
+    {
+        $iconUrl = $icon ?: asset('images/logo.png');
+        $clickAction = $link ?: url('/');
+
+        $payload = [
+            'to' => $token,
+            'notification' => [
+                'title' => $title,
+                'body'  => $body,
+                'icon'  => $iconUrl,
+                'badge' => asset('favicon-48x48.png'),
+                'sound' => 'default',
+                'click_action' => $clickAction,
+            ],
+            'data' => [
+                'title'        => $title,
+                'body'         => $body,
+                'link'         => $clickAction,
+                'click_action' => $clickAction,
+                'icon'         => $iconUrl,
+            ],
+            'priority' => 'high',
+        ];
+
+        if ($image) {
+            $payload['notification']['image'] = $image;
+        }
+
+        try {
+            $response = Http::withoutVerifying()->withHeaders([
+                'Authorization' => 'key=' . $serverKey,
+                'Content-Type'  => 'application/json',
+            ])->timeout(10)->post('https://fcm.googleapis.com/fcm/send', $payload);
+
+            if ($response->successful()) {
+                $result = $response->json();
+                if (($result['success'] ?? 0) > 0) {
+                    return true;
+                }
+                $error = $result['results'][0]['error'] ?? 'Unknown error';
+                if (in_array($error, ['NotRegistered', 'InvalidRegistration', 'MissingRegistration'])) {
+                    DeviceToken::where('token', $token)->delete();
+                }
+                Log::warning("FCM Legacy send unsuccessful: " . json_encode($result));
+                return false;
+            }
+
+            Log::warning("FCM Legacy HTTP error [{$response->status()}]: " . $response->body());
+            return false;
+        } catch (\Exception $e) {
+            Log::error("FCM Legacy network exception: " . $e->getMessage());
             return false;
         }
     }

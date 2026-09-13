@@ -15,16 +15,22 @@
                         
                         {{-- Product Info --}}
                         <div class="w-full sm:w-1/3 lg:w-1/4 shrink-0">
-                            <a href="{{ route('frontend.products.show', $review->product->slug) }}" class="group flex gap-3">
-                                <div class="w-12 h-16 sm:w-14 sm:h-18 bg-brand-light border border-brand-border shrink-0 overflow-hidden rounded-lg">
-                                    @if($review->product->primaryImage)
-                                        <img src="{{ $review->product->primaryImage->url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                    @endif
+                            @if($review->product)
+                                <a href="{{ route('frontend.products.show', $review->product->slug) }}" class="group flex gap-3">
+                                    <div class="w-12 h-16 sm:w-14 sm:h-18 bg-brand-light border border-brand-border shrink-0 overflow-hidden rounded-lg">
+                                        @if($review->product->primaryImage)
+                                            <img src="{{ $review->product->primaryImage->url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs sm:text-sm font-bold text-brand-dark group-hover:underline line-clamp-2">{{ $review->product->name }}</h4>
+                                    </div>
+                                </a>
+                            @else
+                                <div class="flex gap-3 items-center text-xs text-brand-muted italic">
+                                    [Product Unavailable]
                                 </div>
-                                <div>
-                                    <h4 class="text-xs sm:text-sm font-bold text-brand-dark group-hover:underline line-clamp-2">{{ $review->product->name }}</h4>
-                                </div>
-                            </a>
+                            @endif
                         </div>
                         
                         {{-- Review Content --}}

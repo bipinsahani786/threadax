@@ -10,6 +10,18 @@
     <title>@yield('title', 'ThreadAx — Premium Streetwear')</title>
     <link rel="canonical" href="@yield('canonical_url', url()->current())">
 
+    {{-- Favicons & App Icons (Google Search & Multi-Device Optimized) --}}
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('favicon-48x48.png') }}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('favicon-96x96.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <meta name="theme-color" content="#0A0A0A">
+    <meta name="msapplication-TileColor" content="#0A0A0A">
+
     {{-- Google Search Console Verification --}}
     @php $googleVerification = config('services.analytics.google_site_verification', env('GOOGLE_SITE_VERIFICATION')); @endphp
     @if($googleVerification)
@@ -1147,19 +1159,43 @@
         </div>
     </div>
 
+    {{-- Firebase App & Messaging SDK --}}
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "{{ config('services.firebase.api_key') ?: 'AIzaSyDZAYp4_s3itqdvuyWSZCXOZtG4HAe0ihU' }}",
+            authDomain: "{{ config('services.firebase.auth_domain') ?: 'threadax.firebaseapp.com' }}",
+            projectId: "{{ config('services.firebase.project_id') ?: 'threadax' }}",
+            storageBucket: "{{ config('services.firebase.storage_bucket') ?: 'threadax.firebasestorage.app' }}",
+            messagingSenderId: "{{ config('services.firebase.messaging_sender_id') ?: '719254291980' }}",
+            appId: "{{ config('services.firebase.app_id') ?: '1:719254291980:web:e3622d75bc599da91a5029' }}"
+        };
+        try {
+            if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch (e) {
+            console.debug('Firebase config init:', e.message);
+        }
+    </script>
+
     {{-- Firebase Push Notification Opt-in Prompt & Client SDK --}}
     <div x-data="{
             showPrompt: false,
             loading: false,
             init() {
-                // Check if already subscribed or dismissed
+                // Check if browser supports notifications & service workers
                 if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+                
                 if (Notification.permission === 'granted') {
+                    // Automatically register/refresh device token
                     this.registerDeviceToken();
                     return;
                 }
+                
                 if (Notification.permission === 'default' && !localStorage.getItem('threadax_push_dismissed')) {
-                    setTimeout(() => { this.showPrompt = true; }, 4000);
+                    setTimeout(() => { this.showPrompt = true; }, 3500);
                 }
             },
             async subscribePush() {
@@ -1187,18 +1223,25 @@
                 localStorage.setItem('threadax_push_dismissed', '1');
             },
             async registerDeviceToken() {
-                if (!('serviceWorker' in navigator)) return;
+                if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
                 try {
                     const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    await navigator.serviceWorker.ready;
+                    
                     if (typeof firebase !== 'undefined' && firebase.messaging) {
+                        if (!firebase.apps.length) {
+                            firebase.initializeApp(firebaseConfig);
+                        }
                         const messaging = firebase.messaging();
                         const vapidKey = '{{ config('services.firebase.vapid_key') }}';
-                        const token = await messaging.getToken({
-                            serviceWorkerRegistration: reg,
-                            vapidKey: vapidKey || undefined
-                        });
+                        const tokenOptions = { serviceWorkerRegistration: reg };
+                        if (vapidKey) {
+                            tokenOptions.vapidKey = vapidKey;
+                        }
+                        
+                        const token = await messaging.getToken(tokenOptions);
                         if (token) {
-                            fetch('{{ route('push-tokens.save') }}', {
+                            await fetch('{{ route('push-tokens.save') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1206,14 +1249,14 @@
                                 },
                                 body: JSON.stringify({
                                     token: token,
-                                    device_type: window.innerWidth < 768 ? 'android' : 'web',
+                                    device_type: /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'android' : 'web',
                                     browser: navigator.userAgent
                                 })
                             });
                         }
                     }
                 } catch (err) {
-                    console.debug('FCM Token sync skipped:', err.message);
+                    console.debug('FCM Token sync:', err.message);
                 }
             }
          }"
@@ -1257,27 +1300,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Firebase App & Messaging SDK --}}
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "{{ config('services.firebase.api_key', 'AIzaSy_DEFAULT') }}",
-            authDomain: "{{ config('services.firebase.auth_domain', 'threadax.firebaseapp.com') }}",
-            projectId: "{{ config('services.firebase.project_id', 'threadax-ecommerce') }}",
-            storageBucket: "{{ config('services.firebase.storage_bucket', 'threadax.appspot.com') }}",
-            messagingSenderId: "{{ config('services.firebase.messaging_sender_id', '100000000000') }}",
-            appId: "{{ config('services.firebase.app_id', '1:100000000000:web:threadax') }}"
-        };
-        try {
-            if (typeof firebase !== 'undefined') {
-                firebase.initializeApp(firebaseConfig);
-            }
-        } catch (e) {
-            console.debug('Firebase config init:', e.message);
-        }
-    </script>
 </body>
 
 </html>

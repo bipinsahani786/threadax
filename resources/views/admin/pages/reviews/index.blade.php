@@ -175,17 +175,21 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-11 h-13 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
-                                        @if($review->product->primaryImage)
+                                        @if($review->product?->primaryImage)
                                             <img src="{{ $review->product->primaryImage->url }}" alt="{{ $review->product->name }}" class="w-full h-full object-cover">
                                         @else
                                             <span class="font-bold text-slate-400 text-xs">TX</span>
                                         @endif
                                     </div>
                                     <div class="min-w-0">
-                                        <a href="{{ route('frontend.products.show', $review->product->slug) }}" target="_blank" class="font-extrabold text-slate-900 text-xs hover:text-blue-600 transition-colors line-clamp-1">
-                                            {{ $review->product->name }}
-                                        </a>
-                                        <span class="text-[10px] text-slate-400 font-bold block mt-0.5">₹{{ number_format($review->product->price) }}</span>
+                                        @if($review->product)
+                                            <a href="{{ route('frontend.products.show', $review->product->slug) }}" target="_blank" class="font-extrabold text-slate-900 text-xs hover:text-blue-600 transition-colors line-clamp-1">
+                                                {{ $review->product->name }}
+                                            </a>
+                                            <span class="text-[10px] text-slate-400 font-bold block mt-0.5">₹{{ number_format($review->product->price) }}</span>
+                                        @else
+                                            <span class="font-extrabold text-slate-400 text-xs italic">[Product Unavailable]</span>
+                                        @endif
                                     </div>
                                 </div>
                             </td>

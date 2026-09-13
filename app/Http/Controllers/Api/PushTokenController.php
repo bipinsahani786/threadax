@@ -17,17 +17,18 @@ class PushTokenController extends Controller
         $request->validate([
             'token'       => 'required|string',
             'device_type' => 'nullable|string|in:web,android,ios',
-            'browser'     => 'nullable|string|max:50',
+            'browser'     => 'nullable|string|max:500',
         ]);
 
         $userId = Auth::id(); // null if guest visitor
+        $browser = substr($request->browser ?: ($request->header('User-Agent') ?: 'Unknown'), 0, 255);
 
         $deviceToken = DeviceToken::updateOrCreate(
             ['token' => $request->token],
             [
                 'user_id'     => $userId,
                 'device_type' => $request->device_type ?? 'web',
-                'browser'     => $request->browser ?? $request->header('User-Agent'),
+                'browser'     => $browser,
                 'ip_address'  => $request->ip(),
             ]
         );

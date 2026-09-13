@@ -50,12 +50,12 @@ return [
     'firebase' => [
         'credentials'        => env('FIREBASE_CREDENTIALS', storage_path('app/firebase-credentials.json')),
         'server_key'         => env('FCM_SERVER_KEY', env('FIREBASE_SERVER_KEY')),
-        'api_key'            => env('FIREBASE_API_KEY'),
-        'auth_domain'        => env('FIREBASE_AUTH_DOMAIN'),
+        'api_key'            => env('FIREBASE_API_KEY', 'AIzaSyDZAYp4_s3itqdvuyWSZCXOZtG4HAe0ihU'),
+        'auth_domain'        => env('FIREBASE_AUTH_DOMAIN', 'threadax.firebaseapp.com'),
         'project_id'         => env('FIREBASE_PROJECT_ID', 'threadax'),
-        'storage_bucket'     => env('FIREBASE_STORAGE_BUCKET'),
-        'messaging_sender_id'=> env('FIREBASE_MESSAGING_SENDER_ID', env('FCM_SENDER_ID')),
-        'app_id'             => env('FIREBASE_APP_ID'),
+        'storage_bucket'     => env('FIREBASE_STORAGE_BUCKET', 'threadax.firebasestorage.app'),
+        'messaging_sender_id'=> env('FIREBASE_MESSAGING_SENDER_ID', env('FCM_SENDER_ID', '719254291980')),
+        'app_id'             => env('FIREBASE_APP_ID', '1:719254291980:web:e3622d75bc599da91a5029'),
         'vapid_key'          => env('FIREBASE_VAPID_KEY'),
     ],
 

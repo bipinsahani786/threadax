@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141414" />
+      <stop offset="100%" stop-color="#000000" />
+    </linearGradient>
+  </defs>
+  <!-- Squircle Base with smooth rounded corners -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <!-- Subtle border for contrast against dark or light browser tabs -->
+  <rect x="2" y="2" width="508" height="508" rx="110" fill="none" stroke="#262626" stroke-width="4" />
+  
+  <!-- Stylized Geometric TX Monogram -->
+  <g fill="#FFFFFF">
+    <!-- Letter T -->
+    <!-- Horizontal Crossbar -->
+    <rect x="76" y="148" width="168" height="44" rx="10" />
+    <!-- Vertical Stem -->
+    <rect x="138" y="180" width="44" height="184" rx="10" />
+
+    <!-- Letter X -->
+    <!-- Diagonal 1: Top-Left to Bottom-Right -->
+    <polygon points="268,148 318,148 436,364 386,364" />
+    <!-- Diagonal 2: Top-Right to Bottom-Left -->
+    <polygon points="386,148 436,148 318,364 268,364" />
+  </g>
+  
+  <!-- Small signature streetwear accent dot in ThreadAx accent amber/gold or clean red -->
+  <circle cx="256" cy="406" r="8" fill="#E8C547" />
+</svg>
