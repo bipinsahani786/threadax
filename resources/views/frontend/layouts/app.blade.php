@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description"
         content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
     <title>@yield('title', 'ThreadAx — Premium Streetwear')</title>
@@ -424,7 +425,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search for products..."
+                <input type="text" name="search" value="{{ Request::get('search') }}" placeholder="Search for products..."
                     class="bg-transparent text-sm w-full focus:outline-none text-brand-text placeholder:text-brand-muted">
                 <button type="button" @click="searchOpen = false" class="ml-2 text-brand-muted hover:text-brand-text">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -912,7 +913,7 @@
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                             },
                             body: JSON.stringify({ variant_id: variantId, quantity: quantity })
                         });
@@ -965,7 +966,7 @@
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                             },
                             body: JSON.stringify({ item_id: itemId })
                         });
@@ -1002,7 +1003,7 @@
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                             },
                             body: JSON.stringify({ item_id: itemId, quantity: qty })
                         });
@@ -1039,7 +1040,7 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                             },
                             body: JSON.stringify({ email: this.email })
                         });
@@ -1201,7 +1202,7 @@
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                                 },
                                 body: JSON.stringify({
                                     token: token,
