@@ -408,10 +408,13 @@
                                 @endif
                             </div>
 
-                            {{-- Free Delivery Threshold Prompt (if below ₹999) --}}
-                            @if(($summary['subtotal'] ?? 0) < 999)
+                            {{-- Free Delivery Threshold Prompt (if below threshold) --}}
+                            @php
+                                $freeShippingThreshold = (float) ($summary['free_shipping_threshold'] ?? ($globalSettings['free_shipping_threshold'] ?? 999));
+                            @endphp
+                            @if(($summary['subtotal'] ?? 0) < $freeShippingThreshold)
                                 <div class="bg-amber-50/90 border border-amber-200/90 rounded-xl p-2.5 text-[11px] text-amber-900 flex items-center justify-between gap-2">
-                                    <span class="leading-tight">🚚 Add <strong>₹{{ number_format(999 - $summary['subtotal']) }}</strong> more for <strong>FREE Delivery</strong></span>
+                                    <span class="leading-tight">🚚 Add <strong>₹{{ number_format($freeShippingThreshold - ($summary['subtotal'] ?? 0)) }}</strong> more for <strong>FREE Delivery</strong></span>
                                     <a href="{{ route('frontend.products.index') }}" class="font-extrabold text-[10px] uppercase text-brand-dark bg-white border border-amber-300 px-2 py-1 rounded-lg hover:bg-amber-100 transition-colors shrink-0">+ Add More</a>
                                 </div>
                             @endif

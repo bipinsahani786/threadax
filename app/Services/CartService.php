@@ -221,17 +221,23 @@ class CartService
             $subtotal += $item->quantity * $unitPrice;
         }
 
-        // Free shipping on orders above ₹999
-        $shipping = $subtotal >= 999 ? 0 : 50;
+        // Fetch shipping threshold & standard shipping charge dynamically from Settings
+        $freeShippingThreshold  = (float) \App\Models\Setting::get('free_shipping_threshold', 999);
+        $standardShippingCharge = (float) \App\Models\Setting::get('standard_shipping_charge', 50);
+
+        // If cart is empty, shipping is 0; otherwise charge standard shipping below threshold
+        $shipping = ($subtotal > 0 && $subtotal < $freeShippingThreshold) ? $standardShippingCharge : 0;
         $total    = $subtotal + $shipping;
 
         // Note: GST is included in the listed price (not added on top)
 
         return [
-            'item_count' => $cart->items->sum('quantity'),
-            'subtotal'   => round($subtotal, 2),
-            'shipping'   => $shipping,
-            'total'      => round($total, 2),
+            'item_count'               => $cart->items->sum('quantity'),
+            'subtotal'                 => round($subtotal, 2),
+            'shipping'                 => round($shipping, 2),
+            'free_shipping_threshold'  => $freeShippingThreshold,
+            'standard_shipping_charge' => $standardShippingCharge,
+            'total'                    => round($total, 2),
         ];
     }
 

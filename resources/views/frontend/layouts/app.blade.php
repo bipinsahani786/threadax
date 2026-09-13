@@ -123,8 +123,9 @@
         <div class="marquee-track flex items-center h-full"
             style="animation: marquee 30s linear infinite; white-space:nowrap; will-change:transform;">
             @php
+                $freeShippingThreshold = (float) ($globalSettings['free_shipping_threshold'] ?? 999);
                 $stripItems = [
-                    '📦 Free Shipping on orders above ₹999',
+                    '📦 Free Shipping on orders above ₹' . number_format($freeShippingThreshold),
                     '🔄 Easy 7-Day No-Questions-Asked Returns',
                     '🏷️ Authentic Premium Streetwear',
                     '✨ 100% Heavy Cotton Fabrics',
@@ -627,7 +628,7 @@
 
         {{-- 1. Home --}}
         <a href="{{ route('frontend.home') }}"
-            class="flex flex-col items-center gap-1 p-2 flex-1 {{ request()->routeIs('frontend.home') ? 'text-brand-text' : 'hover:text-brand-text' }}">
+            class="flex flex-col items-center gap-1 p-2 flex-1 {{ Route::is('frontend.home') ? 'text-brand-text' : 'hover:text-brand-text' }}">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -661,7 +662,7 @@
 
         {{-- 4. Wishlist --}}
         <a href="{{ route('account.wishlist') }}"
-            class="flex flex-col items-center gap-1 p-2 flex-1 {{ request()->routeIs('account.wishlist') ? 'text-brand-text' : 'hover:text-brand-text' }}">
+            class="flex flex-col items-center gap-1 p-2 flex-1 {{ Route::is('account.wishlist') ? 'text-brand-text' : 'hover:text-brand-text' }}">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
@@ -671,7 +672,7 @@
 
         {{-- 5. Profile --}}
         <a href="{{ route('account.dashboard') }}"
-            class="flex flex-col items-center gap-1 p-2 flex-1 {{ request()->is('account*') ? 'text-brand-text' : 'hover:text-brand-text' }}">
+            class="flex flex-col items-center gap-1 p-2 flex-1 {{ Request::is('account*') ? 'text-brand-text' : 'hover:text-brand-text' }}">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -719,21 +720,21 @@
                         {{-- Free Delivery Dynamic Progress Bar --}}
                         <div class="px-5 py-3.5 bg-brand-light/70 border-b border-brand-border" x-show="cartItems.length > 0">
                             <div class="flex items-center justify-between text-xs mb-2">
-                                <span class="font-semibold text-brand-dark flex items-center gap-1.5" x-show="cartSummary.subtotal < 999">
+                                <span class="font-semibold text-brand-dark flex items-center gap-1.5" x-show="cartSummary.subtotal < freeShippingThreshold">
                                     <span>🚚</span>
-                                    <span>Add <span class="font-extrabold text-brand-dark" x-text="formatPrice(999 - cartSummary.subtotal)"></span> more to get <strong class="text-brand-dark underline underline-offset-2">FREE Delivery</strong></span>
+                                    <span>Add <span class="font-extrabold text-brand-dark" x-text="formatPrice(Math.max(0, freeShippingThreshold - cartSummary.subtotal))"></span> more to get <strong class="text-brand-dark underline underline-offset-2">FREE Delivery</strong></span>
                                 </span>
-                                <span class="font-bold text-emerald-700 flex items-center gap-1.5" x-show="cartSummary.subtotal >= 999">
+                                <span class="font-bold text-emerald-700 flex items-center gap-1.5" x-show="cartSummary.subtotal >= freeShippingThreshold">
                                     <span>🎉</span>
                                     <span>You unlocked <strong>FREE Standard Delivery!</strong></span>
                                 </span>
                                 <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white border border-brand-border text-brand-dark"
-                                      x-text="Math.min(100, Math.round((cartSummary.subtotal / 999) * 100)) + '%'"></span>
+                                      x-text="Math.min(100, Math.round((cartSummary.subtotal / (freeShippingThreshold || 1)) * 100)) + '%'"></span>
                             </div>
                             <div class="w-full h-2 bg-brand-border/60 rounded-full overflow-hidden p-0.5">
                                 <div class="h-full rounded-full transition-all duration-500 ease-out shadow-xs"
-                                     :class="cartSummary.subtotal >= 999 ? 'bg-emerald-500' : 'bg-brand-dark'"
-                                     :style="'width: ' + Math.min(100, Math.round((cartSummary.subtotal / 999) * 100)) + '%'"></div>
+                                     :class="cartSummary.subtotal >= freeShippingThreshold ? 'bg-emerald-500' : 'bg-brand-dark'"
+                                     :style="'width: ' + Math.min(100, Math.round((cartSummary.subtotal / (freeShippingThreshold || 1)) * 100)) + '%'"></div>
                             </div>
                         </div>
 
@@ -758,55 +759,52 @@
 
                             {{-- Item List --}}
                             <div class="flow-root" x-show="cartItems.length > 0">
-                                <ul role="list" class="divide-y divide-brand-border/60">
+                                <ul role="list" class="-my-6 divide-y divide-brand-border">
                                     <template x-for="item in cartItems" :key="item.id">
-                                        <li class="py-4 sm:py-5 flex gap-3 sm:gap-4 first:pt-0">
+                                        <li class="flex py-5 group">
                                             {{-- Product Image --}}
-                                            <div class="w-20 h-24 sm:w-22 sm:h-28 border border-brand-border bg-brand-off-white overflow-hidden rounded-xl shrink-0 shadow-2xs relative">
-                                                <img :src="item.image || 'https://via.placeholder.com/150'" :alt="item.product_name" class="w-full h-full object-center object-cover">
+                                            <div class="h-20 w-16 shrink-0 overflow-hidden rounded-xl border border-brand-border bg-brand-light">
+                                                <img :src="item.image" :alt="item.product_name" class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
                                             </div>
 
-                                            {{-- Product Info --}}
-                                            <div class="flex-1 min-w-0 flex flex-col justify-between">
+                                            {{-- Item Info --}}
+                                            <div class="ml-4 flex flex-1 flex-col justify-between">
                                                 <div>
-                                                    <div class="flex justify-between items-start gap-2">
-                                                        <h3 class="text-xs sm:text-sm font-bold text-brand-dark line-clamp-2 leading-snug">
-                                                            <a :href="'/product/' + item.product_slug" class="hover:underline" x-text="item.product_name"></a>
-                                                        </h3>
-                                                        <div class="text-right shrink-0">
-                                                            <p class="text-xs sm:text-sm font-extrabold text-brand-dark" x-text="formatPrice(item.price * item.quantity)"></p>
-                                                            <p x-show="item.quantity > 1" class="text-[10px] text-brand-muted mt-0.5" x-text="'(' + formatPrice(item.price) + ' ea)'"></p>
-                                                        </div>
+                                                    <div class="flex justify-between text-xs font-bold text-brand-dark">
+                                                        <h4 class="line-clamp-1 pr-2">
+                                                            <a :href="'/products/' + item.product_slug" x-text="item.product_name" class="hover:underline"></a>
+                                                        </h4>
+                                                        <p class="ml-2 shrink-0 font-extrabold" x-text="formatPrice(item.price * item.quantity)"></p>
                                                     </div>
-
-                                                    {{-- Variant Attributes --}}
-                                                    <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                                        <template x-if="item.size">
-                                                            <span class="inline-flex items-center gap-1 bg-brand-off-white border border-brand-border px-2 py-0.5 rounded-md text-[10px] font-semibold text-brand-dark">
-                                                                Size: <strong x-text="item.size"></strong>
-                                                            </span>
-                                                        </template>
-                                                        <template x-if="item.color">
-                                                            <span class="inline-flex items-center gap-1 bg-brand-off-white border border-brand-border px-2 py-0.5 rounded-md text-[10px] font-semibold text-brand-dark">
-                                                                Color: <strong x-text="item.color"></strong>
-                                                            </span>
-                                                        </template>
+                                                    <div class="mt-1 flex items-center gap-2 text-[11px] text-brand-muted font-medium">
+                                                        <span x-text="item.color"></span>
+                                                        <span>•</span>
+                                                        <span>Size: <strong class="text-brand-dark" x-text="item.size"></strong></span>
                                                     </div>
                                                 </div>
 
-                                                {{-- Bottom Row: Quantity & Remove --}}
-                                                <div class="flex items-center justify-between pt-2 mt-1">
+                                                <div class="flex items-center justify-between mt-3 text-xs">
                                                     {{-- Quantity Control --}}
-                                                    <div class="flex items-center bg-brand-off-white border border-brand-border rounded-lg h-7 sm:h-8 shadow-2xs">
-                                                        <button type="button" @click="updateCartItem(item.id, item.quantity - 1)" :disabled="isUpdatingCart" class="w-6 sm:w-7 h-full flex items-center justify-center text-brand-dark hover:bg-white active:scale-95 disabled:opacity-40 transition-all font-bold text-sm cursor-pointer" aria-label="Decrease quantity">&minus;</button>
-                                                        <span class="w-6 sm:w-7 text-center font-bold text-xs text-brand-dark select-none" x-text="item.quantity"></span>
-                                                        <button type="button" @click="updateCartItem(item.id, item.quantity + 1)" :disabled="isUpdatingCart" class="w-6 sm:w-7 h-full flex items-center justify-center text-brand-dark hover:bg-white active:scale-95 disabled:opacity-40 transition-all font-bold text-sm cursor-pointer" aria-label="Increase quantity">&plus;</button>
+                                                    <div class="flex items-center border border-brand-border rounded-lg overflow-hidden bg-white shadow-2xs">
+                                                        <button type="button" @click="updateCartItem(item.id, item.quantity - 1)"
+                                                                :disabled="isUpdatingCart"
+                                                                class="px-2.5 py-1 text-brand-dark hover:bg-brand-light transition-colors disabled:opacity-50">
+                                                            -
+                                                        </button>
+                                                        <span class="px-2 text-xs font-bold text-brand-dark min-w-[20px] text-center" x-text="item.quantity"></span>
+                                                        <button type="button" @click="updateCartItem(item.id, item.quantity + 1)"
+                                                                :disabled="isUpdatingCart || item.quantity >= item.stock"
+                                                                class="px-2.5 py-1 text-brand-dark hover:bg-brand-light transition-colors disabled:opacity-50">
+                                                            +
+                                                        </button>
                                                     </div>
 
                                                     {{-- Remove Link --}}
-                                                    <button type="button" @click="removeCartItem(item.id)" :disabled="isUpdatingCart" class="flex items-center gap-1 text-[11px] font-semibold text-red-500 hover:text-red-700 hover:underline disabled:opacity-50 transition-colors cursor-pointer">
-                                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                                                    <button type="button" @click="removeCartItem(item.id)"
+                                                            :disabled="isUpdatingCart"
+                                                            class="text-[11px] font-semibold text-brand-muted hover:text-red-500 transition-colors flex items-center gap-1 cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                                                         </svg>
                                                         Remove
                                                     </button>
@@ -828,12 +826,12 @@
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span>Estimated Shipping</span>
-                                    <span :class="cartSummary.subtotal >= 999 ? 'text-emerald-700 font-bold uppercase tracking-wider text-[11px]' : 'text-brand-dark font-medium'"
-                                          x-text="cartSummary.subtotal >= 999 ? 'FREE' : 'Calculated at checkout'"></span>
+                                    <span :class="cartSummary.subtotal >= freeShippingThreshold ? 'text-emerald-700 font-bold uppercase tracking-wider text-[11px]' : 'text-brand-dark font-medium'"
+                                          x-text="cartSummary.subtotal >= freeShippingThreshold ? 'FREE' : formatPrice(cartSummary.shipping || standardShippingCharge)"></span>
                                 </div>
                                 <div class="flex justify-between items-center pt-2 border-t border-brand-border text-sm">
                                     <span class="font-bold text-brand-dark uppercase tracking-wider">Total</span>
-                                    <span class="font-extrabold font-heading text-base text-brand-dark" x-text="formatPrice(cartSummary.subtotal)"></span>
+                                    <span class="font-extrabold font-heading text-base text-brand-dark" x-text="formatPrice(cartSummary.total || (cartSummary.subtotal + (cartSummary.subtotal >= freeShippingThreshold ? 0 : standardShippingCharge)))"></span>
                                 </div>
                             </div>
 
@@ -869,7 +867,9 @@
                 searchOpen: false,
                 cartOpen: false,
                 cartItems: [],
-                cartSummary: { item_count: 0, subtotal: 0, total: 0 },
+                cartSummary: { item_count: 0, subtotal: 0, total: 0, shipping: 0 },
+                freeShippingThreshold: {{ (float) ($globalSettings['free_shipping_threshold'] ?? 999) }},
+                standardShippingCharge: {{ (float) ($globalSettings['standard_shipping_charge'] ?? 50) }},
                 isUpdatingCart: false,
 
                 init() {
