@@ -385,6 +385,34 @@
                         <p class="text-[11px] text-slate-400 mt-1.5">Must match the exact pickup location name configured in your Shiprocket Dashboard (Settings > Pickup Addresses).</p>
                     </div>
 
+                    {{-- Default Package Dimensions & Weight for Shipping --}}
+                    <div class="sm:col-span-2 pt-2 border-t border-slate-100">
+                        <h4 class="text-xs font-heading font-extrabold text-slate-800 uppercase tracking-wider mb-1">
+                            📦 Default Parcel Dimensions &amp; Weight
+                        </h4>
+                        <p class="text-[11px] text-slate-400 mb-3">
+                            Standard shipping box dimensions &amp; dead weight sent to Shiprocket for freight rate estimation and courier pickup.
+                        </p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                                <label for="default_package_length" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Length (cm)</label>
+                                <input type="number" step="0.1" min="1" name="default_package_length" id="default_package_length" value="{{ $settings['default_package_length'] ?? '15' }}" placeholder="15" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 outline-none">
+                            </div>
+                            <div>
+                                <label for="default_package_breadth" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Breadth (cm)</label>
+                                <input type="number" step="0.1" min="1" name="default_package_breadth" id="default_package_breadth" value="{{ $settings['default_package_breadth'] ?? '12' }}" placeholder="12" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 outline-none">
+                            </div>
+                            <div>
+                                <label for="default_package_height" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Height (cm)</label>
+                                <input type="number" step="0.1" min="1" name="default_package_height" id="default_package_height" value="{{ $settings['default_package_height'] ?? '5' }}" placeholder="5" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 outline-none">
+                            </div>
+                            <div>
+                                <label for="default_package_weight" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Weight (kg)</label>
+                                <input type="number" step="0.01" min="0.01" name="default_package_weight" id="default_package_weight" value="{{ $settings['default_package_weight'] ?? '0.45' }}" placeholder="0.45" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Webhook URL Card --}}
                     <div class="sm:col-span-2 p-4 bg-slate-900 text-white rounded-xl space-y-2">
                         <div class="flex items-center justify-between">
@@ -571,6 +599,38 @@
                                    id="facebook_link" 
                                    value="{{ $settings['facebook_link'] ?? '' }}" 
                                    placeholder="https://facebook.com/yourpage"
+                                   class="w-full pl-9 pr-3.5 py-2 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all">
+                        </div>
+                    </div>
+
+                    {{-- Twitter / X Link --}}
+                    <div>
+                        <label for="twitter_link" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Twitter / X Profile URL
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">𝕏</span>
+                            <input type="url" 
+                                   name="twitter_link" 
+                                   id="twitter_link" 
+                                   value="{{ $settings['twitter_link'] ?? '' }}" 
+                                   placeholder="https://x.com/yourhandle" 
+                                   class="w-full pl-9 pr-3.5 py-2 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all">
+                        </div>
+                    </div>
+
+                    {{-- YouTube Link --}}
+                    <div>
+                        <label for="youtube_link" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            YouTube Channel URL
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">▶️</span>
+                            <input type="url" 
+                                   name="youtube_link" 
+                                   id="youtube_link" 
+                                   value="{{ $settings['youtube_link'] ?? '' }}" 
+                                   placeholder="https://youtube.com/@yourchannel" 
                                    class="w-full pl-9 pr-3.5 py-2 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all">
                         </div>
                     </div>

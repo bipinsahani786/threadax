@@ -91,9 +91,14 @@
 <body>
     <div class="container">
         
+@php
+    $emailBrand = \App\Models\Setting::get('brand_name', 'ThreadAX');
+    $emailTagline = \App\Models\Setting::get('brand_tagline', 'Designed for the Culture. Engineered for Comfort.');
+    $emailContact = \App\Models\Setting::get('contact_email', 'support@threadax.co.in');
+@endphp
         {{-- Brand Header --}}
         <div class="header">
-            <h1>THREADAX</h1>
+            <h1>{{ strtoupper($emailBrand) }}</h1>
             <p>Official Customer Correspondence</p>
         </div>
 
@@ -103,23 +108,23 @@
                 Hello {{ $user->name }},
             </div>
 
-            <p>We are reaching out to you from the ThreadAX Customer Experience team regarding your account.</p>
+            <p>We are reaching out to you from the {{ $emailBrand }} Customer Experience team regarding your account.</p>
 
             <div class="message-body">
                 {{ $messageBody }}
             </div>
 
-            <p>If you have any questions or need further assistance, simply reply to this email or reach out to our team at <a href="mailto:support@threadax.co.in" style="color: #000000; font-weight: 700;">support@threadax.co.in</a>.</p>
+            <p>If you have any questions or need further assistance, simply reply to this email or reach out to our team at <a href="mailto:{{ $emailContact }}" style="color: #000000; font-weight: 700;">{{ $emailContact }}</a>.</p>
 
             <div class="cta-box">
-                <a href="{{ url('/') }}" class="cta-btn">Visit ThreadAX Store</a>
+                <a href="{{ url('/') }}" class="cta-btn">Visit {{ $emailBrand }} Store</a>
             </div>
         </div>
 
         {{-- Footer --}}
         <div class="footer">
-            <p style="margin: 0 0 4px; font-weight: 700; color: #334155;">ThreadAX Luxury Streetwear</p>
-            <p style="margin: 0;">Designed for the Culture. Engineered for Comfort.</p>
+            <p style="margin: 0 0 4px; font-weight: 700; color: #334155;">{{ $emailBrand }} Streetwear</p>
+            <p style="margin: 0;">{{ $emailTagline }}</p>
         </div>
 
     </div>

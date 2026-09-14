@@ -13,6 +13,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentTransaction;
+use App\Models\Setting;
 use App\Notifications\OrderStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -216,7 +217,7 @@ class CheckoutController extends Controller
                     'razorpay_order_id' => $razorpayOrderId,
                     'amount'            => (int) ($order->total * 100),
                     'currency'          => 'INR',
-                    'name'              => 'ThreadAX Streetwear',
+                    'name'              => (Setting::get('brand_name', 'ThreadAX')) . ' Streetwear',
                     'description'       => 'Order #' . $order->order_number,
                     'prefill'           => [
                         'name'    => $user->name,

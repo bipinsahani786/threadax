@@ -89,21 +89,22 @@ class ShiprocketService
                 'selling_price' => (float) $item->price,
                 'discount'      => 0,
                 'tax'           => 0,
-                'hsn'           => 610910,
+                'hsn'           => (int) (Setting::get('default_hsn_code') ?: 610910),
             ];
         }
 
         $pickupLocation = Setting::where('key', 'shiprocket_pickup_location')->value('value') ?: 'Primary';
+        $brandName = Setting::get('brand_name', 'ThreadAX');
 
         $payload = [
             'order_id'              => $order->order_number,
             'order_date'            => $order->created_at->format('Y-m-d H:i'),
             'pickup_location'       => $pickupLocation,
             'channel_id'            => '',
-            'comment'               => 'ThreadAX Premium Order',
+            'comment'               => "{$brandName} Order",
             'billing_customer_name' => $address?->name ?? ($user?->name ?? 'Valued Customer'),
             'billing_last_name'     => '',
-            'billing_address'       => $address?->line1 ?? 'ThreadAX Customer Address',
+            'billing_address'       => $address?->line1 ?? "{$brandName} Customer Address",
             'billing_address_2'     => $address?->line2 ?? '',
             'billing_city'          => $address?->city ?? 'Mumbai',
             'billing_pincode'       => $address?->pincode ?? '400001',
@@ -119,10 +120,10 @@ class ShiprocketService
             'transaction_charges'   => 0,
             'total_discount'        => (float) $order->discount,
             'sub_total'             => (float) $order->total,
-            'length'                => 15,
-            'breadth'               => 12,
-            'height'                => 5,
-            'weight'                => 0.45,
+            'length'                => (float) (Setting::get('default_package_length') ?: 15),
+            'breadth'               => (float) (Setting::get('default_package_breadth') ?: 12),
+            'height'                => (float) (Setting::get('default_package_height') ?: 5),
+            'weight'                => (float) (Setting::get('default_package_weight') ?: 0.45),
         ];
 
         try {

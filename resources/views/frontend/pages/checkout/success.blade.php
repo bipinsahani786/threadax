@@ -24,7 +24,7 @@
             </h1>
             
             <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto mb-6 leading-relaxed">
-                Thank you for shopping with <strong class="text-black font-extrabold">ThreadAx</strong>. We’ve received your order and sent a confirmation email.
+                Thank you for shopping with <strong class="text-black font-extrabold">{{ $globalSettings['brand_name'] ?? 'ThreadAX' }}</strong>. We’ve received your order and sent a confirmation email.
             </p>
 
             {{-- Order Number Badge with Copy --}}

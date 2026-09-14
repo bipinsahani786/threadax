@@ -24,7 +24,7 @@
             'sku' => $product->effective_sku,
             'brand' => [
                 '@type' => 'Brand',
-                'name' => 'ThreadAX',
+                'name' => $globalSettings['brand_name'] ?? 'ThreadAX',
             ],
             'offers' => [
                 '@type' => 'Offer',
@@ -36,7 +36,7 @@
                 'availability' => $inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
                 'seller' => [
                     '@type' => 'Organization',
-                    'name' => 'ThreadAX',
+                    'name' => $globalSettings['brand_name'] ?? 'ThreadAX',
                 ],
             ],
         ];
@@ -442,11 +442,12 @@
                             <div class="pb-6 text-sm text-brand-muted space-y-4 prose prose-sm max-w-none">
                                 @php
                                     $shippingPolicy = \App\Models\Setting::where('key', 'shipping_policy')->value('value');
+                                    $freeShippingThreshold = (float) ($globalSettings['free_shipping_threshold'] ?? 999);
                                 @endphp
                                 @if($shippingPolicy)
-                                    {!! nl2br($shippingPolicy) !!}
+                                    {!! $shippingPolicy !!}
                                 @else
-                                    <p><strong class="text-brand-text">Free Shipping:</strong> On all orders above ₹999.</p>
+                                    <p><strong class="text-brand-text">Free Shipping:</strong> On all orders above ₹{{ number_format($freeShippingThreshold) }}.</p>
                                     <p><strong class="text-brand-text">Delivery Time:</strong> Standard delivery within 3-5 business days. Metro cities within 1-2 business days.</p>
                                     <p><strong class="text-brand-text">Returns:</strong> Easy 7-day returns and exchanges. Product must be unwashed and unworn with original tags attached.</p>
                                 @endif

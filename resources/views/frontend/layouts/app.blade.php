@@ -5,9 +5,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $defaultBrand = $globalSettings['brand_name'] ?? 'ThreadAX';
+        $defaultTagline = $globalSettings['brand_tagline'] ?? 'Premium Streetwear';
+        $defaultTitle = "{$defaultBrand} — {$defaultTagline}";
+        $defaultDesc = "{$defaultBrand} — {$defaultTagline}. Oversized fits, premium fabrics, clean designs.";
+    @endphp
     <meta name="description"
-        content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
-    <title>@yield('title', 'ThreadAx — Premium Streetwear')</title>
+        content="@yield('meta_description', $defaultDesc)">
+    <title>@yield('title', $defaultTitle)</title>
     <link rel="canonical" href="@yield('canonical_url', url()->current())">
 
     {{-- Favicons & App Icons (Google Search & Multi-Device Optimized) --}}
@@ -31,15 +37,15 @@
     {{-- Open Graph / Facebook --}}
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:title" content="@yield('title', 'ThreadAx — Premium Streetwear')">
+    <meta property="og:title" content="@yield('title', $defaultTitle)">
     <meta property="og:description"
-        content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
+        content="@yield('meta_description', $defaultDesc)">
     <meta property="og:image" content="@yield('meta_image', asset('images/banner-men.png'))">
 
     {{-- Twitter Cards --}}
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('title', 'ThreadAx — Premium Streetwear')">
-    <meta name="twitter:description" content="@yield('meta_description', 'ThreadAx — Premium Streetwear. Oversized fits, premium fabrics, clean designs.')">
+    <meta name="twitter:title" content="@yield('title', $defaultTitle)">
+    <meta name="twitter:description" content="@yield('meta_description', $defaultDesc)">
     <meta name="twitter:image" content="@yield('meta_image', asset('images/banner-men.png'))">
 
     {{-- JSON-LD Structured Data Schema for Google Indexing --}}
@@ -47,7 +53,7 @@
     {!! json_encode([
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
-        'name' => 'ThreadAX Streetwear',
+        'name' => $defaultBrand . ' Streetwear',
         'url' => url('/'),
         'logo' => asset('images/logo.png'),
         'contactPoint' => [
@@ -573,7 +579,7 @@
                             </svg>
                         </a>
                         {{-- Twitter / X --}}
-                        <a href="#"
+                        <a href="{{ !empty($globalSettings['twitter_link']) ? $globalSettings['twitter_link'] : '#' }}" {{ !empty($globalSettings['twitter_link']) ? 'target="_blank" rel="noopener noreferrer"' : '' }}
                             class="w-10 h-10 rounded-full bg-brand-light border border-brand-border flex items-center justify-center text-brand-muted hover:bg-brand-text hover:text-white hover:border-brand-text transition-all"
                             aria-label="Twitter">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -591,7 +597,7 @@
                             </svg>
                         </a>
                         {{-- YouTube --}}
-                        <a href="#"
+                        <a href="{{ !empty($globalSettings['youtube_link']) ? $globalSettings['youtube_link'] : '#' }}" {{ !empty($globalSettings['youtube_link']) ? 'target="_blank" rel="noopener noreferrer"' : '' }}
                             class="w-10 h-10 rounded-full bg-brand-light border border-brand-border flex items-center justify-center text-brand-muted hover:bg-[#FF0000] hover:text-white hover:border-[#FF0000] transition-all"
                             aria-label="YouTube">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -648,11 +654,12 @@
 
     {{-- WhatsApp Floating Button --}}
     @php
+        $brandName = $globalSettings['brand_name'] ?? 'ThreadAX';
         $whatsappNumber = $globalSettings['whatsapp_number'] ?? env('WHATSAPP_NUMBER', '919876543210');
         $cleanWhatsappNumber = preg_replace('/[^0-9]/', '', $whatsappNumber);
     @endphp
     @if($cleanWhatsappNumber)
-        <a href="https://wa.me/{{ $cleanWhatsappNumber }}?text={{ urlencode('Hello ThreadAX! I have a query.') }}"
+        <a href="https://wa.me/{{ $cleanWhatsappNumber }}?text={{ urlencode('Hello ' . $brandName . '! I have a query.') }}"
             target="_blank" rel="noopener noreferrer"
             class="hidden lg:flex fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 items-center justify-center"
             aria-label="Chat on WhatsApp">

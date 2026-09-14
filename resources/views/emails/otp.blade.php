@@ -1,9 +1,13 @@
+@php
+    $emailBrand = \App\Models\Setting::get('brand_name', 'ThreadAX');
+    $emailTagline = \App\Models\Setting::get('brand_tagline', 'Wear the Statement');
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your OTP — ThreadAX</title>
+    <title>Your OTP — {{ $emailBrand }}</title>
     <style>
         body { margin: 0; font-family: 'Inter', Arial, sans-serif; background: #f4f4f4; }
         .wrapper { max-width: 560px; margin: 40px auto; background: #0A0A0A; border-radius: 16px; overflow: hidden; }
@@ -24,11 +28,11 @@
 <body>
 <div class="wrapper">
     <div class="header">
-        <div class="logo">THREAD<span>AX</span></div>
+        <div class="logo">{{ strtoupper($emailBrand) }}</div>
     </div>
     <div class="body">
         <h2>Your Login OTP</h2>
-        <p>Use this one-time password to log in to your ThreadAX account. It expires in 10 minutes.</p>
+        <p>Use this one-time password to log in to your {{ $emailBrand }} account. It expires in 10 minutes.</p>
 
         <div class="otp-box">
             <div class="otp-code">{{ $otp }}</div>
@@ -42,7 +46,7 @@
         </div>
     </div>
     <div class="footer">
-        <p>© {{ date('Y') }} ThreadAX · Wear the Statement</p>
+        <p>© {{ date('Y') }} {{ $emailBrand }} · {{ $emailTagline }}</p>
         <p style="margin-top:4px;">This is an automated email. Please do not reply.</p>
     </div>
 </div>
