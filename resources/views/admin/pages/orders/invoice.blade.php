@@ -206,7 +206,7 @@
     $pan = $sysSettings['company_pan'] ?? 'AAACT9988F';
     $companyState = $sysSettings['company_state'] ?? 'Maharashtra (27)';
     $contactEmail = $sysSettings['contact_email'] ?? 'support@threadax.co.in';
-    $contactPhone = $sysSettings['whatsapp_number'] ?? ($sysSettings['contact_phone'] ?? '919876543210');
+    $contactPhone = $sysSettings['contact_phone'] ?? ($sysSettings['whatsapp_number'] ?? '+91 98765 43210');
     $invoicePrefix = $sysSettings['invoice_prefix'] ?? 'INV-';
     $defaultHsn = $sysSettings['default_hsn_code'] ?? '610910';
     $signatoryTitle = $sysSettings['invoice_signatory_title'] ?? 'THREADAX APPARELS PVT. LTD.';
@@ -226,7 +226,7 @@
                 <strong>HQ:</strong> {{ $storeAddress }}<br>
                 @if($gstin)<strong>GSTIN:</strong> {{ $gstin }} | @endif
                 @if($pan)<strong>PAN:</strong> {{ $pan }}<br>@endif
-                <strong>State:</strong> {{ $companyState }} • Support: {{ $contactEmail }}
+                <strong>State:</strong> {{ $companyState }} • Support: {{ $contactPhone }} | {{ $contactEmail }}
             </div>
         </td>
         <td class="header-cell text-right" style="width: 42%;">

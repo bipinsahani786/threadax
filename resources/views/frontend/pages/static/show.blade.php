@@ -86,7 +86,7 @@
                     <div class="p-4 sm:p-6 rounded-2xl border border-brand-border bg-brand-off-white/80 space-y-1.5">
                         <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-brand-dark">Grievance & Legal Desk</h4>
                         <p class="text-xs text-brand-muted leading-relaxed">
-                            For legal inquiries or privacy concerns, please contact our legal desk at <a href="mailto:support@threadax.co.in" class="font-semibold text-brand-dark underline">support@threadax.co.in</a>.
+                            For legal inquiries or privacy concerns, please contact our legal desk at <a href="mailto:{{ $globalSettings['contact_email'] ?? 'support@threadax.co.in' }}" class="font-semibold text-brand-dark underline">{{ $globalSettings['contact_email'] ?? 'support@threadax.co.in' }}</a>.
                         </p>
                     </div>
 

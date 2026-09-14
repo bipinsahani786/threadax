@@ -235,8 +235,14 @@
         </div>
 
         {{-- Footer --}}
+        @php
+            $emailSupport = \App\Models\Setting::get('contact_email', 'support@threadax.co.in');
+            $emailWa = \App\Models\Setting::get('whatsapp_number', '919876543210');
+            $cleanWa = preg_replace('/[^0-9]/', '', $emailWa);
+            $emailPhone = \App\Models\Setting::get('contact_phone', '+91 98765 43210');
+        @endphp
         <div class="footer">
-            <p style="margin: 0 0 6px;">Questions? Contact us at support@threadax.in or WhatsApp us.</p>
+            <p style="margin: 0 0 6px;">Questions? Contact us at <a href="mailto:{{ $emailSupport }}" style="color: #64748B; font-weight: 700;">{{ $emailSupport }}</a>, call <a href="tel:{{ $emailPhone }}" style="color: #64748B; font-weight: 700;">{{ $emailPhone }}</a>, or <a href="https://wa.me/{{ $cleanWa }}" style="color: #10B981; font-weight: 700; text-decoration: underline;">WhatsApp us (+{{ $cleanWa }})</a>.</p>
             <p style="margin: 0;">© {{ date('Y') }} ThreadAX Streetwear India. All Rights Reserved.</p>
         </div>
     </div>

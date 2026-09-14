@@ -189,7 +189,7 @@
                                 'id' => 8,
                                 'category' => 'orders',
                                 'question' => 'Can I modify or cancel my order after placing it?',
-                                'answer' => 'Orders can be modified or cancelled within 2 hours of placing them before they enter the warehouse packing stage. Please contact our support desk immediately at support@threadax.co.in or via WhatsApp.'
+                                'answer' => 'Orders can be modified or cancelled within 2 hours of placing them before they enter the warehouse packing stage. Please contact our support desk immediately at ' . ($globalSettings['contact_email'] ?? 'support@threadax.co.in') . ' or call ' . ($globalSettings['contact_phone'] ?? '+91 98765 43210') . ' / WhatsApp.'
                             ]
                         ];
 
@@ -274,12 +274,37 @@
                             </p>
                         </div>
 
+                        @php
+                            $faqEmail = $globalSettings['contact_email'] ?? 'support@threadax.co.in';
+                            $faqPhone = $globalSettings['contact_phone'] ?? '+91 98765 43210';
+                            $faqCleanPhone = preg_replace('/[^0-9]/', '', $faqPhone);
+                            $faqWa = $globalSettings['whatsapp_number'] ?? '919876543210';
+                            $faqCleanWa = preg_replace('/[^0-9]/', '', $faqWa);
+                        @endphp
                         <div class="space-y-2 pt-1 sm:pt-2">
+                            {{-- Phone / Call Link --}}
+                            <a href="tel:+{{ $faqCleanPhone }}" class="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-brand-border bg-brand-off-white hover:bg-brand-light transition-all text-xs font-bold text-brand-dark">
+                                <span class="flex items-center gap-2 truncate">
+                                    <span class="text-sm">📞</span>
+                                    <span class="truncate">{{ $faqPhone }}</span>
+                                </span>
+                                <svg class="w-3.5 h-3.5 text-brand-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+
+                            {{-- WhatsApp Link --}}
+                            <a href="https://wa.me/{{ $faqCleanWa }}?text={{ urlencode('Hello ThreadAX! I have a question.') }}" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 transition-all text-xs font-bold text-emerald-800">
+                                <span class="flex items-center gap-2 truncate">
+                                    <span class="text-sm">💬</span>
+                                    <span class="truncate">WhatsApp: +{{ $faqCleanWa }}</span>
+                                </span>
+                                <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+
                             {{-- Email Link --}}
-                            <a href="mailto:support@threadax.co.in" class="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-brand-border bg-brand-off-white hover:bg-brand-light transition-all text-xs font-bold text-brand-dark">
+                            <a href="mailto:{{ $faqEmail }}" class="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-brand-border bg-brand-off-white hover:bg-brand-light transition-all text-xs font-bold text-brand-dark">
                                 <span class="flex items-center gap-2 truncate">
                                     <svg class="w-3.5 h-3.5 text-brand-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                    <span class="truncate">support@threadax.co.in</span>
+                                    <span class="truncate">{{ $faqEmail }}</span>
                                 </span>
                                 <svg class="w-3.5 h-3.5 text-brand-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>

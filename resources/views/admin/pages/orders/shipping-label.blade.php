@@ -301,7 +301,7 @@
         $brandTagline = $sysSettings['brand_tagline'] ?? 'PREMIUM STREETWEAR LOGISTICS';
         $companyName = $sysSettings['company_name'] ?? 'THREADAX LOGISTICS WAREHOUSE';
         $storeAddress = $sysSettings['store_address'] ?? 'ThreadAx HQ, Mumbai, Maharashtra 400001';
-        $contactPhone = $sysSettings['whatsapp_number'] ?? ($sysSettings['contact_phone'] ?? '919876543210');
+        $contactPhone = $sysSettings['contact_phone'] ?? ($sysSettings['whatsapp_number'] ?? '+91 98765 43210');
         $contactEmail = $sysSettings['contact_email'] ?? 'support@threadax.co.in';
     @endphp
 
@@ -414,7 +414,7 @@
             <div class="return-title">If Undelivered, Return To:</div>
             <strong>{{ $companyName }}</strong><br>
             {{ $storeAddress }}<br>
-            Support: +{{ $contactPhone }} | Email: {{ $contactEmail }}
+            Support: {{ str_starts_with(trim($contactPhone), '+') ? $contactPhone : '+' . $contactPhone }} | Email: {{ $contactEmail }}
         </div>
 
     </div>

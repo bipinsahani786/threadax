@@ -65,6 +65,24 @@
                         <p class="text-[11px] text-slate-400 mt-1.5">Used for customer order confirmations and inquiries.</p>
                     </div>
 
+                    {{-- Contact Phone / Mobile --}}
+                    <div>
+                        <label for="contact_phone" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Customer Support Calling / Phone Number <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">📞</span>
+                            <input type="text" 
+                                   name="contact_phone" 
+                                   id="contact_phone" 
+                                   value="{{ $settings['contact_phone'] ?? '+91 98765 43210' }}" 
+                                   placeholder="e.g., +91 98765 43210"
+                                   required
+                                   class="w-full pl-10 pr-4 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-medium text-slate-900 outline-none transition-all font-mono">
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Direct phone calling number displayed on website, invoices &amp; labels.</p>
+                    </div>
+
                     {{-- WhatsApp Number --}}
                     <div>
                         <label for="whatsapp_number" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">

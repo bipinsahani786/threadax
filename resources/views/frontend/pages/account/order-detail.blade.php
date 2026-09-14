@@ -311,5 +311,33 @@
         </dl>
     </div>
 
+    {{-- Order Assistance Card --}}
+    @php
+        $supportPhone = $globalSettings['contact_phone'] ?? '+91 98765 43210';
+        $cleanSuppPhone = preg_replace('/[^0-9]/', '', $supportPhone);
+        $supportWa = $globalSettings['whatsapp_number'] ?? '919876543210';
+        $cleanSuppWa = preg_replace('/[^0-9]/', '', $supportWa);
+    @endphp
+    <div class="mt-8 p-4 sm:p-5 bg-brand-light rounded-2xl border border-brand-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-white border border-brand-border flex items-center justify-center text-lg shadow-xs">
+                💬
+            </span>
+            <div>
+                <h4 class="text-xs sm:text-sm font-extrabold text-brand-dark">Need assistance with Order #{{ $order->order_number }}?</h4>
+                <p class="text-[11px] text-brand-muted">Our customer support crew is ready to assist you via WhatsApp or Call.</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <a href="tel:+{{ $cleanSuppPhone }}" class="flex-1 sm:flex-initial text-center px-3.5 py-2 bg-white border border-brand-border rounded-xl text-xs font-bold text-brand-dark hover:bg-brand-off-white transition-all">
+                📞 Call: {{ $supportPhone }}
+            </a>
+            <a href="https://wa.me/{{ $cleanSuppWa }}?text={{ urlencode('Hello ThreadAX! I need help with my Order #' . $order->order_number) }}" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5">
+                <span>WhatsApp</span>
+                <span>➔</span>
+            </a>
+        </div>
+    </div>
+
 </div>
 @endsection

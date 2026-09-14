@@ -121,9 +121,13 @@
         </a>
     </div>
 
+    @php
+        $emailSupport = \App\Models\Setting::get('contact_email', 'support@threadax.co.in');
+        $emailPhone = \App\Models\Setting::get('contact_phone', '+91 98765 43210');
+    @endphp
     <div class="footer">
         <p>© {{ date('Y') }} ThreadAX Inc. All rights reserved.<br>
-        Questions? Contact us at support@threadax.co.in</p>
+        Questions? Contact us at <a href="mailto:{{ $emailSupport }}" style="color: #64748B; font-weight: 700;">{{ $emailSupport }}</a> or call <a href="tel:{{ $emailPhone }}" style="color: #64748B; font-weight: 700;">{{ $emailPhone }}</a></p>
     </div>
 </div>
 

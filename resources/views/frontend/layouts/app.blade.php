@@ -52,7 +52,8 @@
         'logo' => asset('images/logo.png'),
         'contactPoint' => [
             '@type' => 'ContactPoint',
-            'telephone' => '+91-9876543210',
+            'telephone' => $globalSettings['contact_phone'] ?? (!empty($globalSettings['whatsapp_number']) ? '+' . preg_replace('/[^0-9]/', '', $globalSettings['whatsapp_number']) : '+91-9876543210'),
+            'email' => $globalSettings['contact_email'] ?? 'support@threadax.co.in',
             'contactType' => 'customer service',
             'areaServed' => 'IN',
             'availableLanguage' => ['English', 'Hindi']
@@ -501,18 +502,45 @@
                     </ul>
                 </div>
 
-                {{-- Help --}}
+                {{-- Help & Direct Support --}}
                 <div>
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-brand-text mb-4">Help</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-brand-text mb-4">Help &amp; Support</h4>
                     <ul class="space-y-2 text-sm text-brand-muted">
                         <li><a href="{{ route('frontend.page.show', 'track-order') }}"
                                 class="hover:text-brand-text transition-colors">Track Order</a></li>
                         <li><a href="{{ route('frontend.page.show', 'returns-exchanges') }}"
-                                class="hover:text-brand-text transition-colors">Returns & Exchanges</a></li>
+                                class="hover:text-brand-text transition-colors">Returns &amp; Exchanges</a></li>
                         <li><a href="{{ route('frontend.page.show', 'shipping-info') }}"
                                 class="hover:text-brand-text transition-colors">Shipping Info</a></li>
                         <li><a href="{{ route('frontend.page.show', 'faq') }}"
                                 class="hover:text-brand-text transition-colors">FAQ</a></li>
+
+                        {{-- Dynamic Support Contacts --}}
+                        @php
+                            $footContactPhone = $globalSettings['contact_phone'] ?? '+91 98765 43210';
+                            $footCleanPhone = preg_replace('/[^0-9]/', '', $footContactPhone);
+                            $footWaNumber = $globalSettings['whatsapp_number'] ?? '919876543210';
+                            $footCleanWa = preg_replace('/[^0-9]/', '', $footWaNumber);
+                            $footContactEmail = $globalSettings['contact_email'] ?? 'support@threadax.co.in';
+                        @endphp
+                        <li class="pt-2 border-t border-brand-border/60">
+                            <a href="tel:+{{ $footCleanPhone }}" class="flex items-center gap-1.5 text-xs font-bold text-brand-dark hover:underline">
+                                <span>📞</span>
+                                <span>{{ $footContactPhone }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://wa.me/{{ $footCleanWa }}?text={{ urlencode('Hello ThreadAX! I have a query.') }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:underline">
+                                <span>💬</span>
+                                <span>WhatsApp: +{{ $footCleanWa }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:{{ $footContactEmail }}" class="flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-dark transition-colors">
+                                <span>✉️</span>
+                                <span>{{ $footContactEmail }}</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -536,7 +564,7 @@
                     <h4 class="text-xs font-bold uppercase tracking-widest text-brand-text mb-4">Connect</h4>
                     <div class="flex items-center gap-3 mb-6">
                         {{-- Instagram --}}
-                        <a href="https://www.instagram.com/threadax.co.in/" target="_blank"
+                        <a href="{{ $globalSettings['instagram_link'] ?? ($globalSettings['instagram_url'] ?? 'https://www.instagram.com/threadax.co.in/') }}" target="_blank" rel="noopener noreferrer"
                             class="w-10 h-10 rounded-full bg-brand-light border border-brand-border flex items-center justify-center text-brand-muted hover:bg-brand-text hover:text-white hover:border-brand-text transition-all"
                             aria-label="Instagram">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -554,7 +582,7 @@
                             </svg>
                         </a>
                         {{-- Facebook --}}
-                        <a href="#"
+                        <a href="{{ !empty($globalSettings['facebook_link']) ? $globalSettings['facebook_link'] : '#' }}" {{ !empty($globalSettings['facebook_link']) ? 'target="_blank" rel="noopener noreferrer"' : '' }}
                             class="w-10 h-10 rounded-full bg-brand-light border border-brand-border flex items-center justify-center text-brand-muted hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all"
                             aria-label="Facebook">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -620,10 +648,11 @@
 
     {{-- WhatsApp Floating Button --}}
     @php
-        $whatsappNumber = $globalSettings['whatsapp_number'] ?? env('WHATSAPP_NUMBER');
+        $whatsappNumber = $globalSettings['whatsapp_number'] ?? env('WHATSAPP_NUMBER', '919876543210');
+        $cleanWhatsappNumber = preg_replace('/[^0-9]/', '', $whatsappNumber);
     @endphp
-    @if($whatsappNumber)
-        <a href="https://wa.me/{{ $whatsappNumber }}?text={{ urlencode('Hello ThreadAX! I have a query.') }}"
+    @if($cleanWhatsappNumber)
+        <a href="https://wa.me/{{ $cleanWhatsappNumber }}?text={{ urlencode('Hello ThreadAX! I have a query.') }}"
             target="_blank" rel="noopener noreferrer"
             class="hidden lg:flex fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 items-center justify-center"
             aria-label="Chat on WhatsApp">

@@ -103,7 +103,7 @@
                         </div>
                         <h3 class="text-sm sm:text-base font-heading font-bold text-brand-dark mb-1.5">Submit Your Request</h3>
                         <p class="text-xs sm:text-sm text-brand-muted leading-relaxed">
-                            Log in to your account, select the item from your recent orders, or email us at <a href="mailto:support@threadax.co.in" class="font-semibold text-brand-dark underline">support@threadax.co.in</a> with your Order ID.
+                            Log in to your account, select the item from your recent orders, or email us at <a href="mailto:{{ $globalSettings['contact_email'] ?? 'support@threadax.co.in' }}" class="font-semibold text-brand-dark underline">{{ $globalSettings['contact_email'] ?? 'support@threadax.co.in' }}</a> with your Order ID.
                         </p>
                     </div>
                 </div>
