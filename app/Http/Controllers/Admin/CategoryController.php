@@ -27,7 +27,7 @@ class CategoryController extends Controller
             'roots' => Category::whereNull('parent_id')->count(),
             'subs' => Category::whereNotNull('parent_id')->count(),
             'header' => Category::where('show_in_header', true)->count(),
-            'total_products' => \App\Models\Product::whereNotNull('category_id')->count(),
+            'total_products' => \App\Models\Product::whereHas('categories')->count(),
         ];
 
         // For filter dropdown

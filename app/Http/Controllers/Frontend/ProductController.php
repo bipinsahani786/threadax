@@ -65,14 +65,17 @@ class ProductController extends Controller
             'approvedReviews' => fn($q) => $q->with('user:id,name')->latest(),
             'images',
             'variants',
-            'category',
+            'categories',
         ]);
 
-        // Related products from same category
-        $relatedProducts = $this->productRepo->all([
-            'category' => $product->category_id,
-            'status'   => '1',
-        ])->where('id', '!=', $product->id)->take(4);
+        // Related products from same primary category
+        $primaryCategory = $product->category; // Uses accessor (primary category)
+        $relatedProducts = $primaryCategory
+            ? $this->productRepo->all([
+                'category' => $primaryCategory->id,
+                'status'   => '1',
+            ])->where('id', '!=', $product->id)->take(4)
+            : collect();
 
         return view('frontend.pages.products.show', compact('product', 'relatedProducts'));
     }

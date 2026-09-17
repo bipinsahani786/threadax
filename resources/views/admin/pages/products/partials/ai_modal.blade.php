@@ -401,7 +401,7 @@ function productAiHelper(config = {}) {
                     body: JSON.stringify({
                         name: this.name,
                         rough_notes: this.aiRoughNotes,
-                        category_id: document.querySelector('#category_id')?.value || null,
+                        category_id: document.querySelector('input[name="category_ids[]"]:checked')?.value || null,
                         tone: this.aiTone
                     })
                 });

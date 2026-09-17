@@ -32,13 +32,26 @@ trait HasSlug
         $slug = Str::slug($value);
         $original = $slug;
         $count = 1;
+        $useSoftDeletes = method_exists(static::class, 'withTrashed');
 
-        while (static::where('slug', $slug)->where('id', '!=', $this->id ?? 0)->exists()) {
+        while ($this->slugExists($slug, $useSoftDeletes)) {
             $slug = "{$original}-{$count}";
             $count++;
         }
 
         return $slug;
+    }
+
+    /**
+     * Check if a slug already exists (including soft-deleted records).
+     */
+    protected function slugExists(string $slug, bool $useSoftDeletes): bool
+    {
+        $query = $useSoftDeletes
+            ? static::withTrashed()->where('slug', $slug)
+            : static::where('slug', $slug);
+
+        return $query->where('id', '!=', $this->id ?? 0)->exists();
     }
 
     /**

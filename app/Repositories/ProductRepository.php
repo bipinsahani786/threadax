@@ -12,7 +12,7 @@ class ProductRepository implements ProductRepositoryInterface
     public function all(array $filters = [], string $sortBy = 'created_at', string $direction = 'desc'): LengthAwarePaginator
     {
         return Product::active()
-            ->with(['category', 'images', 'variants'])
+            ->with(['categories', 'images', 'variants'])
             ->filter($filters)
             ->sortBy($sortBy, $direction)
             ->paginate(16);
@@ -20,7 +20,7 @@ class ProductRepository implements ProductRepositoryInterface
 
     public function paginateAdmin(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return Product::with('category')
+        return Product::with('categories')
             ->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
@@ -60,7 +60,7 @@ class ProductRepository implements ProductRepositoryInterface
     public function findBySlug(string $slug): ?Product
     {
         return Product::where('slug', $slug)
-            ->with(['category', 'variants', 'images'])
+            ->with(['categories', 'variants', 'images'])
             ->first();
     }
 

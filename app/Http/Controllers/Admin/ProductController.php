@@ -21,7 +21,7 @@ class ProductController extends Controller
     {
         $filters = $request->only(['search', 'category', 'is_active', 'is_featured', 'stock_status']);
         
-        $query = Product::with(['category', 'variants', 'images']);
+        $query = Product::with(['categories', 'variants', 'images']);
 
         if (!empty($filters['search'])) {
             $s = $filters['search'];
@@ -33,8 +33,8 @@ class ProductController extends Controller
         }
 
         if (!empty($filters['category'])) {
-            $query->whereHas('category', function ($q) use ($filters) {
-                $q->where('slug', $filters['category'])->orWhere('id', $filters['category']);
+            $query->whereHas('categories', function ($q) use ($filters) {
+                $q->where('categories.slug', $filters['category'])->orWhere('categories.id', $filters['category']);
             });
         }
 
@@ -88,6 +88,7 @@ class ProductController extends Controller
     public function duplicate(Product $product)
     {
         $newProduct = $product->replicate(['slug']);
+        $newProduct->slug = null; // Force HasSlug trait to generate a new unique slug
         $newProduct->name = $product->name . ' (Copy)';
 
         $baseSku = $product->sku ? $product->sku . '-COPY' : null;
@@ -104,6 +105,12 @@ class ProductController extends Controller
 
         $newProduct->is_active = false;
         $newProduct->save();
+
+        // Duplicate Category Relationships
+        $categoryData = $product->categories->mapWithKeys(fn($cat) => [
+            $cat->id => ['is_primary' => $cat->pivot->is_primary]
+        ])->toArray();
+        $newProduct->categories()->sync($categoryData);
 
         // Duplicate Variants
         foreach ($product->variants as $variant) {
@@ -143,7 +150,8 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:categories,id',
             'sku' => 'nullable|string|max:255|unique:products,sku',
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
@@ -161,9 +169,19 @@ class ProductController extends Controller
         $validated['is_active'] = $request->has('is_active');
         $validated['is_featured'] = $request->has('is_featured');
 
-        // Name slug is handled by HasSlug trait
+        // Extract category_ids before creating product
+        $categoryIds = $validated['category_ids'];
+        unset($validated['category_ids']);
 
-        $this->productRepository->create($validated);
+        // Name slug is handled by HasSlug trait
+        $product = $this->productRepository->create($validated);
+
+        // Sync categories — first one is primary
+        $syncData = [];
+        foreach ($categoryIds as $index => $catId) {
+            $syncData[$catId] = ['is_primary' => $index === 0];
+        }
+        $product->categories()->sync($syncData);
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product created successfully.');
@@ -179,7 +197,8 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:categories,id',
             'sku' => 'nullable|string|max:255|unique:products,sku,' . $product->id,
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
@@ -197,7 +216,18 @@ class ProductController extends Controller
         $validated['is_active'] = $request->has('is_active');
         $validated['is_featured'] = $request->has('is_featured');
 
+        // Extract category_ids before updating product
+        $categoryIds = $validated['category_ids'];
+        unset($validated['category_ids']);
+
         $this->productRepository->update($product, $validated);
+
+        // Sync categories — first one is primary
+        $syncData = [];
+        foreach ($categoryIds as $index => $catId) {
+            $syncData[$catId] = ['is_primary' => $index === 0];
+        }
+        $product->categories()->sync($syncData);
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product updated successfully.');

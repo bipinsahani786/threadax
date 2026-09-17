@@ -28,9 +28,11 @@ trait Filterable
                         ->orWhere('sku', 'like', "%{$value}%")
                         ->orWhere('description', 'like', "%{$value}%");
                 }),
-                'category'   => is_numeric($value) 
-                    ? $query->where('category_id', $value) 
-                    : $query->whereHas('category', fn($q) => $q->where('slug', $value)->orWhere('id', $value)),
+                'category'   => $query->whereHas('categories', function ($q) use ($value) {
+                    is_numeric($value) 
+                        ? $q->where('categories.id', $value)
+                        : $q->where('categories.slug', $value)->orWhere('categories.id', $value);
+                }),
                 'min_price'  => $query->where('price', '>=', (float) $value),
                 'max_price'  => $query->where('price', '<=', (float) $value),
                 'is_active'  => $query->where('is_active', (bool) $value),

@@ -6,7 +6,7 @@ use App\Traits\Filterable;
 use App\Traits\HasSlug;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,7 +15,6 @@ class Product extends Model
     use HasSlug, Filterable, Sortable, SoftDeletes;
 
     protected $fillable = [
-        'category_id',
         'name',
         'slug',
         'description',
@@ -69,9 +68,22 @@ class Product extends Model
 
     // ─── Relationships ────────────────────────────────────────
 
-    public function category(): BelongsTo
+    /**
+     * Many-to-many: product belongs to multiple categories.
+     */
+    public function categories(): BelongsToMany
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsToMany(Category::class)->withPivot('is_primary')->withTimestamps();
+    }
+
+    /**
+     * Get the primary category (backward compatible accessor).
+     * Usage: $product->category returns the primary category or first assigned.
+     */
+    public function getCategoryAttribute(): ?Category
+    {
+        return $this->categories->firstWhere('pivot.is_primary', true)
+            ?? $this->categories->first();
     }
 
     public function variants(): HasMany

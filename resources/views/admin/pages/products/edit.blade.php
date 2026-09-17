@@ -381,21 +381,27 @@
                     </div>
                     
                     <div>
-                        <label for="category_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                            Select Category <span class="text-rose-500">*</span>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Select Categories <span class="text-rose-500">*</span>
+                            <span class="text-slate-400 normal-case font-normal ml-1">(पहली selected = Primary)</span>
                         </label>
-                        <select id="category_id" 
-                                name="category_id" 
-                                required
-                                class="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 focus:border-slate-400 rounded-xl text-xs font-bold text-slate-900 outline-none transition-all cursor-pointer">
-                            <option value="">Choose Category</option>
+                        <div class="max-h-52 overflow-y-auto border border-slate-200 rounded-xl bg-slate-50 p-3 space-y-1.5">
+                            @php $selectedCategoryIds = old('category_ids', $product->categories->pluck('id')->toArray()); @endphp
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                    {{ $category->parent ? $category->parent->name . ' > ' : '' }}{{ $category->name }}
-                                </option>
+                                <label class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white cursor-pointer transition-colors group">
+                                    <input type="checkbox" 
+                                           name="category_ids[]" 
+                                           value="{{ $category->id }}"
+                                           {{ in_array($category->id, $selectedCategoryIds) ? 'checked' : '' }}
+                                           class="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 cursor-pointer">
+                                    <span class="text-xs font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
+                                        {{ $category->parent ? $category->parent->name . ' › ' : '' }}{{ $category->name }}
+                                    </span>
+                                </label>
                             @endforeach
-                        </select>
-                        @error('category_id') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        </div>
+                        @error('category_ids') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                        @error('category_ids.*') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
                 
